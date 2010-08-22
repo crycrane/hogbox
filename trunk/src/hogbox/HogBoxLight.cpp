@@ -59,7 +59,8 @@ HogBoxLight::HogBoxLight(void)
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
-HogBoxLight::HogBoxLight(const HogBoxLight&,const osg::CopyOp& copyop)
+HogBoxLight::HogBoxLight(const HogBoxLight& light,const osg::CopyOp& copyop) 
+	: osg::Object(light, copyop)
 {
 
 }

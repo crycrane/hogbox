@@ -226,10 +226,10 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	std::string uniformName = tex->getName();
 
 	//if a dot seperation sequence is found
-	//use the wrod following the last dot
+	//use the word following the last dot
 	size_t found;
 	found = tex->getName().find_last_of(".");
-	if(found != std::string::npos)
+	if(found+1 != std::string::npos)
 	{
 		uniformName = tex->getName().substr(found+1,tex->getName().size()-1);
 	}

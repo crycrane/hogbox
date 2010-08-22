@@ -249,7 +249,7 @@ public:
 		{
 			float compareVal = formats[i]->CompareFormat(targetWidth, targetHeight, targetFPS);
 			//get distance from 1 (1==same format)
-			float compareDist = fabs(1.0f-compareVal);
+			float compareDist = compareVal;
 			if(compareDist < closestCompareDist)
 			{
 				closestCompareDist = compareDist;

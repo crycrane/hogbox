@@ -231,7 +231,7 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	found = tex->getName().find_last_of(".");
 	if(found != std::string::npos)
 	{
-		uniformName = tex->getName().substr(found,tex->getName().size()-1);
+		uniformName = tex->getName().substr(found+1,tex->getName().size()-1);
 	}
 	unit->sampler = new osg::Uniform(uniformName.c_str(), channel);
 

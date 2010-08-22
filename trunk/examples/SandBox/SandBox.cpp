@@ -38,11 +38,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	root->addChild(hogboxObject->GetRootNode());
 
 	//add hud
-	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(256,256));
+	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));
 	root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
 	
 	//add input handler for hud
-	hogboxHUD::HudInputHandler* input = new hogboxHUD::HudInputHandler(viewer->GetViewer(),osg::Vec2(256,256));
+	hogboxHUD::HudInputHandler* input = new hogboxHUD::HudInputHandler(viewer->GetViewer(),osg::Vec2(800,600));
 	viewer->addEventHandler(input);
 
 	//add a region to the hud

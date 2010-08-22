@@ -1,0 +1,136 @@
+#include <hogboxHUD/HogBoxHud.h>
+
+using namespace hogboxHUD;
+
+//BUG@tom Since moving to CMake the Singleton class has been misbehaving. An app seems to
+//use a different instance of the registry then the plugins seem to register too.
+//Changing to the dreaded global instance below has fixed things but I need to try and correct this
+osg::ref_ptr<HogBoxHud> s_hogboxHUDInstance = NULL;
+
+HogBoxHud* HogBoxHud::Instance(bool erase)
+{
+	if(s_hogboxHUDInstance==NULL)
+	{s_hogboxHUDInstance = new HogBoxHud();}		
+	if(erase)
+	{
+		s_hogboxHUDInstance->destruct();
+		s_hogboxHUDInstance = 0;
+	}
+    return s_hogboxHUDInstance.get();
+}
+
+HogBoxHud::HogBoxHud(void) : m_camera(NULL),
+						m_regionGroup(NULL)
+{
+
+}
+
+HogBoxHud::~HogBoxHud(void)
+{
+	m_regionGroup = NULL; 
+
+	//delete all attached regions, each region is then responsible for 
+	//deleting it own children
+	for(unsigned int i=0; i<m_regions.size(); i++)
+	{
+		m_regions[i] = NULL;
+	}
+	m_regions.clear();
+}
+
+//
+//Sets up the camera for rendering the hud
+//
+osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
+{
+	//store our projection size
+	m_screenSize = screenSize;
+
+	m_camera = new osg::CameraNode;
+
+    // set the projection matrix
+    m_camera->setProjectionMatrix(osg::Matrix::ortho2D(0,m_screenSize.x(),0,m_screenSize.y()));
+
+    // set the view matrix    
+    m_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    m_camera->setViewMatrix(osg::Matrix::identity());
+
+    // only clear the depth buffer as this is post render
+    m_camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+
+    // draw hud after main camera view.
+    m_camera->setRenderOrder(osg::CameraNode::POST_RENDER);
+
+	//add the main group to which we attach the regions
+	m_regionGroup = new osg::Group();
+
+    //add the new page to the hud camera
+	m_camera->addChild( m_regionGroup.get());
+
+	return m_camera.get();
+}
+
+//
+// Pass an input event to all attached regions
+//
+bool HogBoxHud::Event(const std::string ID, CHudEvent hudEvent)
+{
+	bool ret=false;
+
+	//loop all attached
+	for(unsigned int i=0; i<m_regions.size(); i++)
+	{
+		if(m_regions[i]->Event(ID, hudEvent)>0)
+		{ret = true;}
+	}
+
+	//? why did I do this, need to test out, but can't see a need
+	for(unsigned int i=0; i<m_regions.size(); i++)
+	{
+		if(m_regions[i]->IsChild(ID))
+		{return true;}
+	} 
+	return false;
+}
+
+//
+// Add a region to the hud
+//
+bool HogBoxHud::AddRegion(HudRegion* region)
+{
+	//check it is not null
+	if(!region)
+	{return false;}
+
+	m_regions.push_back(region);
+	m_regionGroup->addChild(region->GetRegion());
+
+	return true;
+}
+
+//
+//hide the hud
+//
+void HogBoxHud::SetHudVisibility(bool vis)
+{
+	if(vis)
+	{
+		m_camera->setNodeMask(0xFFFFFFFF);
+	}else{
+		m_camera->setNodeMask(0x0);
+	}
+}
+
+//
+//get visible state
+//
+bool HogBoxHud::GetHudVisibility()
+{
+	if(	m_camera->getNodeMask() == 0xFFFFFFFF)
+	{
+		return false;
+	}else{
+		return true;
+	}
+	return false;
+}

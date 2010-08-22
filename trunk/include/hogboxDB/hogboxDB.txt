@@ -1,0 +1,13 @@
+#  Archive C:\Work\Tom\MagicSymbol Projects\HogBox2\include\hogboxDB\hogboxDB.rar
+Export.h
+HogBoxBaseXmlDef.h
+HogBoxManager.h
+HogBoxRegistry.h
+XmlAttribute.h
+XmlAttributeList.h
+XmlAttributeMap.h
+XmlAttributePtr.h
+XmlClassManager.h
+XmlClassManagerWrapper.h
+XmlClassWrapper.h
+XmlUtils.h

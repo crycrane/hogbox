@@ -196,9 +196,9 @@ public:
 		//use the wrod following the last dot
 		size_t found;
 		found = name.find_last_of(".");
-		if(found != std::string::npos)
+		if(found+1 != std::string::npos)
 		{
-			uniformName = name.substr(found,name.size()-1);
+			uniformName = name.substr(found+1,name.size()-1);
 		}
 		uniform->setName(uniformName);
 	}

@@ -333,7 +333,7 @@ void HogBoxObject::SetWrappedNodes(const NodePtrVector& nodes)
 bool HogBoxObject::AddMeshMapping(MeshMapping* mapping)
 {
 	if(!mapping){return false;}
-	osg::notify(osg::WARN) << "AddMeshMapping" << std::endl;
+
 	//pass to our wrapped nodes via the root
 	m_root->accept(*mapping->m_visitor);
 

@@ -365,7 +365,7 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 		m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
 		m_graphicsContext->setResizedCallback(m_resizeCallback);
-
+	
 		// set the scene to render
 		//check a scene has been set
 		if(!m_p_scene)
@@ -403,6 +403,9 @@ bool HogBoxViewer::CreateAppWindow()
 		//everything is inplace so realize our viewer (creating window etc)
 		m_viewer->realize();
 
+		//force a resize to get a proper initial state
+		m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
+	
 		//set request back to false
 		m_requestReset = false;
 
@@ -1006,14 +1009,12 @@ bool HogBoxViewer::SetHomeLookAtVectorsFromTrackBall(osgGA::TrackballManipulator
 //
 void HogBoxViewer::SetCameraFOV(const double& fov)
 {
-    double height = m_winSize.x();//osg::DisplaySettings::instance()->getScreenHeight();
-	double width = m_winSize.y();//osg::DisplaySettings::instance()->getScreenWidth();
-	width = height*1.333f;
 	m_vfov = fov;
-
 	if(m_viewer.valid())
 	{
-		m_viewer->getCamera()->setProjectionMatrixAsPerspective(m_vfov, (width/height), 0.1f,1000.0f);
+		double fovy, aspect, zNear, zFar;
+		m_viewer->getCamera()->getProjectionMatrixAsPerspective(fovy, aspect, zNear, zFar);
+		m_viewer->getCamera()->setProjectionMatrixAsPerspective(m_vfov, aspect, zNear,zFar);
 	}
 }
 

@@ -47,7 +47,12 @@ public:
 		m_winSize = osg::Vec2(width,height);
 		m_winCorner = osg::Vec2(x,y);
 
-		osg::notify(osg::WARN) << "Corner: " << m_winCorner.x() << ", " << m_winCorner.y() << std::endl;
+		p_viewer->getCamera()->getViewport()->setViewport(0,0,width,height);
+
+		double fovy, aspect, zNear, zFar;
+		p_viewer->getCamera()->getProjectionMatrixAsPerspective(fovy, aspect, zNear, zFar);
+		aspect = (float)width/height;
+		p_viewer->getCamera()->setProjectionMatrixAsPerspective(fovy, aspect, zNear, zFar);
 
 		gc->resizedImplementation(x,y,width, height);
 	}

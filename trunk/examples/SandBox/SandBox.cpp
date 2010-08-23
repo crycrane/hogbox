@@ -31,7 +31,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");
 
-	light1->ApplyLightToGraph(root);
+	light1->ApplyLightToGraph(root);//(Don't like this)
 	root->addChild(light1->GetLight());
 
 	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("BoxMan.Object");
@@ -58,7 +58,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	//add a camera manipulator to control camera
 	osg::ref_ptr<osgGA::TrackballManipulator> cameraManipulator;
     cameraManipulator = new osgGA::TrackballManipulator; 
-	cameraManipulator->setHomePosition(osg::Vec3(0,100,0), osg::Vec3(0,0,0),osg::Vec3(0,0,1));
+	cameraManipulator->setHomePosition(osg::Vec3(0,-100,0), osg::Vec3(0,0,0),osg::Vec3(0,0,1));
 	
 	//add the cameraManipulator to the hogviewer
 	//viewer->addEventHandler(cameraManipulator.get());

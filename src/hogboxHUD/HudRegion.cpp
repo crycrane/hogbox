@@ -105,7 +105,7 @@ bool HudRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& file
 	//make the region identifiable by the picker
 	//by setting the regions geometry names to the
 	//unique ID
-	//setName(fileName); 
+	setName(this->getName()); 
 
 	//Set the regions position, size and rotation
 	SetPosition(corner);SetSize(size);

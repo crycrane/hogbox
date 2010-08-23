@@ -23,12 +23,10 @@ MeshMappingVisitor::~MeshMappingVisitor()
 
 void MeshMappingVisitor::apply(osg::Node& node)
 {
-	osg::notify(osg::WARN) << "APPLY" << std::endl;
 	//is this a geode
 	osg::Geode* geo = dynamic_cast<osg::Geode*>(&node);
 	if (geo)
     {
-		osg::notify(osg::WARN) << "Compare geode name '" << geo->getName() << std::endl;
 		//see if the geodes name matches
 		if(compareWithMapToList(geo->getName()))
 		{
@@ -95,8 +93,6 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 		HogBoxMaterial* useMat = _material->GetFunctionalMaterial();
 		if(useMat)
 		{
-			osg::notify(osg::WARN) << "Apply material '" << useMat->getName() << "' to geode '" << geode->getName() << std::endl;
-
 			geode->setStateSet(useMat->GetStateSet());
 			//also check if the material requires tangent space vectors generating
 			if(useMat->IsUsingTangetSpace())
@@ -157,14 +153,12 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 MeshMapping::MeshMapping() 
 	: osg::Object()
 {
-	osg::notify(osg::WARN) << "CONTRUCTOR" <<std::endl;
 	m_visitor = new MeshMappingVisitor();
 }
 
 MeshMapping::MeshMapping(const std::string& name, HogBoxMaterial* mat, bool vis, bool checkGeoms) 
 	: osg::Object()
 {
-osg::notify(osg::WARN) << "CONTRUCTOR" <<std::endl;
 	m_visitor = new MeshMappingVisitor(name, mat, vis, checkGeoms);
 }
 

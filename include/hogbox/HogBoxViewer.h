@@ -251,6 +251,8 @@ protected:
 	//handle to the context window for manipulaing fullscreen etc
 	osgViewer::GraphicsWindow* m_graphicsWindow;
 	
+	//resize callback handle adjusting viewport and projection when
+	//the window is resized
 	osg::ref_ptr<HogBoxViewerResizedCallback> m_resizeCallback;
 
 //exterior application data (scene/actionadaptors

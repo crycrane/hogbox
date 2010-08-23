@@ -28,7 +28,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	osg::MatrixTransform* root = new osg::MatrixTransform();
 	viewer->SetSceneNode(root);
 
-
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");
 
 	light1->ApplyLightToGraph(root);//(Don't like this)
@@ -46,14 +45,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	viewer->addEventHandler(input);
 
 	//add a region to the hud
-	osg::ref_ptr<hogboxHUD::ButtonRegion> region = new hogboxHUD::ButtonRegion();
-	region->Create(osg::Vec2(20,20),osg::Vec2(50,50), "Quad", "Click");
-	region->setName(std::string("MyHudRegion"));
-
+	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("MainButton");
 	hogboxHUD::HogBoxHud::Instance()->AddRegion(region);
-
-	//region->SetBaseTexture(mat->GetTexture(0));
-	//region->ApplyBaseTexture();
 
 	//add a camera manipulator to control camera
 	osg::ref_ptr<osgGA::TrackballManipulator> cameraManipulator;
@@ -61,16 +54,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	cameraManipulator->setHomePosition(osg::Vec3(0,-100,0), osg::Vec3(0,0,0),osg::Vec3(0,0,1));
 	
 	//add the cameraManipulator to the hogviewer
-	//viewer->addEventHandler(cameraManipulator.get());
 	viewer->GetViewer()->setCameraManipulator(cameraManipulator);
 
 	while(!viewer->done())
 	{
-		//viewer->SetCameraViewMatrix(cameraManipulator->getInverseMatrix());
-		//viewer->SetCameraViewDistance( cameraManipulator->getDistance() );
-		//root->setMatrix(cameraManipulator->getMatrix());
 		viewer->frame();
-
 		if(region->IsPressed())
 		{
 			printf("click\n");

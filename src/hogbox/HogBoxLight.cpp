@@ -146,8 +146,8 @@ void HogBoxLight::SetPosition(const osg::Vec4& pos)
 {
 	m_lightPos=pos;
 	m_transform->setMatrix( osg::Matrix::translate(osg::Vec3(pos.x(),pos.y(),pos.z())) );   
-	//m_light->setPosition(osg::Vec4(0,0,0,pos.w()));
-	m_light->setPosition(pos);
+	m_light->setPosition(osg::Vec4(0,0,0,pos.w()));
+	//m_light->setPosition(pos);
 
 }
 

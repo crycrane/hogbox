@@ -36,7 +36,7 @@ public:
 
 	   unsigned int contextID = renderInfo.getContextID();
 	  
-   		osg::GL2Extensions* extensions = osg::GL2Extensions::Get(contextID,true);
+   		//osg::GL2Extensions* extensions = osg::GL2Extensions::Get(contextID,true);
 
 		bool nvidiaMemoryInfoSupport = osg::isGLExtensionSupported(contextID,"GL_NVX_gpu_memory_info");
 		if(nvidiaMemoryInfoSupport)

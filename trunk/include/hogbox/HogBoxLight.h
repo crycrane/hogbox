@@ -255,8 +255,8 @@ class LightTransformCallback: public osg::NodeCallback
 public:
 
 	LightTransformCallback(osg::Uniform* lightPos, float angular_velocity, float height, float radius):
-    _posUniform(lightPos),
-	_angular_velocity(angular_velocity),
+    _angular_velocity(angular_velocity),
+	_posUniform(lightPos),
     _height(height),
     _radius(radius),
     _previous_traversal_number(-1),

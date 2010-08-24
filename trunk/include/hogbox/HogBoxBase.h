@@ -27,7 +27,6 @@ namespace hogbox
         virtual const char* className() const { return #name; } \
 		virtual const char* libraryName() const { return #library; } \
 		static const std::string xmlClassName(){ osg::ref_ptr<name> classType;return classType->className();}
-        //virtual void accept(osg::NodeVisitor& nv) { if (nv.validNodeMask(*this)) { nv.pushOntoNodePath(this); nv.apply(*this); nv.popFromNodePath(); } } \
 
 //convinience type defs for osg::ref_ptrs of basic types
 typedef osg::ref_ptr<osg::Object> ObjectPtr;

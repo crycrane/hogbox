@@ -22,9 +22,9 @@ class HOGBOXVIS_EXPORT TrackedObject : public osg::Object
 public:
 
 	//tracker is friend as only it can call a markers update (is this dumb? yes)
-	friend HogTracker;
-	friend CARTKTracker;
-	friend COpenCVPlanarPoseTracker;
+	friend class HogTracker;
+	friend class CARTKTracker;
+	friend class COpenCVPlanarPoseTracker;
 
 	enum TrackedDimensions{
 		TRACKING_POSITION,

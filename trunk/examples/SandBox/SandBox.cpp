@@ -1,10 +1,10 @@
 // HogSandBox.cpp : Defines the entry point for the console application.
 //
 
-#include <tchar.h>
 #include <hogbox/HogBoxViewer.h>
 #include <hogbox/HogBoxObject.h>
 #include <hogbox/HogBoxLight.h>
+#include <hogbox/HogBoxUtils.h>
 
 #include <hogboxDB/HogBoxManager.h>
 #include <hogboxDB/HogBoxRegistry.h>
@@ -15,8 +15,40 @@
 #include <hogboxHUD/ButtonRegion.h>
 #include <hogboxHUD/OsgInput.h>
 
-int _tmain(int argc, _TCHAR* argv[])
+int main( int argc, const char* argv[] )
 {
+	
+	//if we're on mac working directory returns the users root by default
+	//but the the working directory argument argc[0] returns what I am used to on windows 
+#ifndef WIN32
+	
+	char* appRootPath;
+	//get the command arg
+	std::string str = std::string(argv[0]);
+	osg::notify(osg::WARN) << "Start " << str << std::endl;
+	
+	//move up in the bundle struncture to the Content folder from MacOS folder  
+	size_t endpos = str.find_last_of("/"); // remove after last slash 
+	str = str.substr( 0, endpos ); 
+	
+	//and again
+	//endpos = str.find_last_of("/");  
+	//str = str.substr( 0, endpos ); 	
+	
+	//move into resources
+	//str = str + "/Resources";
+	
+	//set resources as the current dirrectory
+	osg::notify(osg::WARN) << "try " << str << std::endl;
+	hogbox::SetWorkingDirectory(str.c_str());
+	
+	//accuire the apps path, to check it worked and mimic windows
+	hogbox::GetWorkingDirectory(1024, appRootPath);
+	
+	osg::notify(osg::WARN) << "Mac OS X Current Directory " << std::string(appRootPath) << std::endl;
+
+#endif	
+	
 	osg::setNotifyHandler(new hogbox::HogBoxNotifyHandler("./Data/MessageLog.html"));
 	osg::setNotifyLevel(osg::NOTICE);
 

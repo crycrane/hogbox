@@ -15,7 +15,7 @@ using namespace hogboxVision;
 #include <windows.h>
 #else
 #define IDLE_TIMEOUT 0.3 //MacPort, due to unix sleep being seconds
-#include "windowsOSX.h"   //for sleep redefines
+//#include "windowsOSX.h"   //for sleep redefines
 #endif
 
 	/*static*/
@@ -181,7 +181,7 @@ void VideoStreamBase::run()
 				UpdateStream();
         }
         else {
-            Sleep(IDLE_TIMEOUT);
+           // Sleep(IDLE_TIMEOUT);
         }
     }
 

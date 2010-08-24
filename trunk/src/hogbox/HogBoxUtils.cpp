@@ -3,6 +3,10 @@
 #include <osgDB/ReadFile>
 #include <osgDB/FileNameUtils>
 
+#ifndef MAX_PATH
+	#define MAX_PATH 512
+#endif
+
 //Search all nodes in the tree
 //
 osg::Node* hogbox::FindNodeByName(osg::Node* node, const std::string name)
@@ -219,7 +223,7 @@ osg::TextureCubeMap* hogbox::LoadTextureCubeCross(std::string file)
 }
 
 #ifndef WIN32 //we need to import the Cocoa objective c funcs from the windowsCompact.mm
-extern bool GetOpenFilenameOSX(const char *extensions, const char *defaultFolder, char *selectedFilename);
+bool GetOpenFilenameOSX(const char *extensions, const char *defaultFolder, char *selectedFilename){return true;}
 #endif
 
 //
@@ -267,7 +271,7 @@ const std::string hogbox::OpenPlatformFileDialog(const char* exts, const char* d
 }
 
 #ifndef WIN32
-extern bool GetSaveFileNameOSX(const char* exts, const char* defaultDirectory, char* saveFileName);
+bool GetSaveFileNameOSX(const char* exts, const char* defaultDirectory, char* saveFileName){return true;}
 #endif
 
 //
@@ -358,7 +362,7 @@ void hogbox::GetWorkingDirectory(int length, char* retDir)
 
 //we need to import the Cocoa objective c funcs from the windowsCompact.mm
 #ifndef WIN32
-extern void MessageBoxOSX(const char *title, const char *message);
+void MessageBoxOSX(const char *title, const char *message){}
 #endif
 
 void hogbox::MsgBox(const std::string title, const std::string message, int mode)
@@ -371,7 +375,7 @@ void hogbox::MsgBox(const std::string title, const std::string message, int mode
 }
 
 #ifndef WIN32
-extern int MsgBoxYesNoOSX(const char* title, const char* message);
+int MsgBoxYesNoOSX(const char* title, const char* message){}
 #endif
 
 //
@@ -404,7 +408,7 @@ osg::Texture2D* hogbox::LoadTexture2DDialog()
 	//accuire the apps path
 	GetWorkingDirectory(MAX_PATH, appRoot);
 	
-	osg::Image* image = osgDB::readImageFile(OpenPlatformFileDialog(OPEN_IMAGE_STRING_WIN, "All"));
+	osg::Image* image = NULL;//osgDB::readImageFile(OpenPlatformFileDialog(OPEN_IMAGE_STRING_WIN, "All"));
 	if(image==NULL)
 	{
 //	cout<< "Error could not load image file from dialog" << endl;
@@ -430,7 +434,7 @@ osg::Image* hogbox::LoadImageDialog()
 	//accuire the apps path
 	GetWorkingDirectory(MAX_PATH, appRoot);
 	
-	osg::Image* image = osgDB::readImageFile(OpenPlatformFileDialog(OPEN_IMAGE_STRING_WIN, "All"));
+	osg::Image* image = NULL;//osgDB::readImageFile(OpenPlatformFileDialog(OPEN_IMAGE_STRING_WIN, "All"));
 	
 	SetWorkingDirectory(appRoot);
 	delete [] appRoot;

@@ -7,7 +7,7 @@
 using namespace hogbox;
 
 HogBoxNotifyHandler::HogBoxNotifyHandler(const std::string& outputFileName)
-		: osg::WinDebugNotifyHandler()
+		: PlatformNotifyHandler()
 {
 	m_outputFile.open(outputFileName.c_str());
 	if(m_outputFile.is_open())
@@ -60,10 +60,10 @@ void HogBoxNotifyHandler::notify(osg::NotifySeverity severity, const char *messa
 		m_outputFile << "<PRE " << CreateHtmlStyleString(severity) << ">" << message << "</PRE>" << std::endl;
 	
 		//if file failed to open, then use the standard handler
-		osg::WinDebugNotifyHandler::notify(severity, message);
+		PlatformNotifyHandler::notify(severity, message);
 	}else{
 		//if file failed to open, then use the standard handler
-		osg::WinDebugNotifyHandler::notify(severity, message);
+		PlatformNotifyHandler::notify(severity, message);
 	}
 }
 

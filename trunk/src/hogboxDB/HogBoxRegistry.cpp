@@ -165,7 +165,7 @@ std::string HogBoxRegistry::CreateXmlLibraryNameForClassType(const std::string& 
 #elif macintosh
     return prepend+"hogboxxml_"+lowercase_classtype;
 #else
-    return prepend+"hogboxxml_"+lowercase_classtype+ADDQUOTES(OSG_PLUGIN_EXTENSION);
+    return prepend+"hogboxxml_"+lowercase_classtype+".so";//ADDQUOTES(OSG_PLUGIN_EXTENSION);
 #endif
 
 }

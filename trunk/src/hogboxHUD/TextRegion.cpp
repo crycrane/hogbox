@@ -107,7 +107,7 @@ bool TextRegion::LoadAssest(const std::string& folderName)
 			this->SetFontType(dirCont[i]);
 		}
 	}
-	return true;
+	return ret;
 }
 
 //

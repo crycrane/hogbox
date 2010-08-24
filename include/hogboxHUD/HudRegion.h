@@ -20,6 +20,8 @@ typedef unsigned int InheritanceMask;
 #define	INHERIT_SIZE			0x00000004
 #define INHERIT_ALL_TRANSFORMS (INHERIT_POSITION|INHERIT_ROTATION|INHERIT_SIZE)
 
+class HudRegion;
+typedef osg::ref_ptr<HudRegion> HudRegionPtr;	
 
 //
 //Base hud region
@@ -38,7 +40,7 @@ public:
 
 	META_Box(hogboxHUD,HudRegion);
 
-	typedef std::vector<osg::ref_ptr<HudRegion>> HudRegionList;
+	typedef std::vector<HudRegionPtr> HudRegionList;
 
 	//load assets, set size and position, then apply the names to any geodes for picking
 	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName);

@@ -48,9 +48,9 @@ namespace hogboxDB {
 		//ghandler = pointer to the classes get funtion
 		//shandler = pointer to the classes set function
 		CallbackXmlClassPointer(C *object, 
-			GetPtrHandler ghandler = 0,
-			SetPtrHandler shandler = 0) : 
-			mp_object(object),
+								GetPtrHandler ghandler = 0,
+								SetPtrHandler shandler = 0) 
+			: mp_object(object),
 			f_getptrhandler(ghandler),			
 			f_setptrhandler(shandler)
 		{

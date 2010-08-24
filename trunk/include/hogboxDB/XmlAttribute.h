@@ -4,6 +4,8 @@
 #include <iostream>
 #include <osgDB/XmlParser>
 
+#include <hogboxDB/XmlUtils.h>
+
 #include <osg/Referenced>
 #include <osg/ref_ptr>
 

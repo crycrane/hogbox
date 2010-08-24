@@ -27,11 +27,13 @@ namespace hogboxDB {
 		
 		//write into passed names contents
 		inline virtual bool serialize(osgDB::XmlNode*) 
-		{			
+		{
+			return false;
 		}
 		//read from the passed contents
 		inline virtual bool deserialize(osgDB::XmlNode*) 
-		{			
+		{
+			return false;
 		}
 	
 	protected:

@@ -11,11 +11,17 @@
 
 namespace hogbox {
 
+#ifdef _WIN32
+	typedef osg::WinDebugNotifyHandler PlatformNotifyHandler;
+#else
+	typedef osg::StandardNotifyHandler PlatformNotifyHandler;
+#endif
+	
 //
 //Redirects notify stream to a html file adding html color formating etc
 //for each notify level. If we fail to create the m_outputFile stream then
 //the StandardNotifyHandler handler is used
-class HOGBOX_EXPORT HogBoxNotifyHandler : public osg::WinDebugNotifyHandler
+class HOGBOX_EXPORT HogBoxNotifyHandler : public PlatformNotifyHandler
 {
 public:
 	HogBoxNotifyHandler(const std::string& outputFileName="./Data/MessageLog.html");

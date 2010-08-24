@@ -15,8 +15,14 @@
 #include <hogboxDB/XmlClassManagerWrapper.h>
 #include <osgDB/DynamicLibrary>
 
+extern "C"
+{
+	typedef void (* CPluginFunction) (void);
+}
+
 namespace hogboxDB {
 
+	
 //
 //HogBoxRegistry
 //Currently tracks all XmlNodeManger types registered for
@@ -109,14 +115,27 @@ protected:
 	
 };
 
+struct PluginFunctionProxy
+{
+	PluginFunctionProxy(CPluginFunction function) { (function)(); }
+};
+	
+#define USE_HOGBOXPLUGIN(ext) \
+extern "C" void osgdb_##ext(void); \
+static hogboxDB::PluginFunctionProxy proxy_##ext(osgdb_##ext);
+	
 //
 //Register a new XmlClassManager type plugin 
 //classname is the base classtype the plugin can handle, other types
 //plugin is an implementation of XmlClassManager
 #define REGISTER_HOGBOXPLUGIN(ext, classname) \
 	extern "C" void hogboxdb_##ext(void) {} \
-	static hogboxDB::XmlNodeManagerRegistryProxy g_proxy_##ext(new (##classname), #classname );
+	static hogboxDB::XmlNodeManagerRegistryProxy g_proxy_##ext(new classname , "##ext" );
 
+#define REGISTER_OSGPLUGIN(ext, classname) \
+extern "C" void osgdb_##ext(void) {} \
+static osgDB::RegisterReaderWriterProxy<classname> g_proxy_##classname;
+	
 
 }; //end hogboxDB namespace
 	

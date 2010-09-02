@@ -57,12 +57,26 @@ public:
 			osg::Node* fileNode = osgDB::readNodeFile(_fileName);
 
 			//check it loaded ok
-			if(fileNode){
-				//add the node to our base group
-				group->addChild(fileNode);
-			}else{
+			if(!fileNode)
+			{
+				//if not try using findDataFile
 				osg::notify(osg::WARN) << "XML ERROR: Loading node file '" << _fileName << "', for Node '" << group->getName() << "'." << std::endl;
+				std::string tryFileName = osgDB::findDataFile( _fileName );
+				
+				if(!tryFileName.empty()){
+					osg::notify(osg::WARN) << "           Found Alternative file'" << tryFileName << "', attempting to load," << std::endl;
+					fileNode = osgDB::readNodeFile(tryFileName);
+					if(!fileNode){return false;}
+					_fileName = tryFileName;
+				}else{
+					return false;
+				}
+				
+				//
+				osg::notify(osg::NOTICE) << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
 			}
+			//add the node to our base group
+			group->addChild(fileNode);
 		}
 		return true;
 	}

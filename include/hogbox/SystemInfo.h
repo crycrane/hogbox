@@ -15,7 +15,17 @@
 #include <iostream>
 
 namespace hogbox {
-
+	
+//Need to define GL_STENCIL and GL_STEREO an IPhone
+#if defined( __APPLE__ )
+	
+	#include "TargetConditionals.h"
+	#if (TARGET_OS_IPHONE) || (TARGET_IPHONE_SIMULATOR) //only when on device
+		#define GL_STENCIL 1
+		#define GL_STEREO 1
+	#endif
+#endif
+	
 //
 //Gathers infomation on avaliable dedicated video memory (currently nvidia only)
 //

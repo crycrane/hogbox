@@ -12,7 +12,7 @@
 	#if (TARGET_OS_IPHONE)
 		#include <osgViewer/api/IPhone/GraphicsWindowIPhone> 
 		#define HWND unsigned long
-		USE_GRAPHICSWINDOW()
+		//USE_GRAPHICSWINDOW()
 	#else
 		#include <osgViewer/api/Carbon/GraphicsWindowCarbon> 
 		#define HWND unsigned long

@@ -57,29 +57,6 @@ protected:
 		return xmlWrapper;
 	}
 
-
-	//
-	//Handles the childnodes/members of this object, this func is feed
-	//ReadObjectFromXmlNodeImplementation as it iterates over each child of this
-	//object xml representation
-	bool ParseMemberNode(osg::ref_ptr<osgDB::XmlNode> memberNode, osg::Group* nodeGroup)
-	{
-		//can't pass members if object isn't already alocated
-		if(!nodeGroup){return false;}
-
-		//filename used to load an osg supported file into the group
-		if(memberNode->name=="File")
-		{
-			osg::ref_ptr<osg::Node> file = osgDB::readRefNodeFile(memberNode->contents);
-			if(file)
-			{
-				nodeGroup->addChild(file);
-				return true;
-			}
-		}
-		return false;
-	}
-
 };
 
 //

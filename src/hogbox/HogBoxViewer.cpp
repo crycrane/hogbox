@@ -349,6 +349,7 @@ bool HogBoxViewer::CreateAppWindow()
 		m_viewer->getCamera()->setGraphicsContext(m_graphicsContext.get());
 		m_viewer->getCamera()->setViewport(0,0,m_winSize.x(),m_winSize.y());
 		m_viewer->getCamera()->setClearColor(m_clearColor);
+		
 		//also bind our buffer image if rendering offscreen
 		if(m_bRenderOffscreen)
 		{
@@ -365,6 +366,9 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 		m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
 		m_graphicsContext->setResizedCallback(m_resizeCallback);
+		
+		//force a resize to acount for the initial state
+		m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
 	
 		// set the scene to render
 		//check a scene has been set

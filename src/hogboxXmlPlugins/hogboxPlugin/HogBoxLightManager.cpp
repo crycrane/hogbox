@@ -60,5 +60,5 @@ protected:
 //
 //Will register the xml mamager plugin with the hogbox registry automatically
 //then this dll is loaded
-REGISTER_HOGBOXPLUGIN( hogboxlight, HogBoxLightManager )
+REGISTER_HOGBOXPLUGIN( HogBoxLight, HogBoxLightManager )
 

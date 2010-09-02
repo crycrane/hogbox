@@ -44,7 +44,8 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
 	{
 		osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
 							   << "                                        The file does not exists." << std::endl;
-		return false;
+		//IPHONE_PORT@tom osgDB::fileExists needs fixing on iphone by the look of things
+		//return false;
 	}
 
 	//allocate the document node

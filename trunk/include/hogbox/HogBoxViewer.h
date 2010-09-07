@@ -11,7 +11,7 @@
 	#include <TargetConditionals.h>
 	#if (TARGET_OS_IPHONE)
 		#include <osgViewer/api/IPhone/GraphicsWindowIPhone> 
-		#define HWND unsigned long
+		#define HWND UIWindow*
 		//USE_GRAPHICSWINDOW()
 	#else
 		#include <osgViewer/api/Carbon/GraphicsWindowCarbon> 

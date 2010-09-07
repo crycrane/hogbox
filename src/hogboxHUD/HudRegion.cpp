@@ -5,6 +5,7 @@
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
 #include <hogbox/HogBoxUtils.h>
+#include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogboxHUD;
 
@@ -18,7 +19,12 @@ HudRegion::HudRegion(bool isProcedural)
 	m_transformInheritMask(INHERIT_ALL_TRANSFORMS),
 	m_visible(true),
 	m_stateChanged(false),
-	m_depth(-0.5f)
+	m_depth(-0.5f),
+	//Create our callbacks
+	m_onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
+	m_onMouseUpEvent(new CallbackEvent(this, "OnMouseUp")),
+	m_onMouseMoveEvent(new CallbackEvent(this, "OnMouseMove")),
+	m_onMouseDragEvent(new CallbackEvent(this, "OnMouseDrag"))
 {
 
 	m_root = new osg::MatrixTransform(osg::Matrix::identity());
@@ -124,17 +130,71 @@ osg::MatrixTransform* HudRegion::GetRegion()
 //
 // 0 not used, 1 used by this, 2 used by child
 //
-int HudRegion::Event(const std::string ID, CHudEvent hudEvent)
+int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	int ret = 0;
-
-	//check if the event is for this
-	if(hudEvent.GetID().compare(this->getName())==0)
-	{ret = 1;}
-
-	//see if the children want to use it
-	if(CheckChildEvents(ID, hudEvent) == true)
-	{ret = 2;}
+	
+	//check for basic event and inform our callbacks if detected
+	osg::notify(osg::WARN) << "EVENT" << std::endl;
+	//handle the event type
+    switch(hudEvent.GetInputState()->getEventType())
+    {
+		//key is pressed down
+		case(osgGA::GUIEventAdapter::KEYDOWN):
+        {
+			break;
+        }
+			
+		//key released
+		case(osgGA::GUIEventAdapter::KEYUP):
+        {
+			break;
+		}
+			
+		//mouse moving
+		case(osgGA::GUIEventAdapter::MOVE):
+        {
+			//trigger our onMouseDown event
+			m_onMouseMoveEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE MOVE" << std::endl;
+			break;
+		}
+			
+		//mouse drag (moving with button held)
+		case(osgGA::GUIEventAdapter::DRAG):
+        {
+			//trigger our onMouseDrag event
+			m_onMouseDragEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE DRAG" << std::endl;
+			break;
+        } 
+			
+		//mouse down
+		case(osgGA::GUIEventAdapter::PUSH):
+		{
+			//trigger our onMouseDown event
+			m_onMouseDownEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE DOWN" << std::endl;
+			break;
+		}
+			
+		//mouse up
+		case(osgGA::GUIEventAdapter::RELEASE):
+        {
+			//trigger our onMouseUp event
+			m_onMouseUpEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE UP" << std::endl;
+			break;
+        } 
+			
+		//double click do down and up
+		case(osgGA::GUIEventAdapter::DOUBLECLICK):
+        {
+			break;
+        } 
+		default:break;
+	}
+	//hudEvent
 
 	return ret;
 }
@@ -175,13 +235,13 @@ bool HudRegion::IsChild(const std::string& uniqueID)
 // example, a diloag region passes to it button to animate the button
 // returns true if used by one of the children
 //
-bool HudRegion::CheckChildEvents(const std::string ID, CHudEvent hudEvent)
+bool HudRegion::HandleChildEvents(HudInputEvent& hudEvent)
 {
 	bool l_ret=false;
 	//loop through all the children
 	for(unsigned int i=0; i<m_p_children.size(); i++)
 	{
-		if( m_p_children[i]->Event(ID, hudEvent) != 0)
+		if( m_p_children[i]->HandleInputEvent(hudEvent) != 0)
 		{l_ret = true;}
 	}
 	return l_ret;
@@ -221,12 +281,20 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 	}
 
 	//now try to load a base texture
-	std::string baseTextureFile = folderName+"/base.png";
-	if(osgDB::fileExists(baseTextureFile) )
+	std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png" );
+	if(baseTextureFile.empty()){baseTextureFile = osgDB::findDataFile( folderName+"/base.bmp" );}
+	//if(osgDB::fileExists(baseTextureFile) )
 	{
 		m_baseTexture = hogbox::LoadTexture2D(baseTextureFile);
-		//apply the base as default
-		this->ApplyTexture(m_baseTexture.get());
+		if(m_baseTexture.get())
+		{
+            m_baseTexture->setFilter(osg::Texture::MIN_FILTER,osg::Texture::LINEAR);
+            m_baseTexture->setFilter(osg::Texture::MAG_FILTER,osg::Texture::LINEAR);
+            m_baseTexture->setResizeNonPowerOfTwoHint(false);
+			
+			//apply the base as default
+			this->ApplyTexture(m_baseTexture.get());
+		}
 	}
 
 	//rollover
@@ -243,8 +311,8 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 void HudRegion::setName(const std::string& name)
 {
 	m_region->setName(name); 
-	hogbox::RenameGeodes(m_root.get(), name);
 	osg::Object::setName(name);
+	MakeHudGeodes(m_region.get(), this);
 }
 
 //positioning
@@ -390,12 +458,12 @@ void HudRegion::ApplyTexture(osg::Texture* tex)
 	osg::StateSet* stateset = m_region->getOrCreateStateSet();
 	stateset->setTextureAttributeAndModes(0,tex,osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 	
+	//NOTE@tom, below isn't needed on platforms supporting glu
+	//apply a non power of two rezie callback if require
+	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, stateset);
 	//if the texture casts as a rect apply the tex rect scaling to texture coords
-	osg::TextureRectangle* texRect = dynamic_cast<osg::TextureRectangle*> (tex); 
-	osg::TexMat* texMat = new osg::TexMat();
-	stateset->setTextureAttributeAndModes(0, texMat, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
-	if(tex != NULL)
-	{texMat->setScaleByTextureRectangleSize(true); }
+	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
+	if(tex2D){if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}}
 }
 
 void HudRegion::ApplyBaseTexture()
@@ -585,5 +653,50 @@ void HudRegion::SetChildrenList(const HudRegionList& list)
 	for(unsigned int i=0; i<list.size(); i++)
 	{
 		this->AddChild(list[i]);
+	}
+}
+
+
+//
+//Funcs to register event callbacks
+void HudRegion::AddOnMouseDownCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseDownEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnMouseUpCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseUpEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnMouseMoveCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseMoveEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnMouseDragCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseDragEvent->AddCallbackReceiver(callback);
+}
+
+
+//helper func to rename geodes and attach user data
+void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegion* region)
+{
+	//find geomtry in geodes
+	if(dynamic_cast<osg::Geode*> (node))
+	{
+		//loop all geometry nodes
+		osg::Geode* geode = static_cast<osg::Geode*> (node);
+		geode->setName(region->getName()) ;
+		geode->setUserData(region);
+	}
+	
+	// Traverse any group node
+	if(dynamic_cast<osg::Group*> (node))
+	{
+		osg::Group* group = static_cast<osg::Group*> (node);
+		for(unsigned int i=0; i < group->getNumChildren(); i++)
+		{	hogboxHUD::MakeHudGeodes(group->getChild(i), region);}
 	}
 }

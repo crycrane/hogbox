@@ -6,9 +6,7 @@ using namespace hogboxHUD;
 
 HudInputHandler::HudInputHandler(osgViewer::Viewer* sceneView, osg::Vec2 hudDimensions):
 																		_sceneView(sceneView),
-																		_mx(0.0),_my(0.0),
-																		_done(false),
-																		m_ctrl(false),
+																		p_focusRegion(NULL),
 																		m_hudDimensions(hudDimensions)
 {
 	
@@ -24,7 +22,7 @@ HudInputHandler::~HudInputHandler()
 //
 bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAdapter&)
 {
-
+	m_inputState.SetEvent(ea, m_hudDimensions);//, m_ctrl);
 	//handle the event type
     switch(ea.getEventType())
     {
@@ -32,26 +30,13 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		//key is pressed down
 		case(osgGA::GUIEventAdapter::KEYDOWN):
         {
-
-			//set done to true if escape is pressed
-			//if(ea.getKey()==osgGA::GUIEventAdapter::KEY_Escape)
-			//{return true;}
-
 			//add the key to our list of pressed keys for the frame
-			m_vPressedKeys.push_back(ea.getKey());
-			
+			m_inputState.PressKey(ea.getKey());			
 			//add to held keys
-			PressHeldKey(ea.getKey()); 
+			m_inputState.PressHeldKey(ea.getKey()); 
 
-			//pass the key down event to the hud
-			CHudEvent hE;
-			hE.SetEvent("KEYDOWN", KDOWN, osg::Vec2(ea.getX(),ea.getY()), 
-											osg::Vec2(0,0), 
-											ea.getButton(), 
-											ea.getKey(),
-											osg::Vec2(ea.getWindowWidth(), ea.getWindowHeight()),
-											m_hudDimensions);//, m_ctrl);
-			return HogBoxHud::Instance()->Event("KEYDOWN", hE);
+			//pass key press to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 
         }
 
@@ -59,17 +44,10 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::KEYUP):
         {
 			//remove key from held list
-			ReleaseHeldKey(ea.getKey());
+			m_inputState.ReleaseHeldKey(ea.getKey());
 
-			//pass key up event to basic hud
-			CHudEvent hE;
-			hE.SetEvent("KEYUP", KUP, osg::Vec2(ea.getX(),ea.getY()), 
-										osg::Vec2(0,0), 
-										ea.getButton(), 
-										ea.getKey(),
-										osg::Vec2(ea.getWindowWidth(), ea.getWindowHeight()),
-										m_hudDimensions);//, m_ctrl);
-			return HogBoxHud::Instance()->Event("KEYUP", hE);
+			//pass key press to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 		}
 
 		//mouse moving
@@ -77,23 +55,15 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			//
 			pick(ea,2); //hover check
-            _mx = ea.getX();
-            _my = ea.getY();
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
             return false;
 		}
 
 		//mouse drag (moving with button held)
 		case(osgGA::GUIEventAdapter::DRAG):
         {
-			//pass the selected event to hud, 
-			CHudEvent hE;
-			hE.SetEvent("SELECTED", DRAG, osg::Vec2(ea.getX(),ea.getY()), 
-											osg::Vec2(0,0), 
-											ea.getButton(), 
-											ea.getKey(),
-											osg::Vec2(ea.getWindowWidth(), ea.getWindowHeight()),
-											m_hudDimensions);
-			HogBoxHud::Instance()->Event("SELECTED", hE);
+			//pass drag to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
         } 
 
@@ -101,9 +71,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::PUSH):
 		{
 			pick(ea,0);//MDOWN
-			_mx = ea.getX();
-			_my = ea.getY();
-			_mbutton = 1;
+			//pass mouse down to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
 		}
 	
@@ -111,9 +80,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::RELEASE):
         {
 			pick(ea,1); //MUP
-			_mbutton = 0; 
-			_mx = ea.getX();
-			_my = ea.getY();
+			//pass mouse up to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
         } 
 
@@ -122,13 +90,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			pick(ea,0);//down
 			pick(ea,1);//up 
-
-			_mbutton |= (1<<(ea.getButton()-1));
-			_mbutton &= ~(1<<(ea.getButton()-1));
-
-			_mx = ea.getX();
-			_my = ea.getY();
-			return true;
+			//pass double click to our infoucs region
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			return false;
         } 
 
         default:
@@ -141,7 +105,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 //mouse coords stored in ea,
 //mode is mouse click mode 0 MUP, 1 MDOWN, 2 HOVER
 //
-void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, int mode, bool hudPick) //mode 0 = push, 1=release, 2 = double click
+void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mode 0 = push, 1=release, 2 = double click
 {
 	//select the sub graph to pick from based on hudPick
 	osg::Node* scene = NULL;
@@ -199,58 +163,35 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, int mode, bool hudP
 		{
 			//successfully picked a node so store it then pass its name down to the basic hud system
 			m_clickObject = node;
-			if(PushBasicHudEvent(mode, node->getName(), mCoords, mChange, ea.getButton(), ea.getKey(), ea))
-			{return;}
+			//check if the node has user data
+			HudRegion* geodeRegion = dynamic_cast<HudRegion*> (node->getUserData());
+			if(geodeRegion)
+			{
+				p_focusRegion = geodeRegion;
+			}
 
 		}else{
 
 			//picked a bad node or node has no name thus can't be used in the basic hud
 			//pass none event to basic hud for resets
-			PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
+			//PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
 			
 			//if no node was picked and we were picking for hud objects
 			//try again for models
-			if(hudPick)
-			{pick(ea, mode, false);}
+			//if(hudPick)
+			//{pick(ea, mode, false);}
 		}
 
 	
 	}else{ //no node picked
 
 		//nothing was picked so pass the NONE to the basic hud for resets
-		PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
+		//PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
 
 		//if no node was picked and we were picking for hud objects
 		//try again for models
-		if(hudPick)
-		{pick(ea, mode, false);}
+		//if(hudPick)
+		//{pick(ea, mode, false);}
 	}
 }
 
-
-//
-//Helper to pass events down to the basic hud
-//
-bool HudInputHandler::PushBasicHudEvent(int osgType, std::string nodeName, osg::Vec2 mCoords, 
-											  osg::Vec2 mChange, int mButton, int key,
-											  const osgGA::GUIEventAdapter& ea)
-{
-	//determin the event type
-	EVENT_TYPE type;
-	CHudEvent hEvent;
-	
-	switch(osgType)
-	{
-		case 0: type = MDOWN;break;
-		case 1: type = MUP;break;
-		case 2: type = HOVER;break;
-		default: type = HOVER;break;
-	}
-
-	m_currentEventType = type;
-	hEvent.SetEvent(nodeName, type, mCoords, mChange, mButton, key,
-					osg::Vec2(ea.getWindowWidth(), ea.getWindowHeight()),
-					m_hudDimensions);
-	//pass the event, if it gets used then return as we dont want to select stuff aswell
-	return HogBoxHud::Instance()->Event(nodeName, hEvent);
-}

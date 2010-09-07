@@ -27,7 +27,7 @@ public:
 	//the ortho matrix is made at screenSize
 	osg::Node* Create(osg::Vec2 screenSize);
 
-	bool Event(const std::string ID, CHudEvent hudEvent);
+	bool HandleInputEvent(HudInputEvent& hudEvent);
 	osg::Node* GetHudNode(){return dynamic_cast<osg::Node*> (m_camera.get());}
 
 	//add a region to our hud

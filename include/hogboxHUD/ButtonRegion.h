@@ -25,7 +25,7 @@ public:
 	//
 	//Detects mouse down and flags is pressed state,
 	//also swaps to the mouse down texture if one is present
-	virtual int Event(const std::string ID, CHudEvent hudEvent);
+	virtual int HandleInputEvent(HudInputEvent& hudEvent);
 
 	//
 	//Button region loads the aditional assests

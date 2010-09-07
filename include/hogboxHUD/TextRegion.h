@@ -29,7 +29,8 @@ public:
 	META_Box(hogboxHUD,TextRegion);
 
 	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight = 18.0f);
-	virtual int Event(const std::string ID, CHudEvent hudEvent);
+	
+	virtual int HandleInputEvent(HudInputEvent& hudEvent);
 
 	//
 	//Text region loads the aditional assests

@@ -314,7 +314,7 @@ const bool& TextRegion::isUsingDropShadow() const
 }
 
 
-int TextRegion::Event(const std::string ID, CHudEvent hudEvent)
+int TextRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {
-	return HudRegion::Event(ID, hudEvent); 
+	return HudRegion::HandleInputEvent(hudEvent); 
 }

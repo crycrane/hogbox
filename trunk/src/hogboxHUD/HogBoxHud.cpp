@@ -73,23 +73,16 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 //
 // Pass an input event to all attached regions
 //
-bool HogBoxHud::Event(const std::string ID, CHudEvent hudEvent)
+bool HogBoxHud::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	bool ret=false;
 
 	//loop all attached
 	for(unsigned int i=0; i<m_regions.size(); i++)
 	{
-		if(m_regions[i]->Event(ID, hudEvent)>0)
+		if(m_regions[i]->HandleInputEvent(hudEvent)>0)
 		{ret = true;}
 	}
-
-	//? why did I do this, need to test out, but can't see a need
-	for(unsigned int i=0; i<m_regions.size(); i++)
-	{
-		if(m_regions[i]->IsChild(ID))
-		{return true;}
-	} 
 	return false;
 }
 

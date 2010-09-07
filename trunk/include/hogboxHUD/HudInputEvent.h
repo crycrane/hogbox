@@ -1,93 +1,155 @@
 #pragma once
 
 #include <hogboxHUD/Export.h>
+#include <osgGA/GUIEventHandler>
 
-#include <osg/Geode>
-#include <osg/MatrixTransform>
-
-#include <iostream>
-#include <string>
-#include <vector>
+#include <deque>
 
 namespace hogboxHUD {
 
-enum EVENT_TYPE
-{
-	CLICK,	//MOUSE CLICK
-	MDOWN,	//MOUSE BUTTON DOWN
-	MUP,	//MOUSE BUTTON UP
-	DRAG,	//DRAG WITH MOUSE BUTTON DOWN
-	HOVER,
-	PRESS,	//KEY PRESSED
-	KDOWN,	//KEYBOARD KEY DOWN
-	KUP,
-	NEW_MARKER,
-	OBJ_CHANGE,
-	MARKER_CLICK,
-	MARKER_SHAKE
-};
-
-
-class HOGBOXHUD_EXPORT CHudEvent
+//
+//An input event contains the osgGA input state
+//as well as the state of the HogBoxHud and Window etc
+//Can also be used to track the state over time to get mouse velocities etc
+//
+class HOGBOXHUD_EXPORT HudInputEvent
 {
 public:
 
-	CHudEvent(void)
+	HudInputEvent(void)
 	{
+		m_osgInputEvent = NULL;
 		m_mouseCoords=osg::Vec2(0,0);
 		m_preMouseCoords=osg::Vec2(0,0); 
 		m_mouseChange=osg::Vec2(0,0);
 		m_button=0;
 		m_key=0;
 	}
-	~CHudEvent(void){}
+	~HudInputEvent(void){}
 
-	//id of the item the HUDREGION that has recived 
-	//a user input
-	std::string m_ID;
-	EVENT_TYPE m_EventType;
-
-	osg::Vec2 m_mouseCoords;
-	osg::Vec2 m_preMouseCoords;
-	osg::Vec2 m_mouseChange;
-
-	//window dimensions 
-	osg::Vec2 m_winDimensions;
-	//hud dimensions
-	osg::Vec2 m_hudDimensions;
-
-	//which mouse button is being pressed
-	int m_button;
-	int m_key;
-
-	void SetEvent(	const std::string id, EVENT_TYPE eT, 
-					osg::Vec2 mouseCoords, osg::Vec2 mouseChange, 
-					int button, int key,
-					osg::Vec2 winDimensions,
-					osg::Vec2 hudDimensions)
+	//
+	//Set the current state from the osgInput system
+	//
+	void SetEvent(const osgGA::GUIEventAdapter& osgInputEvent, osg::Vec2 hudSize)
 	{
-		m_ID = id;
-		m_EventType = eT;
+		m_osgInputEvent = NULL;
+		m_osgInputEvent = new osgGA::GUIEventAdapter(osgInputEvent);
+		
+		m_button = osgInputEvent.getButton();
+		m_key = osgInputEvent.getKey();
+		
+		//tack previous states
+		m_preMouseCoords = m_mouseCoords;
+		
+		//set mouse coords
+		m_mouseCoords = osg::Vec2(osgInputEvent.getX(),osgInputEvent.getY());
+		m_mouseChange = m_mouseCoords - m_preMouseCoords;
 
-		m_preMouseCoords=m_mouseCoords;
-		m_mouseCoords=mouseCoords;
-		m_mouseChange=mouseChange;
-
-		m_winDimensions = winDimensions;
-		m_hudDimensions = hudDimensions;
-
-		m_key=key;
-		m_button=button;
+		//store window dimensions
+		m_winDimensions = osg::Vec2(osgInputEvent.getWindowWidth(), osgInputEvent.getWindowHeight());
+		m_hudDimensions = hudSize;
 	}
+	
+	//get the actual osgGA event that set this state
+	osgGA::GUIEventAdapter* GetInputState(){return m_osgInputEvent.get();}
 
-
-//FUNCTIONS
-	std::string GetID(){return m_ID;}
-	EVENT_TYPE GetEventType(){return m_EventType;}
+	//keyboard
+	
+	//
+	//return the list of currently held keys
+	std::deque<int> GetHeldKeys()
+	{return m_vHeldKeys;}
+	
+	//
+	//if the key is held return index of key, else return -1
+	int IsKeyHeld(int key, bool checkCaps = false)
+	{
+		for(unsigned int i=0; i<m_vHeldKeys.size(); i++)
+		{
+			if(m_vHeldKeys[i] == key)
+			{return i;}
+		}
+		//also check for upper/lower case keys
+		if(checkCaps)
+		{
+			//looking for A-Z
+			if( (key >= (int)65) && (key <= (int)90) )
+			{
+				//try lower
+				int lowerKey = key + 32;
+				return IsKeyHeld(lowerKey);
+			}else if( (key >= 97) && (key<= 122))//looking a-z
+			{
+				//try upper
+				int upperKey = key - 32;
+				return IsKeyHeld(upperKey);
+			}else{
+				
+			}
+		}
+		return-1;
+	}
+	
+	//
+	// Press down a held key, adding to the list if it doesn't already exist
+	// returns true if is a new press
+	bool PressHeldKey(int key)
+	{
+		int index =  IsKeyHeld(key);
+		if(index>=0)
+		{return false;}
+		
+		m_vHeldKeys.push_back(key);
+		return true;
+	}
+	
+	//
+	//removes the key from the held list if it exists
+	bool ReleaseHeldKey(int key)
+	{
+		int index = IsKeyHeld(key);
+		if(index>=0)
+		{
+			m_vHeldKeys.erase( m_vHeldKeys.begin()+index);
+			return true;
+		}
+		return false;
+	}
+	
+	void PressKey(int key)
+	{m_vPressedKeys.push_back(key);}
+		
+	
+	//
+	//simple pressed keys
+	//check if a specific key is pressed
+	bool IsKeyPressed(int key)
+	{
+		for(int i=0; i<(int)m_vPressedKeys.size();i++)
+		{
+			if(m_vPressedKeys[i] == key){return true;}
+		}
+		return false;
+	}
+	
+	//
+	//reset the pressed keys at the end of a frame
+	void ResetPressedKeys()
+	{m_vPressedKeys.clear(); }
+	
+	//
+	//return the list of currently pressed keys
+	std::vector<int> GetPressedKeys()
+	{return m_vPressedKeys;}
+	
+	
+	//get event button/key
+	int GetButton(){return m_button;}
+	int GetKey(){return m_key;}
 
 	//mouse atts
 	osg::Vec2 GetMouseCoords(){return m_mouseCoords;}
-	//het mouse coords in hudspace, bottom left being 0,0
+	//get mouse coords in hudspace, bottom left being 0,0
 	osg::Vec2 GetHudSpaceMouseCoords()
 	{
 		float sX = m_hudDimensions.x()*(m_mouseCoords.x()/m_winDimensions.x());
@@ -96,10 +158,31 @@ public:
 	}
 
 	osg::Vec2 GetMouseChange(){return m_mouseChange;}
-	int GetButton(){return m_button;}
 	
-	//keyboard ats
-	int GetKey(){return m_key;}
+	
+protected:
+	
+	osg::ref_ptr<osgGA::GUIEventAdapter> m_osgInputEvent;
+	
+	//which mouse button is being pressed
+	int m_button;
+	int m_key;
+	
+	//list of keys press, lasts a single frame, before they are reset
+	std::vector<int> m_vPressedKeys;
+	
+	//list of key being held down, key will remain in list
+	//until it is released
+	std::deque<int> m_vHeldKeys;
+	
+	osg::Vec2 m_mouseCoords;
+	osg::Vec2 m_preMouseCoords;
+	osg::Vec2 m_mouseChange;
+	
+	//window dimensions 
+	osg::Vec2 m_winDimensions;
+	//hud dimensions
+	osg::Vec2 m_hudDimensions;
 
 };
 

@@ -16,6 +16,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/HudRegion.h
     ${HEADER_PATH}/OsgInput.h
     ${HEADER_PATH}/TextRegion.h
+    ${HEADER_PATH}/HudEventCallback.h
 )
 
 # FIXME: For OS X, need flag for Framework or dylib

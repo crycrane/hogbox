@@ -8,6 +8,7 @@
 #include<osg/Texture2D>
 
 #include <hogboxHUD/HudInputEvent.h>
+#include <hogboxHUD/HudEventCallback.h>
 
 namespace hogboxHUD {
 
@@ -23,6 +24,10 @@ typedef unsigned int InheritanceMask;
 class HudRegion;
 typedef osg::ref_ptr<HudRegion> HudRegionPtr;	
 
+//helper func to rename geodes and attach user data
+extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* graph, HudRegion* region);
+
+	
 //
 //Base hud region
 //
@@ -64,13 +69,15 @@ public:
 	void SetParent(HudRegion* parent){m_p_parent=parent;}
 	HudRegion* GetParent(){return m_p_parent;}
 
+	//Events
+	
 	//Handle a hud event passed by the picker, i.e. mouse click, key press
-	//ID is the name of the object clicked, hudEvent contains the infomation
-	//about the click/key etc. Also passes event down to children
-	virtual int Event(const std::string ID, CHudEvent hudEvent);//  = 0;
+	//geodeID is the name of the geode picked in the hud
+	virtual int HandleInputEvent(HudInputEvent& hudEvent);//  = 0;
 	//pass event on to child regions
-	bool CheckChildEvents(const std::string ID, CHudEvent hudEvent);
+	bool HandleChildEvents(HudInputEvent& hudEvent);
 
+	
 	//translation in hudspace, set position virtual
 	//to handle special cases
 	virtual void SetPosition(const osg::Vec2& corner);
@@ -162,6 +169,13 @@ public:
 	//Set will pass each list item through add child
 	HudRegionList GetChildrenList()const{return m_p_children;}
 	void SetChildrenList(const HudRegionList& list);
+	
+	//
+	//Funcs to register event callbacks
+	void AddOnMouseDownCallbackReceiver(HudEventCallback* callback);
+	void AddOnMouseUpCallbackReceiver(HudEventCallback* callback);
+	void AddOnMouseMoveCallbackReceiver(HudEventCallback* callback);
+	void AddOnMouseDragCallbackReceiver(HudEventCallback* callback);
 
 protected:
 
@@ -236,12 +250,27 @@ protected:
 	//regions attached to this one
 	HudRegionList m_p_children; 
 
-	//the material applied to the region
+	//the material applied to the region (should I just use HogBoxMaterial?)
 	osg::ref_ptr<osg::StateSet> m_stateset; 
 	osg::ref_ptr<osg::Material> m_material;
 	osg::Vec3 m_color;
 	float m_alpha;
 	bool m_alphaEnabled;
+	
+	//Callback system
+	
+	//base hud region handles a few basic hud callbacks
+	//OnMouseDown, called when mouse down/press event occurs in the region
+	//OnMouseUp, called when mouse up/release event occurs in the region
+	//OnMouseMove, called if mouse moves in the regions area
+	//OnMouseDrag, same as mouseMove only a mouse button is held down
+	//X OnMouseEnter, called when mouse first enters the regions area
+	//X OnMouseLeave, called when mouse leaves the area (input model will currently make this difficult to detect)
+	
+	osg::ref_ptr<CallbackEvent> m_onMouseDownEvent;
+	osg::ref_ptr<CallbackEvent> m_onMouseUpEvent;
+	osg::ref_ptr<CallbackEvent> m_onMouseMoveEvent;
+	osg::ref_ptr<CallbackEvent> m_onMouseDragEvent;
 };
 
 }; //end hogboxhud namespace

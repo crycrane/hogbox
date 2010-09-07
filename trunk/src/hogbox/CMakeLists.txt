@@ -19,6 +19,7 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/HogBoxViewer.h
 	${HEADER_PATH}/Noise.h
 	${HEADER_PATH}/SystemInfo.h
+	${HEADER_PATH}/NPOTResizeCallback.h
     ${hogbox_CONFIG_HEADER}
 )
 
@@ -34,6 +35,7 @@ ADD_LIBRARY(${LIB_NAME}
 	HogBoxViewer.cpp
 	Noise.cpp
 	SystemInfo.cpp
+	NPOTResizeCallback.cpp
     #${HOGBOX_VERSIONINFO_RC}
 )
 

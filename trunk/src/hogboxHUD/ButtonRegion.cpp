@@ -36,10 +36,11 @@ bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& f
 	return ret;
 }
 
-int ButtonRegion::Event(const std::string ID, CHudEvent hudEvent)
+int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {	
+	osg::notify(osg::WARN) << "CLICK LICK SLICK" << std::endl;
 	//check if the hud event is for this region
-	if(hudEvent.GetID().compare(this->getName())==0)
+/*	if(hudEvent.GetID().compare(this->getName())==0)
 	{
 		//if it was and it's a down mouse press and the region isn't diabled
 		if(hudEvent.GetEventType()== MDOWN)
@@ -78,8 +79,8 @@ int ButtonRegion::Event(const std::string ID, CHudEvent hudEvent)
 		if(m_baseTexture.valid())
 		{this->ApplyTexture(m_baseTexture.get());}
 	}
-
-	return TextRegion::Event(ID, hudEvent); 
+*/
+	return TextRegion::HandleInputEvent(hudEvent); 
 }
 
 //

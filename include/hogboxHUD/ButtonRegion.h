@@ -31,23 +31,37 @@ public:
 	//Button region loads the aditional assests
 	//mouseDown.png, used when the mouse is pressed down on the region
 	virtual bool LoadAssest(const std::string& folderName);
+	
+	//
+	//Funcs to register event callbacks
+	void AddOnButtonClickedCallbackReceiver(HudEventCallback* callback);
+	
+public:
+	
+	//these realy need to be protected, but the callback system wil need to be made a friend of this?
+	//receive the base callbacks to detect our button click event
+	void OnMouseDown(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseUp(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
 
-	bool IsPressed()
-	{	bool ret=m_isPressed;
-		m_isPressed=false;
-		return ret;
-	}
-
+	//detect for rollover and to disable a mouseDown when focus is lost
+	void OnMouseEnter(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseLeave(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
+	
 protected:
 
 	virtual ~ButtonRegion(void);
 
 protected:
 
-	bool m_isPressed;
+	//is the button currently held down (received mouseDown Event)
+	//if mouse up occurs while m_butonDown is true a ButtonClick Event is triggered
+	bool m_buttonDown;
 
 	//mouse down/pressed texture
 	osg::ref_ptr<osg::Texture> m_mouseDownTexture;
+	
+	//sent once a mouse down followed by a mouse up event is received by this region
+	osg::ref_ptr<CallbackEvent> m_onButtonClickedEvent;
 };
 
 typedef osg::ref_ptr<ButtonRegion> ButtonRegionPtr;

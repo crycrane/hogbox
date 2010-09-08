@@ -24,7 +24,13 @@ HudRegion::HudRegion(bool isProcedural)
 	m_onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
 	m_onMouseUpEvent(new CallbackEvent(this, "OnMouseUp")),
 	m_onMouseMoveEvent(new CallbackEvent(this, "OnMouseMove")),
-	m_onMouseDragEvent(new CallbackEvent(this, "OnMouseDrag"))
+	m_onMouseDragEvent(new CallbackEvent(this, "OnMouseDrag")),
+	m_onDoubleClickEvent(new CallbackEvent(this, "OnDoubleClick")),
+	m_onMouseEnterEvent(new CallbackEvent(this, "OnMouseEnter")),
+	m_onMouseLeaveEvent(new CallbackEvent(this, "OnMouseLeave")),
+	//keyboard events
+	m_onKeyDownEvent(new CallbackEvent(this, "OnKeyown")),
+	m_onKeyUpEvent(new CallbackEvent(this, "OnKeyUp"))
 {
 
 	m_root = new osg::MatrixTransform(osg::Matrix::identity());
@@ -137,22 +143,26 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 	//check for basic event and inform our callbacks if detected
 	osg::notify(osg::WARN) << "EVENT" << std::endl;
 	//handle the event type
-    switch(hudEvent.GetInputState()->getEventType())
+    switch(hudEvent.GetEventType())
     {
 		//key is pressed down
-		case(osgGA::GUIEventAdapter::KEYDOWN):
+		case(ON_KEY_DOWN):
         {
+			m_onKeyDownEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "KEY DOWN" << std::endl;
 			break;
         }
 			
 		//key released
-		case(osgGA::GUIEventAdapter::KEYUP):
+		case(ON_KEY_UP):
         {
+			m_onKeyUpEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "KEY UP" << std::endl;
 			break;
 		}
 			
 		//mouse moving
-		case(osgGA::GUIEventAdapter::MOVE):
+		case(ON_MOUSE_MOVE):
         {
 			//trigger our onMouseDown event
 			m_onMouseMoveEvent->TriggerEvent(hudEvent);
@@ -161,7 +171,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		}
 			
 		//mouse drag (moving with button held)
-		case(osgGA::GUIEventAdapter::DRAG):
+		case(ON_MOUSE_DRAG):
         {
 			//trigger our onMouseDrag event
 			m_onMouseDragEvent->TriggerEvent(hudEvent);
@@ -170,7 +180,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
         } 
 			
 		//mouse down
-		case(osgGA::GUIEventAdapter::PUSH):
+		case(ON_MOUSE_DOWN):
 		{
 			//trigger our onMouseDown event
 			m_onMouseDownEvent->TriggerEvent(hudEvent);
@@ -179,7 +189,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		}
 			
 		//mouse up
-		case(osgGA::GUIEventAdapter::RELEASE):
+		case(ON_MOUSE_UP):
         {
 			//trigger our onMouseUp event
 			m_onMouseUpEvent->TriggerEvent(hudEvent);
@@ -188,8 +198,28 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
         } 
 			
 		//double click do down and up
-		case(osgGA::GUIEventAdapter::DOUBLECLICK):
+		case(ON_DOUBLE_CLICK):
         {
+			osg::notify(osg::WARN) << "DOUBLE CLICK" << std::endl;
+			m_onDoubleClickEvent->TriggerEvent(hudEvent);
+			break;
+        } 
+			
+		//mouse enter
+		case(ON_MOUSE_ENTER):
+        {
+			//trigger our onMouseUp event
+			m_onMouseEnterEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE ENTER" << std::endl;
+			break;
+        } 
+			
+		//mouse leave
+		case(ON_MOUSE_LEAVE):
+        {
+			//trigger our onMouseUp event
+			m_onMouseEnterEvent->TriggerEvent(hudEvent);
+			osg::notify(osg::WARN) << "MOUSE LEAVE" << std::endl;
 			break;
         } 
 		default:break;
@@ -677,6 +707,32 @@ void HudRegion::AddOnMouseMoveCallbackReceiver(HudEventCallback* callback)
 void HudRegion::AddOnMouseDragCallbackReceiver(HudEventCallback* callback)
 {
 	m_onMouseDragEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnDoubleClickCallbackReceiver(HudEventCallback* callback)
+{
+	m_onDoubleClickEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnMouseEnterCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseEnterEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnMouseLeaveCallbackReceiver(HudEventCallback* callback)
+{
+	m_onMouseLeaveEvent->AddCallbackReceiver(callback);
+}
+
+//keyboard
+void HudRegion::AddOnKeyDownCallbackReceiver(HudEventCallback* callback)
+{
+	m_onKeyDownEvent->AddCallbackReceiver(callback);
+}
+
+void HudRegion::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
+{
+	m_onKeyUpEvent->AddCallbackReceiver(callback);
 }
 
 

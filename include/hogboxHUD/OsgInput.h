@@ -81,8 +81,15 @@ public:
 	{
 		m_vUnPickableNodes.clear();
 	}
+	
+	
+protected:
 
-
+	//
+	//Set a new focus object, this will also inform the previous focus object
+	//of the mouseLeave event, and the new object of the mouseEnter event
+	void SetFocusRegion(HudRegion* focusRegion);
+	
 protected:
 
 	//handle to our viewer so we can grab the scene for picking

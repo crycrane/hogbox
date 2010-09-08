@@ -22,7 +22,6 @@ HudInputHandler::~HudInputHandler()
 //
 bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAdapter&)
 {
-	m_inputState.SetEvent(ea, m_hudDimensions);//, m_ctrl);
 	//handle the event type
     switch(ea.getEventType())
     {
@@ -35,6 +34,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			//add to held keys
 			m_inputState.PressHeldKey(ea.getKey()); 
 
+			m_inputState.SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
+			
 			//pass key press to our infoucs region
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 
@@ -45,6 +46,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			//remove key from held list
 			m_inputState.ReleaseHeldKey(ea.getKey());
+			
+			m_inputState.SetEvent(ON_KEY_UP, ea, m_hudDimensions);
 
 			//pass key press to our infoucs region
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
@@ -55,6 +58,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			//
 			pick(ea,2); //hover check
+			
+			m_inputState.SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
+			
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
             return false;
 		}
@@ -63,6 +69,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::DRAG):
         {
 			//pass drag to our infoucs region
+			m_inputState.SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
         } 
@@ -72,6 +79,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		{
 			pick(ea,0);//MDOWN
 			//pass mouse down to our infoucs region
+			m_inputState.SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
 		}
@@ -81,6 +89,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			pick(ea,1); //MUP
 			//pass mouse up to our infoucs region
+			m_inputState.SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
         } 
@@ -91,6 +100,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,0);//down
 			pick(ea,1);//up 
 			//pass double click to our infoucs region
+			m_inputState.SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
 			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
 			return false;
         } 
@@ -101,9 +111,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 }
 
 //
-//Pick items using intersection visitor
-//mouse coords stored in ea,
-//mode is mouse click mode 0 MUP, 1 MDOWN, 2 HOVER
+//Pick is called by mouse up/down and mouse move to select a new focus region
+//the focus region then receives all other inputs i.e. keys, mouseDrags etc
 //
 void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mode 0 = push, 1=release, 2 = double click
 {
@@ -165,33 +174,26 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 			m_clickObject = node;
 			//check if the node has user data
 			HudRegion* geodeRegion = dynamic_cast<HudRegion*> (node->getUserData());
-			if(geodeRegion)
-			{
-				p_focusRegion = geodeRegion;
-			}
+			SetFocusRegion(geodeRegion);
 
 		}else{
 
-			//picked a bad node or node has no name thus can't be used in the basic hud
-			//pass none event to basic hud for resets
-			//PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
-			
-			//if no node was picked and we were picking for hud objects
-			//try again for models
-			//if(hudPick)
-			//{pick(ea, mode, false);}
+			SetFocusRegion(NULL);
 		}
 
 	
 	}else{ //no node picked
 
-		//nothing was picked so pass the NONE to the basic hud for resets
-		//PushBasicHudEvent(mode, "NONE", mCoords, mChange, ea.getButton(), ea.getKey(), ea);
-
-		//if no node was picked and we were picking for hud objects
-		//try again for models
-		//if(hudPick)
-		//{pick(ea, mode, false);}
+		SetFocusRegion(NULL);
 	}
+}
+
+//
+//Set a new focus object, this will also inform the previous focus object
+//of the mouseLeave event, and the new object of the mouseEnter event
+//
+void HudInputHandler::SetFocusRegion(HudRegion* focusRegion)
+{
+	p_focusRegion = focusRegion;
 }
 

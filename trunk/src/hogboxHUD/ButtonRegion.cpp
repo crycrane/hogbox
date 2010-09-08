@@ -7,10 +7,23 @@
 using namespace hogboxHUD;
 
 ButtonRegion::ButtonRegion(void) : TextRegion(),
-									 m_isPressed(false),
-									 m_mouseDownTexture(NULL)
+									m_buttonDown(false),
+									m_mouseDownTexture(NULL),
+									//callback events
+									m_onButtonClickedEvent(new CallbackEvent(this, "OnButtonClicked"))
 {
 
+	//register for the base mouse down and mouse up events to detect ButtonClicked
+	//set app class to receive callback when mouse is pressed on region
+	this->AddOnMouseDownCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																							 &ButtonRegion::OnMouseDown));
+	this->AddOnMouseUpCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																						   &ButtonRegion::OnMouseUp));
+	this->AddOnMouseEnterCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																						   &ButtonRegion::OnMouseEnter));
+	this->AddOnMouseLeaveCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																							  &ButtonRegion::OnMouseLeave));
+	
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -31,56 +44,51 @@ bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& f
 																const std::string& label)
 {
 	//load the base assets and apply names and sizes
-	bool ret = TextRegion::Create(corner,size,fileName, label);
-	m_isPressed = false;
-	return ret;
+	return TextRegion::Create(corner,size,fileName, label);
 }
 
 int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {	
 	osg::notify(osg::WARN) << "CLICK LICK SLICK" << std::endl;
-	//check if the hud event is for this region
-/*	if(hudEvent.GetID().compare(this->getName())==0)
-	{
-		//if it was and it's a down mouse press and the region isn't diabled
-		if(hudEvent.GetEventType()== MDOWN)
-		{
-			//flag to user it has been pressed
-			m_isPressed=true;
-			return 1;
-		}
-
-		//if it's a mouse up event 
-		if(hudEvent.GetEventType()== MUP)
-		{
-			//if it's already pressed down
-			if(m_isPressed)
-			{
-			}
-		}
-
-		if(hudEvent.GetEventType() == HOVER)
-		{
-			if(m_hovering==false)
-			{
-				m_hovering = true;
-				//swap tex to rollover
-				if(m_rollOverTexture.valid())
-				{this->ApplyTexture(m_rollOverTexture.get());}
-			}
-		}
-		return 1;
-	}
-
-	//if not for use but we were hovering, undo the hover
-	if(m_hovering == true)
-	{
-		m_hovering = false;
-		if(m_baseTexture.valid())
-		{this->ApplyTexture(m_baseTexture.get());}
-	}
-*/
 	return TextRegion::HandleInputEvent(hudEvent); 
+}
+
+//
+//
+//receive the base callbacks to detect our button click event
+//
+void ButtonRegion::OnMouseDown(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+{
+	m_buttonDown = true;
+}
+void ButtonRegion::OnMouseUp(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+{
+	//if the button is down then it's a Click event
+	if(m_buttonDown){
+		//trigger the onButtonClicked Event 
+		m_onButtonClickedEvent->TriggerEvent(inputEvent);
+	}
+	
+	//reset buttonDown state
+	m_buttonDown = false;
+}
+
+//detect for rollover and to disable a mouseDown when focus is lost
+void ButtonRegion::OnMouseEnter(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+{
+	//switch to rollover texture
+	if(m_rollOverTexture.valid())
+	{this->ApplyTexture(m_rollOverTexture.get());}
+}
+
+void ButtonRegion::OnMouseLeave(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+{
+	//switch back to base texture
+	if(m_baseTexture.valid())
+	{this->ApplyTexture(m_baseTexture.get());}
+	
+	//reset buttonDown state
+	m_buttonDown = false;
 }
 
 //
@@ -98,6 +106,13 @@ bool ButtonRegion::LoadAssest(const std::string& folderName)
 	{m_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
 
 	return ret;
+}
+
+//
+//Funcs to register event callbacks
+void ButtonRegion::AddOnButtonClickedCallbackReceiver(HudEventCallback* callback)
+{
+	m_onButtonClickedEvent->AddCallbackReceiver(callback);
 }
 
 

@@ -8,8 +8,28 @@
 namespace hogboxHUD {
 
 //
-//An input event contains the osgGA input state
-//as well as the state of the HogBoxHud and Window etc
+//Enums for our basic hud input event types, 
+//these are mainly the osgGA event types, plus the extra
+//hud specific events like MouseEnter, MouseLeave etc
+
+enum HudEventType
+{
+	//mouse events
+	ON_MOUSE_DOWN = 1,
+	ON_MOUSE_UP = 2,
+	ON_MOUSE_MOVE = 4,
+	ON_MOUSE_DRAG = 8,
+	ON_DOUBLE_CLICK = 16,
+	ON_MOUSE_ENTER = 32,
+	ON_MOUSE_LEAVE = 64,
+	//key event
+	ON_KEY_DOWN = 128,
+	ON_KEY_UP = 256
+};
+	
+//
+//A HudInputEvent contains the input evnet type, osgGA input state
+//as well as the state of the HogBoxHud/Window etc
 //Can also be used to track the state over time to get mouse velocities etc
 //
 class HOGBOXHUD_EXPORT HudInputEvent
@@ -30,8 +50,10 @@ public:
 	//
 	//Set the current state from the osgInput system
 	//
-	void SetEvent(const osgGA::GUIEventAdapter& osgInputEvent, osg::Vec2 hudSize)
+	void SetEvent(HudEventType type, const osgGA::GUIEventAdapter& osgInputEvent, osg::Vec2 hudSize)
 	{
+		m_eventType = type;
+		
 		m_osgInputEvent = NULL;
 		m_osgInputEvent = new osgGA::GUIEventAdapter(osgInputEvent);
 		
@@ -49,6 +71,9 @@ public:
 		m_winDimensions = osg::Vec2(osgInputEvent.getWindowWidth(), osgInputEvent.getWindowHeight());
 		m_hudDimensions = hudSize;
 	}
+	
+	//get the event type
+	HudEventType GetEventType(){return m_eventType;}
 	
 	//get the actual osgGA event that set this state
 	osgGA::GUIEventAdapter* GetInputState(){return m_osgInputEvent.get();}
@@ -162,6 +187,10 @@ public:
 	
 protected:
 	
+	//the hogboxHUD input event type
+	HudEventType m_eventType;
+	
+	//the last received input event from osgGA
 	osg::ref_ptr<osgGA::GUIEventAdapter> m_osgInputEvent;
 	
 	//which mouse button is being pressed

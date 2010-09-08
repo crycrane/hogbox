@@ -172,10 +172,17 @@ public:
 	
 	//
 	//Funcs to register event callbacks
+	//mouse events
 	void AddOnMouseDownCallbackReceiver(HudEventCallback* callback);
 	void AddOnMouseUpCallbackReceiver(HudEventCallback* callback);
 	void AddOnMouseMoveCallbackReceiver(HudEventCallback* callback);
 	void AddOnMouseDragCallbackReceiver(HudEventCallback* callback);
+	void AddOnDoubleClickCallbackReceiver(HudEventCallback* callback);
+	void AddOnMouseEnterCallbackReceiver(HudEventCallback* callback);
+	void AddOnMouseLeaveCallbackReceiver(HudEventCallback* callback);
+	//keyboard
+	void AddOnKeyDownCallbackReceiver(HudEventCallback* callback);
+	void AddOnKeyUpCallbackReceiver(HudEventCallback* callback);
 
 protected:
 
@@ -267,10 +274,18 @@ protected:
 	//X OnMouseEnter, called when mouse first enters the regions area
 	//X OnMouseLeave, called when mouse leaves the area (input model will currently make this difficult to detect)
 	
+	//mouse events
 	osg::ref_ptr<CallbackEvent> m_onMouseDownEvent;
 	osg::ref_ptr<CallbackEvent> m_onMouseUpEvent;
 	osg::ref_ptr<CallbackEvent> m_onMouseMoveEvent;
 	osg::ref_ptr<CallbackEvent> m_onMouseDragEvent;
+	osg::ref_ptr<CallbackEvent> m_onDoubleClickEvent;
+	osg::ref_ptr<CallbackEvent> m_onMouseEnterEvent;
+	osg::ref_ptr<CallbackEvent> m_onMouseLeaveEvent;
+	
+	//keyboard events
+	osg::ref_ptr<CallbackEvent> m_onKeyDownEvent;
+	osg::ref_ptr<CallbackEvent> m_onKeyUpEvent;
 };
 
 }; //end hogboxhud namespace

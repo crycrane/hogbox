@@ -8,8 +8,10 @@ SET(LIB_NAME hogbox)
 SET(HEADER_PATH ${hogbox_SOURCE_DIR}/include/${LIB_NAME})
 
 SET(LIB_PUBLIC_HEADERS
+	${HEADER_PATH}/AnimateValue.h
 	${HEADER_PATH}/Export.h
 	${HEADER_PATH}/Version.h
+	${HEADER_PATH}/HogBoxBase.h
 	${HEADER_PATH}/HogBoxLight.h
 	${HEADER_PATH}/HogBoxMaterial.h
 	${HEADER_PATH}/HogBoxMesh.h

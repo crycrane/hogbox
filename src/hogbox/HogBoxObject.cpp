@@ -14,7 +14,7 @@ HogBoxObject::HogBoxObject(void)
 	: osg::Object()
 {
 	m_localTransform = new osg::MatrixTransform();
-	m_localTransform->setName("Object World Trans"); 
+	m_localTransform->setName("Object Local Trans"); 
 
 	m_scaleMat = osg::Matrix::identity();
 	m_rotationMat = osg::Matrix::identity();
@@ -47,22 +47,28 @@ HogBoxObject::HogBoxObject(const HogBoxObject& object,const osg::CopyOp& copyop)
 		: osg::Object(object, copyop),
 		m_scale(object.m_scale),
 		m_position(object.m_position),
-		m_rotDegrees(object.m_rotDegrees)
+		m_rotDegrees(object.m_rotDegrees),
+		m_scaleMat(object.m_scaleMat),
+		m_rotationMat(object.m_rotationMat),
+		m_translationMat(object.m_translationMat),
+		m_loadScale(object.m_loadScale)
 {
-	m_localTransform = new osg::MatrixTransform();
-	m_localTransform->setName("Object World Trans"); 
 
-	m_scaleMat = osg::Matrix::identity();
-	m_rotationMat = osg::Matrix::identity();
-	m_translationMat = osg::Matrix::identity(); 
+	//copy of root 
+	m_root = dynamic_cast<osg::Group*>(copyop(object.m_root.get()));
+	//copy of root will have copied the local transform, we need to get it
+	for(unsigned int i=0; i<m_root->getNumChildren(); i++)
+	{
+		if(m_root->getChild(i)->getName()==object.m_localTransform->getName())
+		{
+			m_localTransform = dynamic_cast<osg::MatrixTransform*>(m_root->getChild(i));
+			break;
+		}
+	}
 
-	m_root = new osg::Group();
-	m_root->setName("Object Root");
-
-	//hook together the basic subgraph
-	m_root->addChild(m_localTransform.get()); 
-
-	Dirty();
+	SetScale(m_scale);
+	SetRotation(m_rotDegrees);
+	SetTranslation(m_position);
 }
 
 HogBoxObject::~HogBoxObject(void)
@@ -209,8 +215,7 @@ void HogBoxObject::UpdateLocalTransform()
 
 //
 //Attaches the node to our localTransfrom for rendering 
-//then calls @@ to transverse the children and add the new
-//nodes meshes to our object
+//then applies all the current  
 //
 bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 {
@@ -231,9 +236,6 @@ bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 	{
 		node->accept(*m_meshMappings[i]->m_visitor);
 	}
-
-	//generate tangent space vectors for new model
-	//GenerateTangentSpaceVectors();
 	
 	return true;
 }
@@ -269,43 +271,6 @@ void HogBoxObject::WrapGeometryNode(osg::Geode* parentGeode, osg::Geometry* geom
 }
 */
 
-//
-//Generate tangent space vectors for all geoms found in the model
-//then attavch them as per vertex attributes for use in shaders
-//
-void HogBoxObject::GenerateTangentSpaceVectors()
-{
-	//loop the geoms
-/*	for(SubMeshList::iterator itr = m_subGeometry.begin(); itr != m_subGeometry.end(); ++itr)
-	{
-
-		//check if the geom already has the vectors
-		if( ((*itr)->GetGeom()->getVertexAttribArray(6) == 0) && ((*itr)->GetGeom()->getVertexAttribArray(7) == 0) )
-		{
-
-			osgUtil::TangentSpaceGenerator* tangGen = new osgUtil::TangentSpaceGenerator();
-			tangGen->generate((*itr)->GetGeom(), 0);
-
-			if(tangGen)
-			{
-				osg::Vec4Array* tangentArray = tangGen->getTangentArray(); 
-				osg::Vec4Array* biNormalArray = tangGen->getBinormalArray();
-
-				int size = tangentArray->size();
-				int sizeb = biNormalArray->size();
-
-				if( (size>0) && (sizeb>0))
-				{
-					(*itr)->GetGeom()->setVertexAttribArray(6, tangentArray);
-					(*itr)->GetGeom()->setVertexAttribBinding(6, osg::Geometry::BIND_PER_VERTEX);  
-
-					(*itr)->GetGeom()->setVertexAttribArray(7, biNormalArray);
-					(*itr)->GetGeom()->setVertexAttribBinding(7, osg::Geometry::BIND_PER_VERTEX);  
-				}
-			}
-		}
-	}*/
-}
 
 //
 //get set the vector of nodes being wrapped by this object

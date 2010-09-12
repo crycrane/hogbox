@@ -211,6 +211,8 @@ protected:
 		bool enabled;
 		osg::ref_ptr<osg::Texture> texture;
 		osg::ref_ptr<osg::Uniform> sampler;
+	protected:
+		virtual ~TextureUnit(){}
 	};
 	typedef osg::ref_ptr<TextureUnit> TextureUnitPtr;
 	typedef std::map<int, TextureUnitPtr> TextureChannelMap; 

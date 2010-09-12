@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hogboxHUD/Export.h>
+#include <hogbox/HogBoxBase.h>
 #include <osgGA/GUIEventHandler>
 
 #include <deque>
@@ -32,20 +33,45 @@ enum HudEventType
 //as well as the state of the HogBoxHud/Window etc
 //Can also be used to track the state over time to get mouse velocities etc
 //
-class HOGBOXHUD_EXPORT HudInputEvent
+class HOGBOXHUD_EXPORT HudInputEvent : public osg::Object
 {
 public:
 
-	HudInputEvent(void)
+	HudInputEvent(void) 
+		: osg::Object(),
+		m_osgInputEvent(new osgGA::GUIEventAdapter()),
+		m_mouseCoords(osg::Vec2(0,0)),
+		m_preMouseCoords(osg::Vec2(0,0)), 
+		m_mouseChange(osg::Vec2(0,0)),
+		m_button(0),
+		m_key(0),
+		m_prevTick(0.0f),
+		m_timePassed(0.0f)
 	{
-		m_osgInputEvent = NULL;
-		m_mouseCoords=osg::Vec2(0,0);
-		m_preMouseCoords=osg::Vec2(0,0); 
-		m_mouseChange=osg::Vec2(0,0);
-		m_button=0;
-		m_key=0;
 	}
-	~HudInputEvent(void){}
+	
+	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+	HudInputEvent(const HudInputEvent& event,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
+		: osg::Object(event, copyop),
+		m_eventType(event.m_eventType),
+		m_mouseCoords(event.m_mouseCoords),
+		m_preMouseCoords(event.m_preMouseCoords), 
+		m_mouseChange(event.m_mouseChange),
+		m_button(event.m_button),
+		m_key(event.m_key),
+		m_prevTick(event.m_prevTick),
+		m_timePassed(event.m_timePassed),
+		m_vPressedKeys(event.m_vPressedKeys),
+		m_vHeldKeys(event.m_vHeldKeys),
+		m_winDimensions(event.m_winDimensions),
+		m_hudDimensions(event.m_hudDimensions)
+	{
+		//if(event.GetInputState()){
+		m_osgInputEvent = new osgGA::GUIEventAdapter();// event.m_osgInputEvent->clone(copyop);
+		//}
+	}
+	
+	META_Box(hogboxHUD,HudInputEvent);
 
 	//
 	//Set the current state from the osgInput system
@@ -55,7 +81,7 @@ public:
 		m_eventType = type;
 		
 		m_osgInputEvent = NULL;
-		m_osgInputEvent = new osgGA::GUIEventAdapter(osgInputEvent);
+		m_osgInputEvent = new osgGA::GUIEventAdapter(osgInputEvent, osg::CopyOp::DEEP_COPY_ALL);
 		
 		m_button = osgInputEvent.getButton();
 		m_key = osgInputEvent.getKey();
@@ -70,10 +96,17 @@ public:
 		//store window dimensions
 		m_winDimensions = osg::Vec2(osgInputEvent.getWindowWidth(), osgInputEvent.getWindowHeight());
 		m_hudDimensions = hudSize;
+		
+		//store time and calc time passed since last event
+		if(m_prevTick == 0.0f){m_prevTick=osgInputEvent.getTime();}
+		m_timePassed = osgInputEvent.getTime() - m_prevTick;
+		m_prevTick = osgInputEvent.getTime();
 	}
 	
 	//get the event type
-	HudEventType GetEventType(){return m_eventType;}
+	const HudEventType& GetEventType(){return m_eventType;}
+	void SetEventType(HudEventType type){m_eventType = type;}
+	
 	
 	//get the actual osgGA event that set this state
 	osgGA::GUIEventAdapter* GetInputState(){return m_osgInputEvent.get();}
@@ -182,8 +215,29 @@ public:
 		return osg::Vec2(sX,sY);
 	}
 
+	//Vector between this and the previous mouse coord
 	osg::Vec2 GetMouseChange(){return m_mouseChange;}
 	
+	//get the mouse movement as velocity vector
+	osg::Vec2 GetMouseVelocityVec(){return GetMouseChange()*GetTimePassed();}
+	
+	//get mouse veocity as a speed/magnitude
+	float GetMouseVelocity(){return GetMouseVelocityVec().length();}
+	
+	
+	//the current sim time
+	double GetTime(){
+		if(m_osgInputEvent.get()){return m_osgInputEvent->getTime();}
+		return 1.0f;
+	}
+	
+	//get the time passed since the last event
+	double GetTimePassed(){return m_timePassed;}
+	
+	
+protected:
+	
+	virtual ~HudInputEvent(void){}
 	
 protected:
 	
@@ -212,6 +266,12 @@ protected:
 	osg::Vec2 m_winDimensions;
 	//hud dimensions
 	osg::Vec2 m_hudDimensions;
+	
+	//time 
+	
+	float m_prevTick;
+	float m_timePassed;
+
 
 };
 

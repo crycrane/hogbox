@@ -13,7 +13,9 @@ TextRegion::TextRegion(void) : HudRegion(),
 								m_alignmentMode(CENTER_ALIGN),
 								m_textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
 								m_usingDropShadow(false),
-								m_dropShadowColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f))
+								m_dropShadowColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
+								//callback events
+								m_onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
 
 {
 	//create the text label to add to the button
@@ -154,6 +156,9 @@ void TextRegion::SetText(const std::string& str)
 {
 	m_string = str;
 	m_text->setText(str);
+	
+	osg::ref_ptr<HudInputEvent> dummyEvent;
+	m_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
 }
 
 //
@@ -317,4 +322,11 @@ const bool& TextRegion::isUsingDropShadow() const
 int TextRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	return HudRegion::HandleInputEvent(hudEvent); 
+}
+
+//
+//Funcs to register event callbacks
+void TextRegion::AddOnTextChangedCallbackReceiver(HudEventCallback* callback)
+{
+	m_onTextChangedEvent->AddCallbackReceiver(callback);
 }

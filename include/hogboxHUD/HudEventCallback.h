@@ -132,11 +132,11 @@ namespace hogboxHUD {
 		
 	protected:
 		
-		//event has a name which can be used by user as a simple reference (e.g OnMouseDown)
-		std::string m_eventName; 
-		
 		//the object sending the event (e.g. hudregion, button)
 		HudRegion* p_eventSender;
+		
+		//event has a name which can be used by user as a simple reference (e.g OnMouseDown)
+		std::string m_eventName; 
 		
 		//the list of callbacks registered to receive this event when triggered
 		std::vector<HudEventCallbackPtr> m_callbacks;

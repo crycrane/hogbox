@@ -55,7 +55,11 @@ protected:
 	//region group attached to camera and has all regions attached to it
 	osg::ref_ptr<osg::Group> m_regionGroup;
 
-	//info regions attached to this camera
+	//the root region to which all regions are attached. This is
+	//attach to the m_regionGroup
+	osg::ref_ptr<HudRegion> m_hudRegion;
+	
+	//list of regions attached to this hud
 	HudRegion::HudRegionList m_regions;
 
 	//store current screnn/projection size

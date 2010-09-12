@@ -224,11 +224,11 @@ protected:
 	float m_constant, m_linear, m_quadratic;
 
 	// Light shader parameters.
-	osg::Uniform* m_uLightPos;
-	osg::Uniform* m_uLightColor;
-	osg::Uniform* m_uConstant;
-	osg::Uniform* m_uLinear;
-	osg::Uniform* m_uQuadratic;
+	osg::ref_ptr<osg::Uniform> m_uLightPos;
+	osg::ref_ptr<osg::Uniform> m_uLightColor;
+	osg::ref_ptr<osg::Uniform> m_uConstant;
+	osg::ref_ptr<osg::Uniform> m_uLinear;
+	osg::ref_ptr<osg::Uniform> m_uQuadratic;
 
 	//visualiseation node
 	osg::ref_ptr<osg::Node> m_visNode;

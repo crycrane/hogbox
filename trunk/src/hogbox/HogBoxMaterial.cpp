@@ -56,7 +56,7 @@ HogBoxMaterial::~HogBoxMaterial(void)
 		//remove any textures from the stateset
 		if(texItr->second){
 			if(texItr->second->texture){
-				m_stateset->removeTextureAttribute(texItr->first, osg::StateAttribute::TEXTURE);
+				//m_stateset->removeTextureAttribute(texItr->first, osg::StateAttribute::TEXTURE);
 				texItr->second->texture = NULL;
 			}
 			texItr->second = NULL;

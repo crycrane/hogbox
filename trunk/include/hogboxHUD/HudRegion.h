@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hogbox/AnimateValue.h>
 #include <hogboxHUD/Export.h>
 #include <hogbox/HogBoxBase.h>
 
@@ -9,6 +10,8 @@
 
 #include <hogboxHUD/HudInputEvent.h>
 #include <hogboxHUD/HudEventCallback.h>
+
+
 
 namespace hogboxHUD {
 
@@ -22,9 +25,11 @@ typedef unsigned int InheritanceMask;
 #define INHERIT_ALL_TRANSFORMS (INHERIT_POSITION|INHERIT_ROTATION|INHERIT_SIZE)
 
 class HudRegion;
-typedef osg::ref_ptr<HudRegion> HudRegionPtr;	
+typedef osg::ref_ptr<HudRegion> HudRegionPtr;
+//forward declare our update callback
+	class HudRegionUpdateCallback;
 
-//helper func to rename geodes and attach user data
+//helper func to rename geodes and attach region as user data
 extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* graph, HudRegion* region);
 
 	
@@ -38,7 +43,6 @@ public:
 	//isProcedural should be flaged as true so that when hudregions are saved the
 	//system knows not to save out the automaticaly created regions
 	HudRegion(bool isProcedural=false);
-	virtual ~HudRegion(void);
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HudRegion(const HudRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
@@ -50,9 +54,10 @@ public:
 	//load assets, set size and position, then apply the names to any geodes for picking
 	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName);
 
+	//was the region auto created by a parent (i.e. we don't want to save it to disk)
 	bool isProcedural(){return m_isProcedural;}
 
-	//return the regions root transform
+	//return the regions root osg transform node
 	osg::MatrixTransform* GetRegion();
 
 	//overload the setnames of osg object so that
@@ -61,7 +66,7 @@ public:
 
 
 	//adds a child to this region which will then be transformed relative
-	//to the parent
+	//to this region
 	void AddChild(HudRegion* region);
 	bool IsChild(const std::string& uniqueID);
 	//set this regions parent, NULL if attached directly
@@ -70,6 +75,12 @@ public:
 	HudRegion* GetParent(){return m_p_parent;}
 
 	//Events
+	
+	
+	//
+	//general update, updates and syncs our animations etc
+	//normally called by an atteched updateCallback
+	void Update(float simTime);
 	
 	//Handle a hud event passed by the picker, i.e. mouse click, key press
 	//geodeID is the name of the geode picked in the hud
@@ -103,7 +114,7 @@ public:
 	//i.e. <1 smaller, >1 bigger
 	void SetPositionFromPercentage(float xScaler, float yScaler);
 
-	//move to a new layer, z depth
+	//move to a new layer, z depth relative to parent
 	void SetLayer(const float& depth);
 	const float& GetLayer() const;
 
@@ -150,7 +161,7 @@ public:
 	//has changed, i.e. the text was altered, a slider was moved etc
 	bool StateChanged();
 
-	//convert corrds into the regions local system with this corner as the origin
+	//convert coords into the regions local system with this corner as the origin
 	osg::Vec2 GetRegionSpaceCoords(osg::Vec2 spCoords);
 	//recerse through parents to get screen space corner
 	osg::Vec2 GetAbsoluteCorner();
@@ -170,6 +181,82 @@ public:
 	HudRegionList GetChildrenList()const{return m_p_children;}
 	void SetChildrenList(const HudRegionList& list);
 	
+	
+	//
+	//Animation
+	
+	//Rotation channel
+	template <typename M>
+	void AddRotationKey(float degrees, float duration)
+	{
+		//if its going to be the first key ensure value is the regions current
+		if(m_animateRotate->GetNumKeys() == 0){m_animateRotate->SetValue(this->GetRotation());}
+		m_animateRotate->AddKey<M>(degrees, duration);
+	}
+	hogbox::AnimateValue<float>::KeyFrame* GetRotationKey(unsigned int index){return m_animateRotate->GetKey(index);}
+	bool RemoveRotationKey(unsigned int index){return m_animateRotate->RemoveKey(index);}
+	unsigned int GetNumRotationKeys(){return m_animateRotate->GetNumKeys();}
+	
+	//Position channel
+	template <class M>
+	void AddPositionKey(osg::Vec2 pos, float duration)
+	{
+		//if its going to be the first key ensure value is the regions current
+		if(m_animatePosition->GetNumKeys() == 0){m_animatePosition->SetValue(this->GetPosition());}
+		m_animatePosition->AddKey<M>(pos, duration);
+	}
+	hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetPositionKey(unsigned int index){return m_animatePosition->GetKey(index);}
+	bool RemovePositionKey(unsigned int index){return m_animatePosition->RemoveKey(index);}
+	unsigned int GetNumPositionKeys(){return m_animatePosition->GetNumKeys();}
+	
+	//Size channel
+	template <typename M>
+	void AddSizeKey(osg::Vec2 size, float duration)
+	{
+		//if its going to be the first key ensure value is the regions current
+		if(m_animateSize->GetNumKeys() == 0){m_animateSize->SetValue(this->GetSize());}
+		m_animateSize->AddKey<M>(size, duration);
+	}
+	hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetSizeKey(unsigned int index){return m_animateSize->GetKey(index);}
+	bool RemoveSizeKey(unsigned int index){return m_animateSize->RemoveKey(index);}
+	unsigned int GetNumSizeKeys(){return m_animateSize->GetNumKeys();}
+	
+	//Color channel
+	template <typename M>
+	void AddColorKey(osg::Vec3 color, float duration)
+	{
+		//if its going to be the first key ensure value is the regions current
+		if(m_animateColor->GetNumKeys() == 0){m_animateColor->SetValue(this->GetColor());}
+		m_animateColor->AddKey<M>(color, duration);
+	}
+	hogbox::AnimateValue<osg::Vec3>::KeyFrame* GetColorKey(unsigned int index){return m_animateColor->GetKey(index);}
+	bool RemoveColorKey(unsigned int index){return m_animateColor->RemoveKey(index);}
+	unsigned int GetNumColorKeys(){return m_animateColor->GetNumKeys();}
+	
+	//Alpha channel
+	template <typename M>
+	void AddAlphaKey(float alpha, float duration)
+	{
+		//if its going to be the first key ensure value is the regions current
+		if(m_animateAlpha->GetNumKeys() == 0){m_animateAlpha->SetValue(this->GetAlpha());}
+		m_animateAlpha->AddKey<M>(alpha, duration);
+	}
+	hogbox::AnimateValue<float>::KeyFrame* GetAlphaKey(unsigned int index){return m_animateAlpha->GetKey(index);}
+	bool RemoveAlphaKey(unsigned int index){return m_animateAlpha->RemoveKey(index);}
+	unsigned int GetNumAlphaKeys(){return m_animateAlpha->GetNumKeys();}
+	
+	//are any of our channels still animating
+	bool IsAnimating()
+	{
+		unsigned int totalKeys = GetNumPositionKeys() + GetNumSizeKeys() + GetNumColorKeys() + GetNumAlphaKeys();
+		if(totalKeys > 0)
+		{return true;}
+		return false;
+	}
+	
+	void SetAnimationDisabled(bool disable){m_animationDisabled = disable;}
+	
+	
 	//
 	//Funcs to register event callbacks
 	//mouse events
@@ -186,13 +273,16 @@ public:
 
 protected:
 
+	//destructor
+	virtual ~HudRegion(void);
+	
 	//
 	//Load assest takes a folder name containing our assest
 	//each region type expects to find specificlty named assests in the folder
 	//Base implementation loads 
-	//geom.ive, used as render geometry (if not present then a quad is generated)
-	//base.png, used as the default texture
-	//rollover.png, used for mouse rollovers
+	//geom.osg, used as render geometry (if not present then a quad is generated with bottom left corner at 0,0)
+	//base.png, used as the default texture if present
+	//rollover.png, used for mouse rollovers if present
 	virtual bool LoadAssest(const std::string& folderName);
 
 	//used internally to alert others that a value has changed
@@ -264,6 +354,24 @@ protected:
 	float m_alpha;
 	bool m_alphaEnabled;
 	
+	//
+	//Our default update callback to ensure update is called each frame
+	osg::ref_ptr<HudRegionUpdateCallback> m_updateCallback;
+	
+	//
+	//Animation for each of our attributes
+	hogbox::AnimateFloatPtr m_animateRotate; bool m_isRotating;
+	hogbox::AnimateVec2Ptr m_animatePosition; bool m_isTranslating;
+	hogbox::AnimateVec2Ptr m_animateSize; bool m_isSizing;
+	hogbox::AnimateVec3Ptr m_animateColor; bool m_isColoring;
+	hogbox::AnimateFloatPtr m_animateAlpha; bool m_isFading;
+	
+	//previous framestamp time to calc time elapsed
+	float m_prevTick;
+	
+	//used to stop any animation
+	bool m_animationDisabled;
+	
 	//Callback system
 	
 	//base hud region handles a few basic hud callbacks
@@ -286,6 +394,51 @@ protected:
 	//keyboard events
 	osg::ref_ptr<CallbackEvent> m_onKeyDownEvent;
 	osg::ref_ptr<CallbackEvent> m_onKeyUpEvent;
+};
+	
+//
+//HudRegionUpdateCallback
+//our default update callback which will ensure animations etc are updated
+//
+class HudRegionUpdateCallback : public osg::NodeCallback
+{
+public:
+	//contuct, passing the region to update
+	HudRegionUpdateCallback(HudRegion* region) 
+		: osg::NodeCallback(),
+		p_updateRegion(region),
+		m_prevTick(0.0f)
+	{
+	}
+	
+	//
+	//Update operator
+	//Here we smooth to targets if value is not equal
+	virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+	{
+		if (p_updateRegion &&
+			nv->getVisitorType()==osg::NodeVisitor::UPDATE_VISITOR && 
+			nv->getFrameStamp())
+		{
+			//get the time passed since last update
+			double time = nv->getFrameStamp()->getReferenceTime();
+			if(m_prevTick==0.0f){m_prevTick = time;}
+			float timePassed = time - m_prevTick;
+			m_prevTick = time;
+			
+			p_updateRegion->Update(time);
+		}
+		osg::NodeCallback::traverse(node,nv);
+	}
+	
+protected:
+	
+	virtual~HudRegionUpdateCallback(void){}
+	
+protected:
+
+	HudRegion* p_updateRegion;
+	float m_prevTick;
 };
 
 }; //end hogboxhud namespace

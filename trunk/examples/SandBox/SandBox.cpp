@@ -43,6 +43,7 @@ int main( int argc, const char* argv[] )
 	hogbox::SetWorkingDirectory(str.c_str());
 	
 	//accuire the apps path, to check it worked and mimic windows
+	appRootPath = new char[512];
 	hogbox::GetWorkingDirectory(1024, appRootPath);
 	
 	osg::notify(osg::WARN) << "Mac OS X Current Directory " << std::string(appRootPath) << std::endl;
@@ -91,9 +92,9 @@ int main( int argc, const char* argv[] )
 	while(!viewer->done())
 	{
 		viewer->frame();
-		if(region->IsPressed())
+		//if(region->IsPressed())
 		{
-			printf("click\n");
+		//	printf("click\n");
 		}
 	}
 

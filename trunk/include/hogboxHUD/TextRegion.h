@@ -81,6 +81,12 @@ public:
 	//enable/disable the texts drop shadow
 	void UseDropShadow(const bool& useShadow);
 	const bool& isUsingDropShadow() const;
+	
+public:
+	
+	//
+	//Funcs to register event callbacks
+	void AddOnTextChangedCallbackReceiver(HudEventCallback* callback);
 
 protected:
 
@@ -116,6 +122,11 @@ protected:
 
 	//color of drop shadow
 	osg::Vec4 m_dropShadowColor;
+	
+	//Callback events
+	
+	//on text changed called each time SetText is called to inform receivers of the change
+	osg::ref_ptr<CallbackEvent> m_onTextChangedEvent;
 };
 
 typedef osg::ref_ptr<TextRegion> TextRegionPtr;

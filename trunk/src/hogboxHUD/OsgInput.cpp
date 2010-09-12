@@ -4,10 +4,11 @@
 
 using namespace hogboxHUD;
 
-HudInputHandler::HudInputHandler(osgViewer::Viewer* sceneView, osg::Vec2 hudDimensions):
-																		_sceneView(sceneView),
-																		p_focusRegion(NULL),
-																		m_hudDimensions(hudDimensions)
+HudInputHandler::HudInputHandler(osgViewer::Viewer* sceneView, osg::Vec2 hudDimensions)
+	: m_inputState(new HudInputEvent()),
+	_sceneView(sceneView),
+	p_focusRegion(NULL),
+	m_hudDimensions(hudDimensions)
 {
 	
 }
@@ -30,14 +31,14 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::KEYDOWN):
         {
 			//add the key to our list of pressed keys for the frame
-			m_inputState.PressKey(ea.getKey());			
+			m_inputState->PressKey(ea.getKey());			
 			//add to held keys
-			m_inputState.PressHeldKey(ea.getKey()); 
+			m_inputState->PressHeldKey(ea.getKey()); 
 
-			m_inputState.SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
+			m_inputState->SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
 			
 			//pass key press to our infoucs region
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 
         }
 
@@ -45,12 +46,12 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::KEYUP):
         {
 			//remove key from held list
-			m_inputState.ReleaseHeldKey(ea.getKey());
+			m_inputState->ReleaseHeldKey(ea.getKey());
 			
-			m_inputState.SetEvent(ON_KEY_UP, ea, m_hudDimensions);
+			m_inputState->SetEvent(ON_KEY_UP, ea, m_hudDimensions);
 
 			//pass key press to our infoucs region
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 		}
 
 		//mouse moving
@@ -59,9 +60,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			//
 			pick(ea,2); //hover check
 			
-			m_inputState.SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
+			m_inputState->SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
 			
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
             return false;
 		}
 
@@ -69,8 +70,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::DRAG):
         {
 			//pass drag to our infoucs region
-			m_inputState.SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			m_inputState->SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 			return false;
         } 
 
@@ -79,8 +80,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		{
 			pick(ea,0);//MDOWN
 			//pass mouse down to our infoucs region
-			m_inputState.SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			m_inputState->SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 			return false;
 		}
 	
@@ -89,8 +90,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			pick(ea,1); //MUP
 			//pass mouse up to our infoucs region
-			m_inputState.SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			m_inputState->SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 			return false;
         } 
 
@@ -100,8 +101,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,0);//down
 			pick(ea,1);//up 
 			//pass double click to our infoucs region
-			m_inputState.SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(m_inputState);}
+			m_inputState->SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
+			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
 			return false;
         } 
 
@@ -167,6 +168,8 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
         node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
         parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
 
+		osg::notify(osg::DEBUG_FP) << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
+		
 		//did we pick a node
         if (node && (node->getName().size() != 0) )
 		{
@@ -194,6 +197,10 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 //
 void HudInputHandler::SetFocusRegion(HudRegion* focusRegion)
 {
+	if(focusRegion)
+	{
+		osg::notify(osg::DEBUG_FP) << "hogboxHUD HudInputHandler: Switching focus to region '" << focusRegion->getName() << "'."  << std::endl;
+	}
 	p_focusRegion = focusRegion;
 }
 

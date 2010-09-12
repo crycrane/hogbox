@@ -46,8 +46,8 @@ public:
 
 	//
 	//
-	const HudInputEvent& GetCurrentEvent()
-	{return m_inputState;}
+	HudInputEvent* GetCurrentEvent()
+	{return m_inputState.get();}
 
 	//
 	//normal mesh picked (i,e, model not part of the basic hud)
@@ -99,7 +99,7 @@ protected:
 	osg::Vec2 m_hudDimensions;
 
 	//current input event state
-	HudInputEvent m_inputState;
+	osg::ref_ptr<HudInputEvent> m_inputState;
 	
 	//the current hud region with focus (need to implement default root region, for now null till mouse click)
 	HudRegion* p_focusRegion;

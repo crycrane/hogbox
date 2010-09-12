@@ -66,6 +66,15 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 
     //add the new page to the hud camera
 	m_camera->addChild( m_regionGroup.get());
+	
+	//create and add our root region
+	m_hudRegion = new HudRegion(true);
+	m_hudRegion->Create(osg::Vec2(0.0f,0.0f), m_screenSize, "");
+	//set the root region layer far back so we have plenty of positive layers infront
+	m_hudRegion->SetLayer(-10.0f);
+	
+	//attach our root region to the hud graph
+	m_regionGroup->addChild(m_hudRegion->GetRegion());
 
 	return m_camera.get();
 }
@@ -96,7 +105,7 @@ bool HogBoxHud::AddRegion(HudRegion* region)
 	{return false;}
 
 	m_regions.push_back(region);
-	m_regionGroup->addChild(region->GetRegion());
+	m_hudRegion->AddChild(region);
 
 	return true;
 }

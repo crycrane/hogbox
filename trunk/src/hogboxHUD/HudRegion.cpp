@@ -19,8 +19,22 @@ HudRegion::HudRegion(bool isProcedural)
 	m_transformInheritMask(INHERIT_ALL_TRANSFORMS),
 	m_visible(true),
 	m_stateChanged(false),
-	m_depth(-0.5f),
+	m_depth(0.1f),
+	//animation
+	m_isRotating(false),
+	m_isTranslating(false),
+	m_isSizing(false),
+	m_isColoring(false),
+	m_isFading(false),
+	m_animateRotate(new hogbox::AnimateFloat()),
+	m_animateSize(new hogbox::AnimateVec2()),
+	m_animatePosition(new hogbox::AnimateVec2()),
+	m_animateColor(new hogbox::AnimateVec3()),
+	m_animateAlpha(new hogbox::AnimateFloat()),
+	m_prevTick(0.0f),
+	m_animationDisabled(false),
 	//Create our callbacks
+	//mouse events
 	m_onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
 	m_onMouseUpEvent(new CallbackEvent(this, "OnMouseUp")),
 	m_onMouseMoveEvent(new CallbackEvent(this, "OnMouseMove")),
@@ -29,7 +43,7 @@ HudRegion::HudRegion(bool isProcedural)
 	m_onMouseEnterEvent(new CallbackEvent(this, "OnMouseEnter")),
 	m_onMouseLeaveEvent(new CallbackEvent(this, "OnMouseLeave")),
 	//keyboard events
-	m_onKeyDownEvent(new CallbackEvent(this, "OnKeyown")),
+	m_onKeyDownEvent(new CallbackEvent(this, "OnKeyDown")),
 	m_onKeyUpEvent(new CallbackEvent(this, "OnKeyUp"))
 {
 
@@ -39,6 +53,10 @@ HudRegion::HudRegion(bool isProcedural)
 	m_scale = new osg::MatrixTransform();
 	m_region = new osg::Group();
 	m_childMount = new osg::MatrixTransform();
+	
+	//create and attach our default updatecallback
+	m_updateCallback = new HudRegionUpdateCallback(this);
+	this->AddUpdateCallback(m_updateCallback.get());
 
 	//build the transform hierachy	
 	m_root->addChild(m_translate);
@@ -70,6 +88,13 @@ HudRegion::HudRegion(bool isProcedural)
 	m_p_parent=NULL;
 
 	m_hovering = false;
+	
+	//set default animation values
+	m_animateRotate->SetValue(this->GetRotation());
+	m_animateSize->SetValue(this->GetSize());
+	m_animatePosition->SetValue(this->GetPosition());
+	m_animateColor->SetValue(this->GetColor());
+	m_animateAlpha->SetValue(this->GetAlpha());
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -101,6 +126,35 @@ HudRegion::~HudRegion(void)
 	m_scale = NULL;
 
 	m_material = NULL;
+}
+
+//
+//general update, updates and syncs our animations etc
+//normally called by an attached updateCallback
+//
+void HudRegion::Update(float simTime)
+{
+	float timePassed = simTime - m_prevTick;
+	m_prevTick = simTime;
+	
+	if(!m_animationDisabled)
+	{
+		//update all our smooth values
+		if(m_isRotating = m_animateRotate->Update(timePassed))
+		{this->SetRotation(m_animateRotate->GetValue());}
+		
+		if(m_isTranslating = m_animatePosition->Update(timePassed))
+		{this->SetPosition(m_animatePosition->GetValue());}
+		
+		if(m_isSizing = m_animateSize->Update(timePassed))
+		{this->SetSize(m_animateSize->GetValue());}
+		
+		if(m_isColoring = m_animateColor->Update(timePassed))
+		{this->SetColor(m_animateColor->GetValue());}
+		
+		if(m_isFading = m_animateAlpha->Update(timePassed))
+		{this->SetAlpha(m_animateAlpha->GetValue());}
+	}
 }
 
 //
@@ -141,23 +195,24 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 	int ret = 0;
 	
 	//check for basic event and inform our callbacks if detected
-	osg::notify(osg::WARN) << "EVENT" << std::endl;
+	osg::notify(osg::DEBUG_FP) << "hogboxHUD HudRegion: Input Event received by region '" << this->getName() << "'." << std::endl;
+	
 	//handle the event type
     switch(hudEvent.GetEventType())
     {
 		//key is pressed down
 		case(ON_KEY_DOWN):
         {
+			osg::notify(osg::DEBUG_FP) << "		KEY DOWN" << std::endl;
 			m_onKeyDownEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "KEY DOWN" << std::endl;
 			break;
         }
 			
 		//key released
 		case(ON_KEY_UP):
         {
+			osg::notify(osg::DEBUG_FP) << "		KEY UP" << std::endl;
 			m_onKeyUpEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "KEY UP" << std::endl;
 			break;
 		}
 			
@@ -165,8 +220,8 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_MOVE):
         {
 			//trigger our onMouseDown event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE MOVE" << std::endl;
 			m_onMouseMoveEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE MOVE" << std::endl;
 			break;
 		}
 			
@@ -174,8 +229,8 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_DRAG):
         {
 			//trigger our onMouseDrag event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE DRAG" << std::endl;
 			m_onMouseDragEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE DRAG" << std::endl;
 			break;
         } 
 			
@@ -183,8 +238,8 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_DOWN):
 		{
 			//trigger our onMouseDown event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE DOWN" << std::endl;
 			m_onMouseDownEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE DOWN" << std::endl;
 			break;
 		}
 			
@@ -192,15 +247,15 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_UP):
         {
 			//trigger our onMouseUp event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE UP" << std::endl;
 			m_onMouseUpEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE UP" << std::endl;
 			break;
         } 
 			
 		//double click do down and up
 		case(ON_DOUBLE_CLICK):
         {
-			osg::notify(osg::WARN) << "DOUBLE CLICK" << std::endl;
+			osg::notify(osg::DEBUG_FP) << "		DOUBLE CLICK" << std::endl;
 			m_onDoubleClickEvent->TriggerEvent(hudEvent);
 			break;
         } 
@@ -209,8 +264,8 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_ENTER):
         {
 			//trigger our onMouseUp event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE ENTER" << std::endl;
 			m_onMouseEnterEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE ENTER" << std::endl;
 			break;
         } 
 			
@@ -218,8 +273,8 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_LEAVE):
         {
 			//trigger our onMouseUp event
+			osg::notify(osg::DEBUG_FP) << "		MOUSE LEAVE" << std::endl;
 			m_onMouseEnterEvent->TriggerEvent(hudEvent);
-			osg::notify(osg::WARN) << "MOUSE LEAVE" << std::endl;
 			break;
         } 
 		default:break;
@@ -282,9 +337,9 @@ bool HudRegion::HandleChildEvents(HudInputEvent& hudEvent)
 //Load assest takes a folder name containing our assest
 //each region type expects to find specificlty named assests in the folder
 //Base implementation loads 
-//geom.ive, used as render geometry (if not present then a quad is generated)
-//base.png, used as the default texture
-//rollover.png, used for mouse rollovers
+//geom.osg, used as render geometry (if not present then a quad is generated with bottom left corner at 0,0)
+//base.png, used as the default texture if present
+//rollover.png, used for mouse rollovers if present
 //
 bool HudRegion::LoadAssest(const std::string& folderName)
 {
@@ -293,7 +348,7 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 	{return true;}
 
 	//try to load the file as an ive file
-	osg::Node* geometry = osgDB::readNodeFile(folderName+"/geom.ive");
+	osg::Node* geometry = osgDB::readNodeFile(folderName+"/geom.osg");
 	if(geometry==NULL)
 	{
 		//create an xy quad of size 1,1 in its place
@@ -312,7 +367,6 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 
 	//now try to load a base texture
 	std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png" );
-	if(baseTextureFile.empty()){baseTextureFile = osgDB::findDataFile( folderName+"/base.bmp" );}
 	//if(osgDB::fileExists(baseTextureFile) )
 	{
 		m_baseTexture = hogbox::LoadTexture2D(baseTextureFile);
@@ -485,12 +539,23 @@ void HudRegion::SetRolloverTexture(osg::Texture* texture)
 //
 void HudRegion::ApplyTexture(osg::Texture* tex)
 {
-	osg::StateSet* stateset = m_region->getOrCreateStateSet();
-	stateset->setTextureAttributeAndModes(0,tex,osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	if(!m_stateset.get()){return;}
+	
+	m_stateset->setTextureAttributeAndModes(0,tex,osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	
+	//if the textures image includes alpha enable alpha/blending
+	if(tex)
+	{
+		if(tex->getImage(0))
+		{
+			bool isImageTranslucent = tex->getImage(0)->getPixelFormat()==GL_RGBA || tex->getImage(0)->getPixelFormat()==GL_BGRA;
+			this->EnableAlpha(isImageTranslucent);
+		}
+	}
 	
 	//NOTE@tom, below isn't needed on platforms supporting glu
-	//apply a non power of two rezie callback if require
-	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, stateset);
+	//apply a non power of two rezie callback if required
+	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, m_stateset.get());
 	//if the texture casts as a rect apply the tex rect scaling to texture coords
 	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
 	if(tex2D){if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}}
@@ -569,6 +634,7 @@ void HudRegion::EnableAlpha(const bool& enable)
 		m_stateset->setMode(GL_BLEND, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
 
 	}else{
+		m_stateset->setRenderingHint(osg::StateSet::OPAQUE_BIN);
 		m_stateset->setMode(GL_BLEND, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
 	}
 	m_alphaEnabled = enable;
@@ -589,10 +655,10 @@ void HudRegion::SetStateSet(osg::StateSet* stateSet)
 
 osg::StateSet* HudRegion::GetStateSet()
 {
-	if(m_region.get()==NULL)
+	if(!m_stateset.get())
 	{return NULL;}
 
-	return m_region->getOrCreateStateSet();
+	return m_stateset.get();
 }
 
 
@@ -689,6 +755,8 @@ void HudRegion::SetChildrenList(const HudRegionList& list)
 
 //
 //Funcs to register event callbacks
+
+//mouse
 void HudRegion::AddOnMouseDownCallbackReceiver(HudEventCallback* callback)
 {
 	m_onMouseDownEvent->AddCallbackReceiver(callback);
@@ -736,7 +804,7 @@ void HudRegion::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
 }
 
 
-//helper func to rename geodes and attach user data
+//helper func to rename geodes and attach region as user data
 void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegion* region)
 {
 	//find geomtry in geodes

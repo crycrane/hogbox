@@ -5,8 +5,11 @@
 #include <osg/Texture2D>
 #include <osg/TextureRectangle>
 
-//#include <hogboxVision/VideoStream.h>
 #include <iostream>
+
+#if !defined(_MSC_VER) || !defined(_X86_)
+# include <cmath>
+#endif
 
 using namespace hogbox;
 
@@ -14,7 +17,7 @@ using namespace hogbox;
 /*static*/
 unsigned int CalcNextPowerOf2(unsigned int x)
 {
-#if defined(_MSC_VER) && defined(_X86_)
+#if defined(WIN32)
 	int val = x; // Get input
 	val--;
 	val = (val >> 1) | val;

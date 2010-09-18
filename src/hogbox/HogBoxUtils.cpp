@@ -3,6 +3,10 @@
 #include <osgDB/ReadFile>
 #include <osgDB/FileNameUtils>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #ifndef MAX_PATH
 	#define MAX_PATH 512
 #endif

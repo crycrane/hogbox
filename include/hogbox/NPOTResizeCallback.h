@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <hogbox/Export.h>
 #include <osg/Image>
 #include <osg/Texture>
 #include <osg/Texture2D>
@@ -16,7 +16,7 @@ namespace hogbox {
 // If the texture passed to the contructor is a tex rect than a texRect coord size up matrix is applied
 //but m_useAsCallback is set to false to indicate we don't need to actually apply this as a callback
 //
-class NPOTResizeCallback :	public osg::Texture2D::SubloadCallback
+class HOGBOX_EXPORT NPOTResizeCallback : public osg::Texture2D::SubloadCallback
 {
 public:
 	//

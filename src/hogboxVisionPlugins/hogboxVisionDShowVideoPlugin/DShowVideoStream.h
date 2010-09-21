@@ -40,7 +40,7 @@ public:
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
 	DShowVideoStream(const DShowVideoStream& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Stream(MagicSymbol, DShowVideoStream);
+	META_Stream(hogboxVision, DShowVideoStream);
 
 
 	//

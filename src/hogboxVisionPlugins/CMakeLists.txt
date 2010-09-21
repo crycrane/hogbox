@@ -33,11 +33,12 @@ SET(TARGET_COMMON_LIBRARIES
 
 ############################################################
 #
-#  Video plugins
+#  Video/webcam plugins
 #
 
 IF(WIN32)
     ADD_SUBDIRECTORY(hogboxVisionDShowVideoPlugin)
+	ADD_SUBDIRECTORY(hogboxVisionDShowWebCamPlugin)
 ELSE(WIN32)
     IF(APPLE)
         #CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0 FATAL_ERROR)

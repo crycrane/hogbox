@@ -21,6 +21,7 @@ public:
 	int GetWidth(){return m_width;}
 	int GetHeight(){ return m_height;}
 	float GetFPS(){return m_fps;}
+	int GetBitRate(){return m_bitRate;}
 
 
 	//
@@ -65,6 +66,8 @@ protected:
 	//width and height of the captured images
 	int m_width;
 	int m_height;
+
+	int m_bitRate;
 	
 	//frames per second for the format
 	float m_fps;

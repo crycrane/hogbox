@@ -60,13 +60,6 @@ public:
 
 			if(fileImage)
 			{
-				//copy the data into our image
-				/*image->setImage(fileImage->s(), fileImage->t(), fileImage->r(), fileImage->getInternalTextureFormat(),
-																				fileImage->getPixelFormat(),
-																				fileImage->getDataType(),
-																				fileImage->data(),
-																				osg::Image::USE_NEW_DELETE,
-																				fileImage->getPacking());*/
 				p_wrappedObject = fileImage;//->copySubImage(1,1,1,fileImage);
 
 			}else{

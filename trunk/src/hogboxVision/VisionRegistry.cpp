@@ -67,42 +67,13 @@ void VisionRegistry::AddVideoStreamTypeToRegistry(VideoFileStreamWrapper* protoW
 
 //
 //Allocate a VideoFileStream of the first registered type
-VideoFileStream* VisionRegistry::AllocateVideoFileStream()
+VideoFileStreamPtr VisionRegistry::AllocateVideoFileStream(const std::string& plugin)
 {
-	//if the sixe of m_videoFileStreamTypes is zero, try to load all video plugins
-	if(m_videoFileStreamTypes.size() == 0)
+	//see if it's already loaded
+	VideoFileStreamWrapperPtr protoWrapper = GetVideoFileStreamPluginProto(plugin);
+	if(!protoWrapper.get())
 	{
-		if(LoadVideoFileStreamPlugins() == 0)
-		{
-			//no plugins were loaded, inform user and return NULL
-			osg::notify(osg::WARN) << "HogBoxVision Video Plugin ERROR: Failed to load any Video Plugins. Video files can not be handled." << std::endl;
-			return NULL;
-		}
-	}
-	//try to use one of the already registered types
-	for(unsigned int i=0; i<m_videoFileStreamTypes.size(); i++)
-	{
-		//check the wrapper contains a valid videofilestream prototype
-		if(m_videoFileStreamTypes[i]->GetPrototype())
-		{
-			//clone the type then try calling create, if it works return it
-			VideoFileStream* type = dynamic_cast<VideoFileStream*>(m_videoFileStreamTypes[i]->GetPrototype()->cloneType());
-			if(type)
-			{return type;}
-		}
-	}
-	return NULL;
-}
-
-
-//
-//
-VideoFileStream* VisionRegistry::CreateVideoFileStream(const std::string& fileName, bool hflip, bool vflip, bool deinter)
-{
-	//if the sixe of m_videoFileStreamTypes is zero, try to load all video plugins
-	if(m_videoFileStreamTypes.size() == 0)
-	{
-		if(LoadVideoFileStreamPlugins() == 0)
+		if(!LoadVideoFileStreamPlugin(plugin))
 		{
 			//no plugins were loaded, inform user and return NULL
 			osg::notify(osg::WARN) << "HogBoxVision Video Plugin ERROR: Failed to load any Video Plugins. Video files can not be handled." << std::endl;
@@ -110,28 +81,98 @@ VideoFileStream* VisionRegistry::CreateVideoFileStream(const std::string& fileNa
 		}
 	}
 
-	//try to use one of the already registered types
-	for(unsigned int i=0; i<m_videoFileStreamTypes.size(); i++)
+	//check the wrapper contains a valid videofilestream prototype
+	if(protoWrapper->GetPrototype())
 	{
-		//check the wrapper contains a valid videofilestream prototype
-		if(m_videoFileStreamTypes[i]->GetPrototype())
-		{
-			//clone the type then try calling create, if it works return it
-			VideoFileStream* type = dynamic_cast<VideoFileStream*>(m_videoFileStreamTypes[i]->GetPrototype()->cloneType());
-			if(type)
-			{
-				if(type->CreateStream(fileName, hflip, vflip, deinter))
-				{
-					return type;
-				}
-				type = NULL;
-			}
-		}
+		//clone the type
+		VideoFileStreamPtr type = dynamic_cast<VideoFileStream*>(protoWrapper->GetPrototype()->cloneType());
+		if(type.get())
+		{return type;}
 	}
 
-	osg::notify(osg::WARN) << "HogBoxVision Video Plugin ERROR: No avaliable Video Plugin was able to load file '" << fileName << "." << std::endl;
 	return NULL;
 }
+
+
+//
+//
+VideoFileStreamPtr VisionRegistry::CreateVideoFileStream(const std::string& fileName, const std::string& plugin,
+														 bool hflip, bool vflip, bool deinter)
+{
+	//clone the type then try calling create, if it works return it
+	VideoFileStreamPtr type = AllocateVideoFileStream(plugin);
+	if(type.get())
+	{
+		if(type->CreateStream(fileName, hflip, vflip, deinter))
+		{
+			return type;
+		}
+	}
+	return NULL;
+}
+
+//webcams
+
+//
+//register a new videoFileStream type with the registry
+//
+void VisionRegistry::AddWebCamStreamTypeToRegistry(WebCamStreamWrapper* protoWrapper)
+{
+	//already exist by manager class name
+	//VideoFileStream* existing = GetXmlClassManager(object->className());
+	//if(existing){return;}
+	m_webcamStreamTypes.push_back(protoWrapper);
+}
+
+//
+//Allocate a VideoFileStream of the first registered type
+//
+WebCamStreamPtr VisionRegistry::AllocateWebCamStream(const std::string& plugin)
+{
+	//see if it's already loaded
+	WebCamStreamWrapperPtr protoWrapper = GetWebCamStreamPluginProto(plugin);
+	if(!protoWrapper.get())
+	{
+		if(!LoadWebCamStreamPlugin(plugin))
+		{
+			//no plugins were loaded, inform user and return NULL
+			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin ERROR: Failed to load any WebCam Plugins. Video files can not be handled." << std::endl;
+			return NULL;
+		}
+		protoWrapper = GetWebCamStreamPluginProto(plugin);
+		if(!protoWrapper.get()){return NULL;}
+	}
+
+	//check the wrapper contains a valid videofilestream prototype
+	if(protoWrapper->GetPrototype())
+	{
+		//clone the type then try calling create, if it works return it
+		WebCamStreamPtr type = dynamic_cast<WebCamStream*>(protoWrapper->GetPrototype()->cloneType());
+		if(type)
+		{return type;}
+	}
+
+	return NULL;
+}
+
+//
+//Try to allocate, create and return a video file stream using one of the registered types
+//
+WebCamStreamPtr VisionRegistry::CreateWebCamStream(const std::string& fileName, const std::string& plugin,
+													bool hflip, bool vflip, bool deinter)
+{
+	//clone the type then try calling create, if it works return it
+	WebCamStreamPtr type = AllocateWebCamStream(plugin);
+	if(type.get())
+	{
+		if(type->CreateStream(fileName, hflip, vflip, deinter))
+		{
+			return type;
+		}
+	}
+	return NULL;
+}
+
 
 //
 //Add an alias for a classtype to the library that will load it
@@ -144,7 +185,7 @@ void VisionRegistry::AddClassTypeAlias(const std::string mapClassType, const std
 //Load all avaliable plugins in the hogboxVisionPlugins folder matching the
 //VideoFileStreamPluginPrepend. Returns the number of plugins loaded
 //
-int VisionRegistry::LoadVideoFileStreamPlugins()
+int VisionRegistry::LoadVideoFileStreamPlugin(const std::string plugin)
 {
    //open the hogboxVisionPlugins folder and find all files matching the prepend
 	std::string visPluginsFolder = std::string("./hogboxVisPlugins-"+std::string(hogboxGetVersion()));
@@ -153,6 +194,50 @@ int VisionRegistry::LoadVideoFileStreamPlugins()
 	std::string ext = GetPluginExtension();
 	std::string prepend = GetVideoFileStreamPluginPrepend();
 	int loadCount = 0;
+
+	std::string libraryName = "";
+
+	//if we have a plugin name try to load it
+	if(!plugin.empty()){
+		std::string requestedPluginLibrary = visPluginsFolder + "/" + prepend + "_" + plugin + ext;
+		libraryName = requestedPluginLibrary;
+	}else{
+		libraryName = FindVideoFileLibraryName(0);
+	}
+
+	//it matches the prepend definition, load it.
+	if(!libraryName.empty())
+	{		
+		osgDB::Registry::LoadStatus result = this->LoadLibrary(libraryName);
+		if(result == osgDB::Registry::LOADED)
+		{
+			osg::notify(osg::INFO) << "HogBoxVision Video Plugin INFO: Plugin '" << libraryName << "', was loaded successfully." << std::endl;
+			loadCount++;
+			return true;
+		}else if(result == osgDB::Registry::PREVIOUSLY_LOADED) {
+
+			osg::notify(osg::WARN) << "HogBoxVision Video Plugin WARN: Plugin '" << libraryName << "' has already been loaded." << std::endl; 
+		}else{
+			//failed to load the libray
+			osg::notify(osg::WARN) << "HogBoxVision Video Plugin WARN: Failed to load Plugin '" << libraryName << "'." << std::endl; 
+		}
+	}
+	return false;
+}
+
+//
+//return the path of the index file in the visPlugins folder
+//that matches the video plugin library naming convention
+//
+const std::string VisionRegistry::FindVideoFileLibraryName(int index)
+{
+   //open the hogboxVisionPlugins folder and find all files matching the prepend
+	std::string visPluginsFolder = std::string("./hogboxVisPlugins-"+std::string(hogboxGetVersion()));
+	osgDB::DirectoryContents pluginsFolder = osgDB::getDirectoryContents(visPluginsFolder);
+
+	std::string ext = GetPluginExtension();
+	std::string prepend = GetVideoFileStreamPluginPrepend();
+	int foundCount = 0;
 
 	//loop over contents looking for any files with the corrent extension
 	for(unsigned int i=0; i<pluginsFolder.size(); i++)
@@ -167,33 +252,160 @@ int VisionRegistry::LoadVideoFileStreamPlugins()
 			{
 				std::string strippedName = pluginsFolder[i].substr(0,found);
 				std::string prependName = visPluginsFolder+strippedName;
-				std::string libraryName = visPluginsFolder+pluginsFolder[i];
+				std::string libraryName = visPluginsFolder+"/"+pluginsFolder[i];
 				//compare to prepend
 				if(prepend.compare(prependName) == 0)
 				{
 					//it matches the prepend definition, load it.
 					if(!libraryName.empty())
 					{		
-						osgDB::Registry::LoadStatus result = this->LoadLibrary(libraryName);
-						
-						if(result == osgDB::Registry::LOADED)
-						{
-							osg::notify(osg::INFO) << "HogBoxVision Video Plugin INFO: Plugin '" << libraryName << "', was loaded successfully." << std::endl;
-							loadCount++;
-						}else if(result == osgDB::Registry::PREVIOUSLY_LOADED) {
-
-							osg::notify(osg::WARN) << "HogBoxVision Video Plugin WARN: Plugin '" << libraryName << "' has already been loaded." << std::endl; 
-						}else{
-							//failed to load the libray
-							osg::notify(osg::WARN) << "HogBoxVision Video Plugin WARN: Failed to load Plugin '" << libraryName << "'." << std::endl; 
-						}
+						//we have a valid plugin name increase the fund count
+						foundCount++;
+						if(foundCount == index){return libraryName;}
 					}
 				}
 			}
 		}
 	}
+	return "";
+}
 
-	return loadCount;
+//
+//Return a videostream plugin prototype based on it's name
+//if no name is passed the first avaliable plugin is returned
+//
+VideoFileStreamWrapperPtr VisionRegistry::GetVideoFileStreamPluginProto(const std::string& plugin)
+{
+	//if no plugin name return the first
+	if(plugin.empty())
+	{
+		if(m_videoFileStreamTypes.size() > 0){return m_videoFileStreamTypes[0];}
+		return NULL;
+	}
+	//try to find requested
+	for(unsigned int i=0; i<m_videoFileStreamTypes.size(); i++)
+	{
+		//compare to plugin base name
+		if(m_videoFileStreamTypes[i]->GetPluginName() == plugin)
+		{
+			return m_videoFileStreamTypes[i];
+		}
+	}
+	return NULL;
+}
+
+//
+//Loads a specific webcam plugin, unless no plugin name is given,
+//in which case the first plugin found is loaded
+//return 0 on success -1 on fail
+//
+int VisionRegistry::LoadWebCamStreamPlugin(const std::string plugin)
+{
+   //open the hogboxVisionPlugins folder and find all files matching the prepend
+	std::string visPluginsFolder = std::string("./hogboxVisPlugins-"+std::string(hogboxGetVersion()));
+	osgDB::DirectoryContents pluginsFolder = osgDB::getDirectoryContents(visPluginsFolder);
+
+	std::string ext = GetPluginExtension();
+	std::string prepend = GetWebCamStreamPluginPrepend();
+	int loadCount = 0;
+
+	std::string libraryName = "";
+
+	//if we have a plugin name try to load it
+	if(!plugin.empty()){
+		std::string requestedPluginLibrary = prepend + "_" + plugin + ext;
+		libraryName = requestedPluginLibrary;
+	}else{
+		libraryName = FindWebCamLibraryName(0);
+	}
+
+	//it matches the prepend definition, load it.
+	if(!libraryName.empty())
+	{		
+		osgDB::Registry::LoadStatus result = this->LoadLibrary(libraryName);
+		if(result == osgDB::Registry::LOADED)
+		{
+			osg::notify(osg::INFO) << "HogBoxVision WebCam Plugin INFO: Plugin '" << libraryName << "', was loaded successfully." << std::endl;
+			loadCount++;
+			return true;
+		}else if(result == osgDB::Registry::PREVIOUSLY_LOADED) {
+
+			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin WARN: Plugin '" << libraryName << "' has already been loaded." << std::endl; 
+		}else{
+			//failed to load the libray
+			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin WARN: Failed to load Plugin '" << libraryName << "'." << std::endl; 
+		}
+	}
+	return false;
+}
+
+//
+//return the path of the index file in the visPlugins folder
+//that matches the video plugin library naming convention
+//
+const std::string VisionRegistry::FindWebCamLibraryName(int index)
+{
+   //open the hogboxVisionPlugins folder and find all files matching the prepend
+	std::string visPluginsFolder = std::string("./hogboxVisPlugins-"+std::string(hogboxGetVersion()));
+	osgDB::DirectoryContents pluginsFolder = osgDB::getDirectoryContents(visPluginsFolder);
+
+	std::string ext = GetPluginExtension();
+	std::string prepend = GetWebCamStreamPluginPrepend();
+	int foundCount = 0;
+
+	//loop over contents looking for any files with the corrent extension
+	for(unsigned int i=0; i<pluginsFolder.size(); i++)
+	{
+		if(osgDB::getFileExtensionIncludingDot(pluginsFolder[i]) == ext)
+		{
+			//check if the begining matches the videofilestream prepend
+			//stream upto the last _
+			size_t found;
+			found = pluginsFolder[i].find_last_of("_");
+			if(found != std::string::npos)
+			{
+				std::string strippedName = pluginsFolder[i].substr(0,found);
+				std::string prependName = visPluginsFolder+strippedName;
+				std::string libraryName = visPluginsFolder+"/"+pluginsFolder[i];
+				//compare to prepend
+				if(prepend.compare(prependName) == 0)
+				{
+					//it matches the prepend definition, load it.
+					if(!libraryName.empty())
+					{		
+						//we have a valid plugin name increase the fund count
+						foundCount++;
+						if(foundCount == index){return libraryName;}
+					}
+				}
+			}
+		}
+	}
+	return "";
+}
+
+//
+//Return a videostream plugin prototype based on it's name
+//if no name is passed the first avaliable plugin is returned
+//
+WebCamStreamWrapperPtr VisionRegistry::GetWebCamStreamPluginProto(const std::string& plugin)
+{
+	//if no plugin name return the first
+	if(plugin.empty())
+	{
+		if(m_webcamStreamTypes.size() > 0){return m_webcamStreamTypes[0];}
+		return NULL;
+	}
+	//try to find requested
+	for(unsigned int i=0; i<m_webcamStreamTypes.size(); i++)
+	{
+		//compare to plugin base name
+		if(m_webcamStreamTypes[i]->GetPluginName() == plugin)
+		{
+			return m_webcamStreamTypes[i];
+		}
+	}
+	return NULL;
 }
 
 //
@@ -204,7 +416,7 @@ const std::string VisionRegistry::GetVideoFileStreamPluginPrepend()
 #if defined(OSG_JAVA_BUILD)
     static std::string prepend = std::string("hogboxVisionPlugins")+std::string("/java");
 #else
-    static std::string prepend = std::string("hogboxVisionPlugins")+std::string("/");
+    static std::string prepend = std::string("hogboxVisPlugins-"+std::string(hogboxGetVersion()))+std::string("/");
 #endif
 
 #if defined(__CYGWIN__)
@@ -217,6 +429,30 @@ const std::string VisionRegistry::GetVideoFileStreamPluginPrepend()
     return prepend+"hogboxvision_video";
 #else
     return prepend+"hogboxvision_video";
+#endif	
+}
+
+//
+//get the platform specific prepend for videoFileStream plugins i.e. 'hogboxVisionPlugins/hogboxVision_Video_'
+//
+const std::string VisionRegistry::GetWebCamStreamPluginPrepend()
+{
+#if defined(OSG_JAVA_BUILD)
+    static std::string prepend = std::string("hogboxVisionPlugins")+std::string("/java");
+#else
+    static std::string prepend = std::string("hogboxVisPlugins-"+std::string(hogboxGetVersion()))+std::string("/");
+#endif
+
+#if defined(__CYGWIN__)
+    return prepend+"cygwin_"+"hogboxvision_webcam";
+#elif defined(__MINGW32__)
+    return prepend+"mingw_"+"hogboxvision_webcam";
+#elif defined(WIN32)
+    return prepend+"hogboxvision_webcam";
+#elif macintosh
+    return prepend+"hogboxvision_webcam";
+#else
+    return prepend+"hogboxvision_webcam";
 #endif	
 }
 

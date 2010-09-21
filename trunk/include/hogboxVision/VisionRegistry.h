@@ -35,27 +35,70 @@ public:
 	typedef std::vector< osg::ref_ptr<osgDB::DynamicLibrary> >		DynamicLibraryList;
 	typedef std::map< std::string, std::string>						ClassTypeAliasMap;
 
+	//videofiles
 	
 	//register a new videoFileStream type with the registry
 	void AddVideoStreamTypeToRegistry(VideoFileStreamWrapper* protoWrapper);
-	
+
 	//
 	//Allocate a VideoFileStream of the first registered type
-	VideoFileStream* AllocateVideoFileStream();
+	VideoFileStreamPtr AllocateVideoFileStream(const std::string& plugin="");
 
 	//
 	//Try to allocate, create and return a video file stream using one of the registered types
-	VideoFileStream* CreateVideoFileStream(const std::string& fileName, bool hflip=false, bool vflip=false, bool deinter=false);
+	VideoFileStreamPtr CreateVideoFileStream(const std::string& fileName, const std::string& plugin = "",
+											bool hflip=false, bool vflip=false, bool deinter=false);
+
+	//webcams
+
+	//register a new videoFileStream type with the registry
+	void AddWebCamStreamTypeToRegistry(WebCamStreamWrapper* protoWrapper);
+
+	//
+	//Allocate a VideoFileStream of the first registered type
+	WebCamStreamPtr AllocateWebCamStream(const std::string& plugin="");
+
+	//
+	//Try to allocate, create and return a video file stream using one of the registered types
+	WebCamStreamPtr CreateWebCamStream(const std::string& fileName, const std::string& plugin="",
+										bool hflip=false, bool vflip=false, bool deinter=false);
 
 
 
+	//
 	void AddClassTypeAlias(const std::string mapClassType, const std::string toLibraryName);
 
 	//
-	//Load all avaliable plugins in the hogboxVisionPlugins folder matching the
-	//VideoFileStreamPluginPrepend. Returns the number of plugins loaded
-	int LoadVideoFileStreamPlugins();
+	//Loads a specific video plugin, unless no plugin name is given,
+	//in which case the first plugin found is loaded
+	//return 0 on success -1 on fail
+	int LoadVideoFileStreamPlugin(const std::string plugin="");
 
+	//
+	//return the path of the index file in the visPlugins folder
+	//that matches the video plugin library naming convention
+	const std::string FindVideoFileLibraryName(int index);
+
+	//
+	//Return a videostream plugin prototype based on it's name
+	//if no name is passed the first avaliable plugin is returned
+	VideoFileStreamWrapperPtr GetVideoFileStreamPluginProto(const std::string& plugin);
+	
+	//
+	//Loads a specific webcam plugin, unless no plugin name is given,
+	//in which case the first plugin found is loaded
+	//return 0 on success -1 on fail
+	int LoadWebCamStreamPlugin(const std::string plugin="");
+
+	//
+	//return the path of the index file in the visPlugins folder
+	//that matches the video plugin library naming convention
+	const std::string FindWebCamLibraryName(int index);
+
+	//
+	//Return a videostream plugin prototype based on it's name
+	//if no name is passed the first avaliable plugin is returned
+	WebCamStreamWrapperPtr GetWebCamStreamPluginProto(const std::string& plugin);
 
 	//
 	//Load a library, which should register an plugin of some sort
@@ -68,8 +111,10 @@ protected:
 	VisionRegistry(void);
 	virtual ~VisionRegistry(void);
 
-	//get the platform specific prepend for videoFileStream plugins i.e. 'hogboxVisionPlugins/hogboxVision_Video_'
+	//get the platform specific prepend for videoFileStream plugins i.e. 'hogboxVisionPlugins/hogboxVision_video_'
 	const std::string GetVideoFileStreamPluginPrepend();
+
+	const std::string GetWebCamStreamPluginPrepend();
 
 	//get the extension used for plugins (including the . )
 	const std::string GetPluginExtension();
@@ -112,7 +157,7 @@ public:
 		{
 			//create the wrapper and add to the reg
 			proto->setName(name);
-			_wrapper = new VideoFileStreamWrapper(proto);
+			_wrapper = new VideoFileStreamWrapper(std::string(name), proto);
 			
 			VisionRegistry::Instance()->AddVideoStreamTypeToRegistry(_wrapper);
 					
@@ -131,12 +176,57 @@ protected:
 };
 
 //
-//Register a new XmlClassManager type plugin 
-//classname is the base classtype the plugin can handle, other types
-//plugin is an implementation of XmlClassManager
+//register proxy
+//
+class WebCamStreamRegistryProxy
+{
+public:
+	WebCamStreamRegistryProxy(WebCamStream* proto, const char* name)
+	{
+		//check the registry instance
+		if(VisionRegistry::Instance())
+		{
+			//create the wrapper and add to the reg
+			proto->setName(name);
+			_wrapper = new WebCamStreamWrapper(std::string(name), proto);
+			
+			VisionRegistry::Instance()->AddWebCamStreamTypeToRegistry(_wrapper);
+					
+		}
+	}
+	
+	virtual ~WebCamStreamRegistryProxy(void)
+	{
+		_wrapper = NULL;
+	}
+	
+protected:
+	
+	WebCamStreamWrapperPtr _wrapper;
+	
+};
+
+#define USE_VISION_VIDEO_PLUGIN(ext) \
+extern "C" void hogboxvision_video_##ext(void); \
+static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_video_##ext);
+
+
+//
+//Register a new videofilestream type plugin 
 #define REGISTER_VISION_VIDEO_PLUGIN(ext, classname) \
-	extern "C" void hogboxvision_##ext(void) {} \
-	static hogboxVision::VideoFileStreamRegistryProxy g_proxy_##ext(new (##classname), #classname );
+	extern "C" void hogboxvision_video_##ext(void) {} \
+	static hogboxVision::VideoFileStreamRegistryProxy g_proxy_##ext(new (##classname), #ext );
+
+
+#define USE_VISION_WEBCAM_PLUGIN(ext) \
+extern "C" void hogboxvision_webcam_##ext(void); \
+static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_webcam_##ext);
+
+//
+//Register a new videofilestream type plugin 
+#define REGISTER_VISION_WEBCAM_PLUGIN(ext, classname) \
+	extern "C" void hogboxvision__webcam_##ext(void) {} \
+	static hogboxVision::WebCamStreamRegistryProxy g_proxy_##ext(new (##classname), #ext );
 
 
 }; //end hogboxVision namespace

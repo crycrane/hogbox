@@ -7,6 +7,7 @@
 
 #include <hogboxVision/VisionRegistry.h>
 
+REGISTER_VISION_VIDEO_PLUGIN(dshow, DShowVideoStream)
 
 //
 //
@@ -563,4 +564,3 @@ HRESULT DShowVideoStream::GetGraphState()
 	return S_OK;
 }
 
-REGISTER_VISION_VIDEO_PLUGIN(DShowVideoStream, DShowVideoStream)

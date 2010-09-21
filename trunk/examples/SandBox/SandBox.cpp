@@ -9,6 +9,8 @@
 #include <hogboxDB/HogBoxManager.h>
 #include <hogboxDB/HogBoxRegistry.h>
 
+#include <hogboxVision/VisionRegistry.h>
+
 #include <hogbox/HogBoxNotifyHandler.h>
 
 #include <hogboxHUD/HogBoxHud.h>
@@ -56,18 +58,24 @@ int main( int argc, const char* argv[] )
 	hogboxDB::HogBoxManager* manager = hogboxDB::HogBoxManager::Instance();
 	manager->ReadDataBaseFile("Data/hogboxDB.xml");
 
+	//load the main window
 	hogbox::HogBoxViewerPtr viewer = manager->ReadNodeByIDTyped<hogbox::HogBoxViewer>("MainWindow");
 
 	osg::MatrixTransform* root = new osg::MatrixTransform();
 	viewer->SetSceneNode(root);
 
+	//load the main light
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");
 
 	light1->ApplyLightToGraph(root);//(Don't like this)
 	root->addChild(light1->GetLight());
 
+	//load our main object
 	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("BoxMan.Object");
 	root->addChild(hogboxObject->GetRootNode());
+
+	//load the webcam
+	hogboxVision::WebCamStreamPtr webcam = manager->ReadNodeByIDTyped<hogboxVision::WebCamStream>("MainWebCam");
 
 	//add hud
 	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));

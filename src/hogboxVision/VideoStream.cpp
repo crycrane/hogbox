@@ -19,7 +19,7 @@ using namespace hogboxVision;
 #endif
 
 	/*static*/
-unsigned int VideoStreamBase::CalcNextPowerOf2(unsigned int x)
+unsigned int VideoStreamBase::computeNextPowerOfTwo(unsigned int x)
 {
 #if defined(_MSC_VER) && defined(_X86_)
 	int val = x; // Get input

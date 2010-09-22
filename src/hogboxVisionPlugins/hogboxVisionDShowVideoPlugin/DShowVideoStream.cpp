@@ -203,7 +203,7 @@ bool DShowVideoStream::CreateStream(const std::string& config, bool hflip, bool 
 
 	//call pause, to push out the first frame
 	//to our renderer
-	this->pause();
+	this->play();
 
 	//the stream is now valid
 	m_isValid=true;

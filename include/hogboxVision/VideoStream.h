@@ -92,7 +92,7 @@ public:
 
 	//
 	//Helper to calculate the next power of two up from value x
-	static unsigned int CalcNextPowerOf2(unsigned int x);
+	static unsigned int computeNextPowerOfTwo(unsigned int x);
 
 protected:
 

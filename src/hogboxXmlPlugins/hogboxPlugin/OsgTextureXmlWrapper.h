@@ -26,7 +26,17 @@ public:
 
 	//pass node representing the texture object
 	OsgTextureXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "Texture")
+			: hogboxDB::XmlClassWrapper(node, "Texture"),
+			_wrapU("REPEAT"),
+			_wrapV("REPEAT"),
+			_wrapW("REPEAT"),
+			//filtering
+			_minFilter("LINEAR_MIPMAP_NEAREST"),
+			_magFilter("LINEAR_MIPMAP_NEAREST"),
+			//auto gen mipmaps, default to true
+			_autoGenMipMaps(true),
+			//resize nonpower of two, default to true
+			_resizeNPOT(true)
 	{
 
 		osg::Texture* texture = NULL;
@@ -87,6 +97,14 @@ public:
 		m_xmlAttributes["WrapV"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapV);
 		m_xmlAttributes["WrapW"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapW);
 
+		m_xmlAttributes["MinFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_minFilter);
+		m_xmlAttributes["MagFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_magFilter);
+
+		m_xmlAttributes["GenMipMaps"] = new hogboxDB::TypedXmlAttribute<bool>(&_autoGenMipMaps);
+		m_xmlAttributes["ResizeNPOT"] = new hogboxDB::TypedXmlAttribute<bool>(&_resizeNPOT);
+
+		m_xmlAttributes["MaxAnisotropy"] = new hogboxDB::TypedXmlAttribute<float>(&_maxAnisotropic);
+		
 		//store texture
 		p_wrappedObject = texture;
 	}
@@ -107,6 +125,13 @@ public:
 		texture->setWrap(osg::Texture::WRAP_T, GetWrapMode(_wrapV));
 		texture->setWrap(osg::Texture::WRAP_R, GetWrapMode(_wrapW));
 
+		//apply filter mode
+		texture->setFilter(osg::Texture2D::MIN_FILTER, GetFilterMode(_minFilter));
+		texture->setFilter(osg::Texture2D::MAG_FILTER, GetFilterMode(_magFilter));
+
+		texture->setResizeNonPowerOfTwoHint(_resizeNPOT);
+		texture->setUseHardwareMipMapGeneration(_autoGenMipMaps);
+
 		return true;
 	}
 
@@ -119,12 +144,39 @@ public:
 		if(wrapStr == "MIRROR"){return osg::Texture::MIRROR;}
 		return osg::Texture::REPEAT;
 	}
+
+	osg::Texture::FilterMode GetFilterMode(const std::string& filterStr)
+	{
+		if(filterStr == "LINEAR"){return osg::Texture::LINEAR;}
+		if(filterStr == "LINEAR_MIPMAP_LINEAR"){return osg::Texture::LINEAR_MIPMAP_LINEAR;}
+		if(filterStr == "LINEAR_MIPMAP_NEAREST"){return osg::Texture::LINEAR_MIPMAP_NEAREST;}
+		if(filterStr == "NEAREST"){return osg::Texture::NEAREST;}
+		if(filterStr == "NEAREST_MIPMAP_LINEAR"){return osg::Texture::NEAREST_MIPMAP_LINEAR;}
+		if(filterStr == "NEAREST_MIPMAP_NEAREST"){return osg::Texture::NEAREST_MIPMAP_NEAREST;}
+		return osg::Texture::LINEAR;
+	}
+
 public:
 
 	//helper values for loading
+
+	//tex wrap mode
 	std::string _wrapU;
 	std::string _wrapV;
 	std::string _wrapW;
+
+	//filtering
+	std::string _minFilter;
+	std::string _magFilter;
+
+	//auto gen mipmaps, default to true
+	bool _autoGenMipMaps;
+
+	//resize nonpower of two, default to true
+	bool _resizeNPOT;
+
+	//max anisotropy
+	float _maxAnisotropic;
 
 protected:
 

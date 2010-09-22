@@ -17,6 +17,7 @@
 #include <hogboxHUD/ButtonRegion.h>
 #include <hogboxHUD/OsgInput.h>
 
+
 int main( int argc, const char* argv[] )
 {
 	
@@ -110,4 +111,3 @@ int main( int argc, const char* argv[] )
 
 	return 0;
 }
-

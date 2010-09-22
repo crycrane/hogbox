@@ -3,6 +3,7 @@
 #include <hogbox/HogBoxUtils.h>
 #include <hogbox/SystemInfo.h>
 #include <osg/BlendEquation>
+#include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogbox;
 
@@ -241,6 +242,20 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	//apply the texture to the materials stateset
 	m_stateset->setTextureAttributeAndModes(channel, unit->texture, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
 	m_stateset->addUniform(unit->sampler, osg::StateAttribute::ON);
+
+	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*>(tex); 	
+	if(tex2D){
+		//if we don't want to resize the texture to power of two
+		//and the hardware dows not support npot textures. The apply
+		//a NPOTResizeCallback
+		if(tex2D->getResizeNonPowerOfTwoHint() == false){
+			osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex2D, channel, m_stateset.get());
+			if(resizer->useAsCallBack()){
+				tex2D->setSubloadCallback(resizer.get());
+			}
+		}
+	}
+
 
 	//flag the texture as on
 	unit->enabled = true;

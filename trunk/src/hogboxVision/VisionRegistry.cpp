@@ -76,9 +76,11 @@ VideoFileStreamPtr VisionRegistry::AllocateVideoFileStream(const std::string& pl
 		if(!LoadVideoFileStreamPlugin(plugin))
 		{
 			//no plugins were loaded, inform user and return NULL
-			osg::notify(osg::WARN) << "HogBoxVision Video Plugin ERROR: Failed to load any Video Plugins. Video files can not be handled." << std::endl;
+			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin ERROR: Failed to load any WebCam Plugins. Video files can not be handled." << std::endl;
 			return NULL;
 		}
+		protoWrapper = GetVideoFileStreamPluginProto(plugin);
+		if(!protoWrapper.get()){return NULL;}
 	}
 
 	//check the wrapper contains a valid videofilestream prototype
@@ -199,7 +201,7 @@ int VisionRegistry::LoadVideoFileStreamPlugin(const std::string plugin)
 
 	//if we have a plugin name try to load it
 	if(!plugin.empty()){
-		std::string requestedPluginLibrary = visPluginsFolder + "/" + prepend + "_" + plugin + ext;
+		std::string requestedPluginLibrary = prepend + "_" + plugin + ext;
 		libraryName = requestedPluginLibrary;
 	}else{
 		libraryName = FindVideoFileLibraryName(0);

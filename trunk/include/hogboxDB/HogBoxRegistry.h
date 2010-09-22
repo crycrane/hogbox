@@ -130,7 +130,7 @@ static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxxml_##ext);
 //plugin is an implementation of XmlClassManager
 #define REGISTER_HOGBOXPLUGIN(ext, classname) \
 	extern "C" void hogboxxml_##ext(void) {} \
-	static hogboxDB::XmlNodeManagerRegistryProxy g_proxy_##ext(new classname , "ext" );
+	static hogboxDB::XmlNodeManagerRegistryProxy g_proxy_##ext(new classname , #ext );
 
 
 }; //end hogboxDB namespace

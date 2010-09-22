@@ -14,11 +14,13 @@
 using namespace hogbox;
 
 
-/*static*/
-unsigned int CalcNextPowerOf2(unsigned int x)
+//
+//Compute next power of two up from x
+//
+unsigned int computeNextPowerOfTwo(unsigned int x)
 {
 #if defined(WIN32)
-	int val = x; // Get input
+	int val = x; 
 	val--;
 	val = (val >> 1) | val;
 	val = (val >> 2) | val;
@@ -70,10 +72,10 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		
 		//its not power of two, find next up
 		if(m_scaledWidth != m_imageWidth)
-		{m_scaledWidth = CalcNextPowerOf2((unsigned int) m_imageWidth);}
+		{m_scaledWidth = computeNextPowerOfTwo((unsigned int) m_imageWidth);}
 		//same for height
 		if(m_scaledHeight != m_imageHeight)
-		{m_scaledHeight = CalcNextPowerOf2((unsigned int) m_imageHeight);}
+		{m_scaledHeight = computeNextPowerOfTwo((unsigned int) m_imageHeight);}
 		
 		//set the texture to beleive it is of power of two size
 		texture2D->setTextureSize(m_scaledWidth, m_scaledHeight);
@@ -104,18 +106,14 @@ void NPOTResizeCallback::load(const osg::Texture2D& texture, osg::State&) const
 	
 	const osg::Image* _image = texture.getImage();
 
-	osg::notify(osg::WARN) << "Load image with data of size " << m_scaledWidth << ", " << m_scaledHeight << std::endl;
-	
 	//create texture space to include the power of two size up
 	//this way writes to the video memory will be quicker
-	/*glTexImage2D(GL_TEXTURE_2D, 0, 
-		osg::Image::computeNumComponents(_image->getInternalTextureFormat()), 
+	glTexImage2D(GL_TEXTURE_2D, 0, 
+		_image->getInternalTextureFormat(), 
 		(int)m_scaledWidth, 
 		(int)m_scaledHeight, 
 		0, _image->getPixelFormat(), 
-		_image->getDataType(), 0);*/
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_scaledWidth, m_scaledHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	
+		_image->getDataType(), 0);	
 }
 
 void NPOTResizeCallback::subload(const osg::Texture2D& texture, osg::State& state) const 
@@ -125,7 +123,7 @@ void NPOTResizeCallback::subload(const osg::Texture2D& texture, osg::State& stat
 	const osg::Image* _image = texture.getImage();
 
 	if(_image->valid() && m_modifiedCount != _image->getModifiedCount())
-	{	
+	{
 		//copy the actual res image into the sized up buffer
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 						m_imageWidth, m_imageHeight, _image->getPixelFormat(), 

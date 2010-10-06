@@ -1,5 +1,7 @@
 #pragma once
 
+//needs review still esentially the same code from old hogbox
+
 //////////////////////////////////////////////////////////
 // Author:	Thomas Hogarth								//
 // Date:	12/09/2007									//

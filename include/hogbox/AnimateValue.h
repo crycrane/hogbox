@@ -61,12 +61,14 @@ public:
 	public:
 		KeyFrameQueue()
 			: osg::Object(),
+			m_isPlaying(false),
 			m_currentKeyIndex(0)
 		{
 		}
 		/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 		KeyFrameQueue(const KeyFrameQueue& queue,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
 			: osg::Object(queue, copyop),
+			m_isPlaying(queue.m_isPlaying),
 			m_keyFrameQueue(queue.m_keyFrameQueue),
 			m_currentKeyIndex(queue.m_currentKeyIndex)
 		{
@@ -100,7 +102,7 @@ public:
 		}
 		//return the current front of the queue
 		KeyFrame* GetCurrentKey(){
-			return GetKey(0);
+			return GetKey(m_currentKeyIndex);
 		}
 		//return the current number of keys in the queue
 		const unsigned int GetNumKeys(){ 
@@ -115,13 +117,34 @@ public:
 			return true;
 		}
 		
-		//pops the current key from the front, returns false
-		//if there are no more keys in the queue 
-		bool ChangeToNextKey(){
-			m_keyFrameQueue.pop_front();
-			//check the new size
-			unsigned int size = m_keyFrameQueue.size();
-			if(size > 0){return true;}
+		//
+		//Update the current keys osgAAnimation motion time,
+		//also handle moving to the next key if the motion reaches it's
+		//duration time.
+		//Returns true if we are still animating, false if not
+		bool Update(const float& timePassed)
+		{
+			if(m_isPlaying)
+			{
+				//get current key frame
+				KeyFrame* key = this->GetCurrentKey();
+				if(key)
+				{	
+					//update the motions time
+					key->motion->update(timePassed);
+
+					//check if our motion has completed
+					if(key->motion->getTime() >= key->motion->getDuration())
+					{
+						//move to next key if we have one
+						this->MoveToNextKey();
+						return true;
+					}
+					return true;
+				}else{
+					return false;
+				}
+			}
 			return false;
 		}
 		
@@ -129,7 +152,28 @@ public:
 		
 		virtual ~KeyFrameQueue(){}
 		
+		//pops the current key from the front, returns false
+		//if there are no more keys in the queue 
+		bool MoveToNextKey(){
+			
+			//ensure we reset the current key
+			KeyFrame* key = GetCurrentKey();
+			if(key)
+			{key->motion->reset();}
+			
+			//move forward a key (need transport direction here)
+			m_currentKeyIndex++;
+			unsigned int size = m_keyFrameQueue.size();
+			//if we reach the end reset m_currentKey to 0 and return false
+			if(m_currentKeyIndex >= size){m_currentKeyIndex = 0; return false;}
+			return true;
+		}
+		
 	protected:
+		
+		//play state of the queue
+		bool m_isPlaying;
+		
 		std::deque<KeyFrame> m_keyFrameQueue;
 		unsigned int m_currentKeyIndex;
 	};
@@ -184,8 +228,11 @@ public:
 	//and the keys end value. If we have reached the end of the keyframe queue
 	//false is returned,
 	bool Update(const float& timePassed){
+		
+		return m_keyFrameQueue->Update(timePassed);
+		
 		//get current key frame
-		KeyFrame* key = this->GetCurrentKey();
+		/*KeyFrame* key = this->GetCurrentKey();
 		if(key)
 		{	
 			//update the motions time
@@ -207,7 +254,7 @@ public:
 			return true;
 		}else{
 			return false;
-		}
+		}*/
 	}
 
 protected:
@@ -217,12 +264,12 @@ protected:
 	//pops the current key from the front, returns false
 	//if there are no more keys in the queue 
 	bool ChangeToNextKey(){
-		m_keyFrameQueue->ChangeToNextKey();//pop_front();
+		/*m_keyFrameQueue->ChangeToNextKey();//pop_front();
 		//set the new start value to the current value
 		m_start = m_value;
 		//check the new size
 		unsigned int size = m_keyFrameQueue->GetNumKeys();
-		if(size > 0){return true;}
+		if(size > 0){return true;}*/
 		return false;
 	}
 

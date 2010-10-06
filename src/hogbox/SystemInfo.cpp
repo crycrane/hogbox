@@ -12,10 +12,10 @@ using namespace hogbox;
 //Changing to the dreaded global instance below has fixed things but I need to try and correct this
 osg::ref_ptr<SystemInfo> s_hogboxSystemInfoInstance = NULL;
 
-SystemInfo* SystemInfo::Instance(bool erase)
+SystemInfo* SystemInfo::Instance(GatherLevel level, bool erase)
 {
 	if(s_hogboxSystemInfoInstance==NULL)
-	{s_hogboxSystemInfoInstance = new SystemInfo();}		
+	{s_hogboxSystemInfoInstance = new SystemInfo(level);}		
 	if(erase)
 	{
 		s_hogboxSystemInfoInstance->destruct();
@@ -24,12 +24,47 @@ SystemInfo* SystemInfo::Instance(bool erase)
     return s_hogboxSystemInfoInstance.get();
 }
 
-SystemInfo::SystemInfo(void) 
+SystemInfo::SystemInfo(GatherLevel level) 
 	: osg::Referenced(),
-	m_maxTestedBuffers(0),
+	_gatherLevel(level),
+	_osName(""),
+//Default info
+	m_maxTestedBuffers(2),
 	m_maxTestedStencilBits(0),
-	m_maxTestedDepthBits(0),
+	m_maxTestedDepthBits(8),
 	m_maxTestedMultiSamples(0),
+	//The system info values
+	_glVersionNumber(0.0f),
+	_glslVersionNumber(0.0f),
+	_rendererName(""),
+	_vendorName(""),
+	//buffers
+	_quadBufferedStereoSupported(false),
+	_multiSamplingSupported(false),
+	_maxMultiSamples(0),
+	_bStencilBufferedSupported(false),
+	//shaders
+	_glslLangSupported(false),
+	_shaderObjectSupported(false),
+	_gpuShader4Supported(false),
+	_vertexShadersSupported(false),
+	_fragmentShadersSupported(false),
+	_geometryShadersSupported(false),
+	//texturing
+	_maxTex2DSize(256),
+	_texRectangleSupported(false),
+	_maxTextureUnits(2),
+	_maxVertexTextureUnits(0),
+	_maxFragmentTextureUnits(0),
+	_maxGeometryTextureUnits(0),
+	_totalTextureUnits(2),
+	_maxTextureCoordUnits(2),
+	//framebufers / render to texture stuff 
+	_frameBufferObjectSupported(false),
+	_totalDedicatedGLMemory(0),
+	_avaliableGLMemory(0),
+	_avliableDedicatedGLMemory(0),
+	//list of Systeminfolevels
 	m_renderSupportInfo(NULL)
 {
 	//call init to get info
@@ -41,47 +76,189 @@ SystemInfo::~SystemInfo(void)
 	m_renderSupportInfo = NULL;
 }
 
+//
+//Run init on first instance
+//will gather info at the requested level
+//
 int SystemInfo::Init(bool printReport)
 {
-	//create graphics context using the maximum value for each trait (i.e. samples, depth buffer bits etc)
-	//this will also set our max tested values
-	osg::ref_ptr<osg::GraphicsContext> graphicsContext = FindGoodContext();
-
-	//if it fails then we cant create even our minimum spec
-	if(!graphicsContext)
-	{osg::notify(osg::FATAL) << "SystemInfo: FATAL ERROR: Failed to create a valid gl context." << std::endl; return -1;}
-
-	osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer();
-	//attach the graphics context to the viewers camera
-	viewer->getCamera()->setGraphicsContext(graphicsContext.get());
-	viewer->getCamera()->setViewport(0,0,0,0);
-
-	//create our gl info gathering callback
-	m_renderSupportInfo = new GLSupportCallback();
-
-	//atach our info gathering frame callback to the viewer camera
-	viewer->getCamera()->setFinalDrawCallback(m_renderSupportInfo.get());
-	viewer->getCamera()->setClearColor(osg::Vec4( 1.0, 1.0, 1.0f, 1.0));
-
-	//launch the window and render a frame so our callback can get at the graphics context
-	//and gather the required gl support info. Single threaded as we want to be sure the
-	//callback is triggered before return from frame.
-	viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
-	viewer->realize();
-	viewer->frame();
-
-	//now create the memory info callback and attach as final draw
-	m_memoryInfo = new GPUMemoryCallback();
-	viewer->getCamera()->setFinalDrawCallback(m_memoryInfo.get());
-
-	//fire another frame to fill GPUMemoryInfo
-	viewer->frame();
+	//determine our os version
+#ifdef _WIN32
+	//GetVersionEx();
+	_osName = "Windows";
+#elif __APPLE__ & __MACH__ 
+	_osName = "MacOSX";
+#elif __APPLE__ //
+	osName = "iOS";
+#endif
+	
+	osg::ref_ptr<osg::GraphicsContext> graphicsContext;
+	
+	switch (_gatherLevel) {
+		case CONFIG:
+			SetSystemInfoFromConfig("SystemInfo.xml");
+			break;
+		case FULL:
+			//create graphics context using the maximum value for each trait (i.e. samples, depth buffer bits etc)
+			//this will also set our max tested values
+			graphicsContext = FindGoodContext();
+			SetGLSystemInfoFromGather(graphicsContext);
+			break;
+			
+		case GL_GATHER:
+			SetGLSystemInfoFromGather(NULL);
+			break;
+			
+		default:
+			break;
+	}
 	
 	if(printReport){PrintReportToLog();}
 
 	return 1;
 }
 
+//
+//Load system info from an xml config file, returns true if used
+bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
+{
+	
+}
+
+//
+//Set the local glSystemInfo from the GL gathers
+//will also fire off the gather if it hasn't been done yet (will create a viewer)
+//
+bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> graphicsContext)
+{
+	//if the m_renderSupportInfo isn't valid, then a gather needs to be performed
+	if(!m_renderSupportInfo.get())
+	{
+		//no external context supplied, create one using our defaults
+		if(!graphicsContext.get())
+		{
+			graphicsContext = CreateGLContext(osg::Vec2(128,128));
+			if(!graphicsContext.get())
+			{osg::notify(osg::FATAL) << "SystemInfo::SetGLSystemInfoFromGather: ERROR: Failed to create a GL context." << std::endl;return false;}
+				
+		}
+		
+		osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer();
+		if(!viewer.get())
+		{osg::notify(osg::FATAL) << "SystemInfo::SetGLSystemInfoFromGather ." << std::endl;return false;}
+		//attach the graphics context to the viewers camera
+		viewer->getCamera()->setGraphicsContext(graphicsContext.get());
+		viewer->getCamera()->setViewport(0,0,0,0);
+		
+		//create our gl info gathering callback
+		m_renderSupportInfo = new GLSupportCallback();
+		if(!m_renderSupportInfo){return false;}
+		
+		//atach our info gathering frame callback to the viewer camera
+		viewer->getCamera()->setFinalDrawCallback(m_renderSupportInfo.get());
+		viewer->getCamera()->setClearColor(osg::Vec4( 1.0, 1.0, 1.0f, 1.0));
+		
+		//launch the window and render a frame so our callback can get at the graphics context
+		//and gather the required gl support info. Single threaded as we want to be sure the
+		//callback is triggered before return from frame.
+		viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+		viewer->realize();
+		viewer->frame();
+		
+		//now create the memory info callback and attach as final draw
+		m_glMemoryInfo = new GPUMemoryCallback();
+		if(m_glMemoryInfo.get())
+		{
+			viewer->getCamera()->setFinalDrawCallback(m_glMemoryInfo.get());
+			//fire another frame to fill GPUMemoryInfo
+			viewer->frame();
+		}
+	}
+	
+	//now set locals from m_renderSupportInfo
+	_glVersionNumber = m_renderSupportInfo->getGLVersionNumber();
+	_glslVersionNumber = m_renderSupportInfo->getGLSLVersionNumber();
+	
+	_rendererName = m_renderSupportInfo->getRendererName();
+	_vendorName = m_renderSupportInfo->getVendorName();
+	
+	//buffers
+	
+	_quadBufferedStereoSupported = m_renderSupportInfo->quadBufferedStereoSupported();
+	
+	_multiSamplingSupported = m_renderSupportInfo->multiSamplingSupported();
+	_maxMultiSamples = m_renderSupportInfo->maxMultiSamplesSupported();
+	
+	_bStencilBufferedSupported = m_renderSupportInfo->stencilBufferSupported();
+	
+	//shaders
+	
+	_glslLangSupported = m_renderSupportInfo->glslLangSupported();
+	_shaderObjectSupported = m_renderSupportInfo->shaderObjectSupported();
+	_gpuShader4Supported = m_renderSupportInfo->gpuShader4Supported();
+	_vertexShadersSupported = m_renderSupportInfo->vertexShadersSupported();
+	_fragmentShadersSupported = m_renderSupportInfo->fragmentShadersSupported();
+	_geometryShadersSupported = m_renderSupportInfo->geometryShadersSupported();
+	
+	//texturing
+	
+	_maxTex2DSize = m_renderSupportInfo->maxTex2DSize();
+	_texRectangleSupported = m_renderSupportInfo->textureRectangleSupported();
+	
+	_maxTextureUnits = m_renderSupportInfo->maxTextureUnits();
+	_maxVertexTextureUnits = m_renderSupportInfo->maxVertexTextureUnits();
+	_maxFragmentTextureUnits = m_renderSupportInfo->maxFragmentTextureUnits();
+	_maxGeometryTextureUnits = m_renderSupportInfo->maxGeometryTextureUnits();
+	_totalTextureUnits = m_renderSupportInfo->totalTextureUnitsAvaliable();
+	
+	_maxTextureCoordUnits = m_renderSupportInfo->maxTextureCoordUnits();
+	
+	//framebufers / render to texture stuff 
+	
+	_frameBufferObjectSupported = m_renderSupportInfo->frameBufferObjectSupported();
+	
+	//GL Memory
+	if(m_glMemoryInfo.get())
+	{
+		_totalDedicatedGLMemory = m_glMemoryInfo->totalDedicatedVideoMemory();
+		_avaliableGLMemory = m_glMemoryInfo->avaliableMemory();
+		_avliableDedicatedGLMemory = m_glMemoryInfo->avaliableDedicatedVideoMemory();
+	}
+	
+	return true;
+}
+
+
+//
+//Creates a gl context from the current info settings
+//
+osg::ref_ptr<osg::GraphicsContext> SystemInfo::CreateGLContext(osg::Vec2 size)
+{
+	// create the bare minimum traits that should work on all systems
+	// then use the find traits functions to find the rest of the values
+	osg::ref_ptr<osg::GraphicsContext::Traits> graphicsTraits = new osg::GraphicsContext::Traits;
+	graphicsTraits->x = 0;
+	graphicsTraits->y =	 0;
+	graphicsTraits->width = size.x();
+	graphicsTraits->height = size.y();
+	graphicsTraits->doubleBuffer = m_maxTestedBuffers >= 2 ? true : false;
+	graphicsTraits->sharedContext = 0;
+	graphicsTraits->windowDecoration = false;
+	graphicsTraits->windowName = "";
+	graphicsTraits->stencil = m_maxTestedStencilBits;
+	graphicsTraits->depth = m_maxTestedDepthBits;
+	graphicsTraits->samples = m_maxTestedMultiSamples;
+	graphicsTraits->quadBufferStereo = m_maxTestedBuffers >= 4 ? true : false;
+
+	//create context
+	osg::ref_ptr<osg::GraphicsContext> graphicsContext = osg::GraphicsContext::createGraphicsContext(graphicsTraits.get());
+	return graphicsContext;
+}
+
+
+//
+//Screen info
+//
 const unsigned int SystemInfo::getNumberOfScreens()
 {
 	//get basic params
@@ -523,11 +700,11 @@ void SystemInfo::PrintReportToLog()
 
 	osg::notify(osg::NOTICE) << "        GL Memory:" <<std::endl;
 
-	osg::notify(osg::NOTICE) << "                Onboard (MB):= " << (this->totalDedicatedVideoMemory() > 0 ? this->totalDedicatedVideoMemory()/1024 : 0) <<std::endl; 
+	osg::notify(osg::NOTICE) << "                Onboard (MB):= " << (this->totalDedicatedGLMemory() > 0 ? this->totalDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Avaliable Onboard (MB):= " << (this->avaliableDedicatedVideoMemory() > 0 ? this->avaliableDedicatedVideoMemory()/1024 : 0) <<std::endl; 
+	osg::notify(osg::NOTICE) << "                Avaliable Onboard (MB):= " << (this->avaliableDedicatedGLMemory() > 0 ? this->avaliableDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Total Avaliable (MB):= " << (this->avaliableMemory() > 0 ? this->avaliableMemory()/1024 : 0) <<std::endl; 
+	osg::notify(osg::NOTICE) << "                Total Avaliable (MB):= " << (this->avaliableGLMemory() > 0 ? this->avaliableGLMemory()/1024 : 0) <<std::endl; 
 
 	osg::notify(osg::NOTICE) << "        Buffer Formats:" <<std::endl;
 	

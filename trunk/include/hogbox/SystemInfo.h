@@ -403,9 +403,24 @@ class HOGBOX_EXPORT SystemInfo : public osg::Referenced //, public hogbox::Singl
 {
 public:
 
+	//
+	//System info can perform a few different favours of info gather
+	//
+	enum GatherLevel
+	{
+		FULL, //perfrom all gathers incuding the physical tests of the contexts
+		GL_GATHER, //gather info with glGetString etc using the GLSupportCallback (will launch a viewer for a single frame)
+		CONFIG, //use an external config file to set the system info (not implemented, will just become defaults)
+		DEFAULTS //nothing is gathered from the system and some reasonable defaults are set targeting gl 1.x and intel cards
+	};
+	
 	//friend hogbox::Singleton<SystemInfo>;
 
-	static SystemInfo* Instance(bool erase = false);
+	static SystemInfo* Instance(GatherLevel level = FULL, bool erase = false);
+		
+	//
+	//Creates a gl context from the current info settings
+	osg::ref_ptr<osg::GraphicsContext> CreateGLContext(osg::Vec2 size);
 
 	//Screens
 	const unsigned int getNumberOfScreens();
@@ -422,26 +437,26 @@ public:
 	bool setScreenColorDepth(unsigned int depth, unsigned int screenID=0);
 
 	//Gl Version
-	const float getGLVersionNumber(){return m_renderSupportInfo->getGLVersionNumber();}
-	const float getGLSLVersionNumber(){return m_renderSupportInfo->getGLSLVersionNumber();}
+	const float getGLVersionNumber(){return _glVersionNumber;}
+	const float getGLSLVersionNumber(){return _glslVersionNumber;}
 
 	//Renderer info (Graphics Card)
-	const std::string getRendererName(){return m_renderSupportInfo->getRendererName();}
-	const std::string getVendorName(){return m_renderSupportInfo->getVendorName();}
+	const std::string getRendererName(){return _rendererName;}
+	const std::string getVendorName(){return _vendorName;}
 
 	//Buffer Support
     const bool doubleBufferSupported(){ return m_maxTestedBuffers >= 2;}
 
-	const bool quadBufferedStereoSupported(){ return m_renderSupportInfo->quadBufferedStereoSupported() && m_maxTestedBuffers == 4;}
+	const bool quadBufferedStereoSupported(){ return _quadBufferedStereoSupported && m_maxTestedBuffers == 4;}
 
 	const bool depthBufferSupported(){return m_maxTestedDepthBits > 0;} //TODO
 	const int maxDepthBufferBits(){ return m_maxTestedDepthBits;}
 
-	const bool stencilBufferSupported(){return m_renderSupportInfo->stencilBufferSupported() && m_maxTestedStencilBits > 0;}
+	const bool stencilBufferSupported(){return _bStencilBufferedSupported && m_maxTestedStencilBits > 0;}
 	const unsigned int& maxStencilBitsSupported(){return m_maxTestedStencilBits;}
 
 	//multispampling uses a combination of gl info and actual test data
-	const bool multiSamplingSupported(){ return m_renderSupportInfo->multiSamplingSupported() && m_maxTestedMultiSamples > 0;}
+	const bool multiSamplingSupported(){ return _multiSamplingSupported && m_maxTestedMultiSamples > 0;}
 	const int  maxMultiSamplesSupported(){return m_maxTestedMultiSamples;}
 
 	//shader support
@@ -452,51 +467,50 @@ public:
 										vertexShadersSupported() &&
 										fragmentShadersSupported();}
 
-	const bool glslSupported(){return m_renderSupportInfo->glslLangSupported();}
+	const bool glslSupported(){return _glslLangSupported;}
 
-	const bool shaderObjectSupported(){return m_renderSupportInfo->shaderObjectSupported();}
-	const bool gpuShader4Supported(){return m_renderSupportInfo->gpuShader4Supported();}
-	const bool vertexShadersSupported(){return m_renderSupportInfo->vertexShadersSupported();}
-	const bool fragmentShadersSupported(){return m_renderSupportInfo->fragmentShadersSupported();}
-	const bool geometryShadersSupported(){return m_renderSupportInfo->geometryShadersSupported();}
+	const bool shaderObjectSupported(){return _shaderObjectSupported;}
+	const bool gpuShader4Supported(){return _gpuShader4Supported;}
+	const bool vertexShadersSupported(){return _vertexShadersSupported;}
+	const bool fragmentShadersSupported(){return _fragmentShadersSupported;}
+	const bool geometryShadersSupported(){return _geometryShadersSupported;}
 
 	//texturing
-	const int maxTexture2DSize(){ return m_renderSupportInfo->maxTex2DSize();}
+	const int maxTexture2DSize(){ return _maxTex2DSize;}
 
 	const bool textureRectangleSupported(){ 
 		#ifdef WIN32
-			return m_renderSupportInfo->textureRectangleSupported();
+			return _texRectangleSupported;
 		#else
 			return false;//osx is returing true, but texrect isn't working
 		#endif
 	}
 
 	//number of fixed function units
-	const int maxTextureUnits(){return m_renderSupportInfo->maxTextureUnits();}
+	const int maxTextureUnits(){return _maxTextureUnits;}
 
 	//number of shader units
-	const int maxVertexTextureUnits(){return m_renderSupportInfo->maxVertexTextureUnits();}
-	const int maxFragmentTextureUnits(){return m_renderSupportInfo->maxFragmentTextureUnits();}
-	const int maxGeometryTextureUnits(){return m_renderSupportInfo->maxGeometryTextureUnits();}
-	const int totalTextureUnitsAvaliable(){return m_renderSupportInfo->totalTextureUnitsAvaliable();}
+	const int maxVertexTextureUnits(){return _maxVertexTextureUnits;}
+	const int maxFragmentTextureUnits(){return _maxFragmentTextureUnits;}
+	const int maxGeometryTextureUnits(){return _maxGeometryTextureUnits;}
+	const int totalTextureUnitsAvaliable(){return _totalTextureUnits;}
 	
 	//number of texture coord channels	
-	const int maxTextureCoordUnits(){return m_renderSupportInfo->maxTextureCoordUnits();}
+	const int maxTextureCoordUnits(){return _maxTextureCoordUnits;}
 
 	//framebuffer object support
-	const bool frameBufferObjectSupported(){return m_renderSupportInfo->frameBufferObjectSupported();}
+	const bool frameBufferObjectSupported(){return _frameBufferObjectSupported;}
 
-	//video memory info
+	//video memory info (these only really make sense on nvidia cards at the moment)
 
 	//total memory on the card kb
-	const int totalDedicatedVideoMemory(){return m_memoryInfo->totalDedicatedVideoMemory();}
+	const int totalDedicatedGLMemory(){return _totalDedicatedGLMemory;}
 
 	//total memory avaliable including ram kb
-	const int avaliableMemory(){return m_memoryInfo->avaliableMemory();}
+	const int avaliableGLMemory(){return _avaliableGLMemory;}
 
 	//total memory avaliable on the card kb 
-	const int avaliableDedicatedVideoMemory(){return m_memoryInfo->avaliableDedicatedVideoMemory();}
-
+	const int avaliableDedicatedGLMemory(){return _avliableDedicatedGLMemory;}
 	
 	//simplified supported feature level info
 
@@ -511,7 +525,7 @@ public:
 	//return true if the system info matches or exceeds the feature level
 	//return false is the system info is below the feature level
 	bool IsFeatureLevelSupported(SystemFeatureLevel* featureLevel);
-	//same but by name
+	//compare one of the stored feature levels
 	bool IsFeatureLevelSupported(const std::string& name);
 
 	//
@@ -520,7 +534,7 @@ public:
 protected:
 
 	//constructor is protected for singleton 
-	SystemInfo(void);
+	SystemInfo(GatherLevel level = FULL);
 	~SystemInfo(void);
 
 	virtual void destruct(){
@@ -531,6 +545,15 @@ protected:
 	//colects the system infomation, should be called when the single instance
 	//is first created
 	int Init(bool printReport = true);
+	
+	//
+	//Load system info from an xml config file, returns true if used
+	bool SetSystemInfoFromConfig(const std::string& config);
+	
+	//
+	//Set the local glSystemInfo from the GL gathers
+	//will also fire off the gather if it hasn't been done yet (will create a viewer)
+	bool SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> graphicsContext);
 
 	//
 	//keeps trying various contexts till it finds the max values for each trait
@@ -553,6 +576,61 @@ protected:
 	unsigned int FindMultiSamplingTraits(osg::GraphicsContext::Traits* currentTraits, unsigned int samples);
 
 private:
+	
+	//gather level if not default (FULL) then needs to be set on very first call to instance. As at mo
+	//we are lazily loading the singleton this could become a problem
+	GatherLevel _gatherLevel;
+	
+	//
+	//The system info values, these maybe gathered on demand or come from a predefined config
+	//the predefined config is used on platforms like iphone where we already know the config
+	
+	std::string _osName;
+
+	
+	//GL stuff
+	
+	float _glVersionNumber;
+	float _glslVersionNumber;
+	
+	std::string _rendererName;
+	std::string _vendorName;
+	
+	//buffers
+	
+	bool _quadBufferedStereoSupported;
+	
+	bool _multiSamplingSupported;
+	int _maxMultiSamples;
+	
+	bool _bStencilBufferedSupported;
+	
+	//shaders
+	
+	bool _glslLangSupported;
+	bool _shaderObjectSupported;
+	bool _gpuShader4Supported;
+	bool _vertexShadersSupported;
+	bool _fragmentShadersSupported;
+	bool _geometryShadersSupported;
+	
+	//texturing
+	
+	int  _maxTex2DSize;
+	bool _texRectangleSupported;
+	
+	int _maxTextureUnits;
+	int _maxVertexTextureUnits;
+	int _maxFragmentTextureUnits;
+	int _maxGeometryTextureUnits;
+	int _totalTextureUnits;
+	
+	int _maxTextureCoordUnits;
+	
+	//framebufers / render to texture stuff 
+	
+	bool _frameBufferObjectSupported;
+	
 
 	//these represent the max bits achived in a real world
 	//test (via the FindGoodContext function)
@@ -564,7 +642,13 @@ private:
 	//callback attched to a render viewer camera to gather gl info
 	osg::ref_ptr<GLSupportCallback> m_renderSupportInfo;
 
-	osg::ref_ptr<GPUMemoryCallback> m_memoryInfo;
+	
+	//gl memory info
+	int _totalDedicatedGLMemory;
+	int _avaliableGLMemory;
+	int _avliableDedicatedGLMemory;
+	
+	osg::ref_ptr<GPUMemoryCallback> m_glMemoryInfo;
 
 	//the store map of registered SystemFeatureLevels to their friendly names. 
 	//The friendly name/uniqueID can then be used by material etc to describe the

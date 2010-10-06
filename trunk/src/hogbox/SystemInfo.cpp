@@ -122,7 +122,7 @@ int SystemInfo::Init(bool printReport)
 //Load system info from an xml config file, returns true if used
 bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
 {
-	
+	return false;
 }
 
 //

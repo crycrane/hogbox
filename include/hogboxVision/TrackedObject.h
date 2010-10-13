@@ -40,7 +40,8 @@ public:
 	META_Box(hogboxVision, TrackedObject);
 
 
-	virtual bool Init();
+	//init passing the name of a config/marker file
+	virtual bool Init(const std::string& config);
 
 	//the the dimensions this marker can track
 	TrackedDimensions GetTrackedDimensions(){return m_trackingDimensions;}
@@ -50,16 +51,19 @@ public:
 
 	//is the object currently visible/being tracked
 	bool IsObjectDetected(){return m_isDetected;}
+	
+	float GetConfidence(){return m_confidence;}
+	
+	//base update, called by a tracker
+	//isDetected, indicates if the object was detected by the tracker calling update
+	//pose, the pose matrix returned by the tracker if any
+	bool UpdateMarker(bool isDetected, osg::Matrix pose);
 
 protected:
 
 	//
 	virtual ~TrackedObject(void);
 
-	//base update, called by a tracker
-	//isDetected, indicates if the object was detected by the tracker calling update
-	//pose, the pose matrix returned by the tracker if any
-	bool UpdateMarker(bool isDetected, osg::Matrix pose);
 
 	//the dimensions being tracked
 	TrackedDimensions m_trackingDimensions;
@@ -70,6 +74,9 @@ protected:
 
 	//was the object detected in the last update of its tracker
 	bool m_isDetected;
+	
+	//the confidence of the tracked object i.e. are we getting a good signal/match, 0-1 1 being total confidence
+	float m_confidence;
 
 };
 

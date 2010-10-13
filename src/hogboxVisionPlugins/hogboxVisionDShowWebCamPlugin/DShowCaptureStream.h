@@ -342,7 +342,7 @@ protected:
 
 
 	//perform implementation specific showing of props
-	virtual bool ShowWebCamPropertiesImplementation();
+	virtual bool ShowPropertiesDialogImplementation();
 
 	//return a list of capture devices avaliable to the implementation
 	virtual std::vector<hogboxVision::CaptureDevicePtr> GetConnectedDevicesListImplementation();

@@ -48,9 +48,13 @@ protected:
 
 	//pointer to the image currently being tracked
 	osg::ref_ptr<osg::Image> p_image;
+	
+	//camera tracker keeps track of p_images previous
+	//modified count so we know if we need to update the marker detection
+	int m_modifiedCount;
 
 	//all child camera based trackers are expected to allocate and initalise
-	//thier own implmentation of a CameraCalibration structure
+	//their own implmentation of a CameraCalibration structure
 	CameraCalibrationPtr m_cc;
 
 };

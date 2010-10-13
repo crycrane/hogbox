@@ -103,7 +103,6 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 
 void NPOTResizeCallback::load(const osg::Texture2D& texture, osg::State&) const 
 {
-	
 	const osg::Image* _image = texture.getImage();
 
 	//create texture space to include the power of two size up
@@ -118,7 +117,6 @@ void NPOTResizeCallback::load(const osg::Texture2D& texture, osg::State&) const
 
 void NPOTResizeCallback::subload(const osg::Texture2D& texture, osg::State& state) const 
 {
-
 	//const unsigned int contextID = state.getContextID();
 	const osg::Image* _image = texture.getImage();
 

@@ -27,7 +27,7 @@ public:
 			_fps(30),
 			_bitrate(16)
 	{
-		hogboxVision::VideoStreamBasePtr stream = NULL;
+		hogboxVision::VideoStreamPtr stream = NULL;
 
 		//get the Texture type from the nodes 'type' property
 		std::string streamTypeStr;

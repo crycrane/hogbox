@@ -555,10 +555,10 @@ void HudRegion::ApplyTexture(osg::Texture* tex)
 	
 	//NOTE@tom, below isn't needed on platforms supporting glu
 	//apply a non power of two rezie callback if required
-	//osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, m_stateset.get());
+	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, m_stateset.get());
 	//if the texture casts as a rect apply the tex rect scaling to texture coords
-	//osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
-	//if(tex2D){if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}}
+	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
+	if(tex2D){if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}}
 }
 
 void HudRegion::ApplyBaseTexture()
@@ -576,6 +576,7 @@ void HudRegion::ApplyRollOverTexture()
 //
 void HudRegion::SetColor(const osg::Vec3& color)
 {
+	OSG_WARN << "Set Region Color to " << color.x() << ", " << color.y() << ", " << color.z() << std::endl;
 	m_color = color;
 
 	osg::Vec4 vec4Color = osg::Vec4(color, m_alpha);

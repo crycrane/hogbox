@@ -29,15 +29,15 @@ public:
 	
 	//osg inherits
 	FSVideoLayer(const FSVideoLayer&,const osg::CopyOp& = osg::CopyOp::SHALLOW_COPY);
-	META_Node(NULL,FSVideoLayer)
+	META_Node(hogboxVision,FSVideoLayer)
 
 
 	void SetRotation(float x, float y, float z, int vFlip, int hFlip);	
 		
 	//apply a different texture to our fs quad
-	void setTextureFromVideoStream(VideoStreamBase* videoStream, int channel);
-	void setTextureFromTex2D(osg::Texture2D* texture, int channel);
-	void setTextureFromTexRect(osg::TextureRectangle* texture, int channel);
+	void setTextureFromVideoStream(VideoStream* videoStream, int channel=0);
+	void setTextureFromTex2D(osg::Texture2D* texture, int channel=0);
+	void setTextureFromTexRect(osg::TextureRectangle* texture, int channel=0);
 	
 	
 	//get the screen space width
@@ -60,25 +60,25 @@ protected:
 	//referanced
 	virtual ~FSVideoLayer();
 	
-			
-	float m_width;
-	float m_height;
-
-	osg::ref_ptr<osg::Geometry>			m_geometry;
-
-private:
-
 	//build the actual drawable object and attach to the rendering system			
 	osg::ref_ptr<osg::Projection> buildLayer();
 	//build the actual geometry of the object
 	osg::ref_ptr<osg::Geode> buildLayerGeometry();
+	
+protected:
+	
+	//dimensions of layer, should match the ortho projection dimensions
+	float m_width;
+	float m_height;
+
+	//actual verts etc
+	osg::ref_ptr<osg::Geode>			m_layerGeode;
+	osg::ref_ptr<osg::Geometry>			m_geometry;
 
 	//draw matrices for ortho projection
 	osg::ref_ptr<osg::MatrixTransform>	m_layerModelViewMatrix;
 	osg::ref_ptr<osg::Projection>		m_layerProjectionMatrix;
-	//actual verts etc
-	osg::ref_ptr<osg::Geode>			m_layerGeode;
-};
 
+};
 
 };

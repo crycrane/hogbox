@@ -161,34 +161,41 @@ typedef osg::ref_ptr<CaptureDevice> CaptureDevicePtr;
 //and handling of the various formats a capture device supports
 //
 //The user uses GetConnectedDevicesList, to retrieve a
-//list of CCaptureDevices connected to the machine.
-//CreateStream can be called passing either a config file or the ID of a capturedevice
+//list of CaptureDevices connected to the machine.
+//CreateWebCamStream should be used over the base CreateStream to
+//pass extra config info
 //
-class HOGBOXVIS_EXPORT WebCamStream : public VideoStreamBase
+class HOGBOXVIS_EXPORT WebCamStream : public VideoStream
 {
 public:
-	WebCamStream() : VideoStreamBase(),
+	WebCamStream() : VideoStream(),
 					m_captureDevice(NULL)
 	{
 	}
 	
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
 	WebCamStream(const WebCamStream& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
-		: VideoStreamBase(image, copyop)
+		: VideoStream(image, copyop)
 	{
 	}
 
 	META_Stream(hogboxVision, WebCamStream);
 
+	//
+	//Create default type stream
+	virtual bool CreateStream(const std::string& config, bool hflip = false, bool vflip = false, bool deinter = false)
+	{
+		return CreateWebCamStream(config, 640, 480, 30, hflip, vflip, deinter);
+	}
 
 	//
 	//Actually setup the capture stream using config as the device name, and target width,height and fps to
 	//try and find the nearest matching format to connect to
-	virtual bool CreateWebCamStream(const std::string& config, int targetWidth=800, int targetHeight=600, int targetFPS=60,
+	virtual bool CreateWebCamStream(const std::string& config, int targetWidth=640, int targetHeight=480, int targetFPS=30,
 															bool hflip = false, bool vflip = false, bool deInter = false)
 	{
 		//pass to base
-		VideoStreamBase::CreateStream(config,hflip,vflip,deInter);
+		VideoStream::CreateStream(config,hflip,vflip,deInter);
 
 		//get the list of connected devices 
 		std::vector<CaptureDevicePtr> devices = GetConnectedDevicesList();
@@ -210,7 +217,7 @@ public:
 		{
 			connected = this->ConnectToDeviceImplementation(devices[deviceIndex]);
 		}else{
-			osg::notify(osg::WARN) << "WebCamStream: CreateStream: WARN: The requested device '" << config << "', was not found, trying the next avaliable." << std::endl; 	
+			OSG_WARN << "WebCamStream::CreateWebCamStream: WARN: The requested device '" << config << "', was not found, trying the next avaliable." << std::endl; 	
 		}
 
 		//if we're still not connected try each device until one works
@@ -223,12 +230,12 @@ public:
 		//if we're still not connected it's game over. There are no functioning devices attached
 		//to the machine
 		if(!connected || !m_captureDevice){
-			osg::notify(osg::WARN) << "WebCamStream: CreateStream: ERROR: Failed to connect a capture device." << std::endl; 	
+			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to connect a capture device." << std::endl; 	
 			return false;
 		}
 
 		//we're connected to a device, deviceIndex should tell us which one in the list worked
-		osg::notify(osg::NOTICE) << "WebCamStream: CreateStream: Connected to capture device '" << m_captureDevice->GetDeviceName() << "'." << std::endl;
+		OSG_NOTICE << "WebCamStream::CreateWebCamStream: Connected to capture device '" << m_captureDevice->GetDeviceName() << "'." << std::endl;
 
 		//set name of stream to device name
 		this->setName(m_captureDevice->GetDeviceName());
@@ -241,12 +248,12 @@ public:
 
 		if(formats.empty())
 		{
-			osg::notify(osg::WARN) << "WebCamStream: CreateStream: ERROR: Failed to find any avaliable formats for capture device '" << m_captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
+			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to find any avaliable formats for capture device '" << m_captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
 			return false;
 		}
 
 		//now loop the formats and use the format compare func to find the closest to our target
-		float closestCompareDist = 100.0f;
+		float closestCompareDist = DBL_MAX;
 		int closestCompareIndex = -1;
 		for(unsigned int i=0; i< formats.size(); i++)
 		{
@@ -276,8 +283,8 @@ public:
 
 	//
 	//Show a properties dialog/settings for the webcam
-	bool ShowWebCamProperties(){
-		return ShowWebCamPropertiesImplementation();
+	bool ShowPropertiesDialog(){
+		return ShowPropertiesDialogImplementation();
 	}
 
 	//
@@ -300,25 +307,25 @@ public:
 		if(!format){return false;}
 		if(!m_captureDevice)
 		{
-			osg::notify(osg::WARN) << "WebCamStream: CreateStream: ERROR: Can not apply format '" << format->GetFormatDescription() << "', the WebCamStream is not connected to a valid capture device." << std::endl;
+			OSG_WARN << "WebCamStream: CreateStream: ERROR: Can not apply format '" << format->GetFormatDescription() << "', the WebCamStream is not connected to a valid capture device." << std::endl;
 			return false;
 		}
 		
 		//stop the capture before changing
-		this->PauseImplementation();
+		this->pause();
 		
 		//inform of format change
-		osg::notify(osg::NOTICE) << "WebCamStream: CreateStream: Attempting to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'." << std::endl;
+		OSG_NOTICE << "WebCamStream: CreateStream: Attempting to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'." << std::endl;
 		
 		if(!ApplyFormatImplementation(format))
 		{
-			osg::notify(osg::WARN) << "WebCamStream: CreateStream: ERROR: failed to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'," << std::endl
+			OSG_WARN << "WebCamStream: CreateStream: ERROR: failed to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'," << std::endl
 									 << "                                                         The device will not be restarted." << std::endl;
 			return false;
 		}
 		
 		//start again
-		this->PlayImplementation();
+		this->play();
 		return true;
 	}
 
@@ -330,7 +337,7 @@ protected:
 	}
 
 	//perform implementation specific showing of props
-	virtual bool ShowWebCamPropertiesImplementation(){return false;}
+	virtual bool ShowPropertiesDialogImplementation(){return false;}
 
 	//return a list of capture devices avaliable to the implementation
 	virtual std::vector<CaptureDevicePtr> GetConnectedDevicesListImplementation(){return std::vector<CaptureDevicePtr>();}

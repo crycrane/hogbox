@@ -20,10 +20,10 @@ protected:
 
 //
 //
-class HOGBOXVIS_EXPORT VideoFileStream : public VideoStreamBase
+class HOGBOXVIS_EXPORT VideoFileStream : public VideoStream
 {
 public:
-	VideoFileStream() : VideoStreamBase(),
+	VideoFileStream() : VideoStream(),
 						m_syncClock(NULL), 
 						m_isSynced(false)
 	{
@@ -31,7 +31,7 @@ public:
 	
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
 	VideoFileStream(const VideoFileStream& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
-		: VideoStreamBase(image, copyop),
+		: VideoStream(image, copyop),
 		m_syncClock(image.m_syncClock),
 		m_isSynced(image.m_isSynced)
 	{
@@ -44,7 +44,7 @@ public:
 	//At mo VideoFileStream doesn't do any specific create stuff
 	virtual bool CreateStream(const std::string& config, bool hflip = false, bool vflip = false, bool deinter = false)
 	{
-		return VideoStreamBase::CreateStream(config,hflip,vflip,deinter);
+		return VideoStream::CreateStream(config,hflip,vflip,deinter);
 	}
 
 

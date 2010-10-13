@@ -13,6 +13,8 @@
 #include <osg/Image>
 #include <osg/TexMat>
 
+#include <hogbox/NPOTResizeCallback.h>
+
 using namespace hogboxVision;
 
 // FSVideoLayer
@@ -61,8 +63,10 @@ osg::ref_ptr<osg::Projection> FSVideoLayer::buildLayer()
 
 osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry() 
 {
-	float maxU = m_width;//1.0f
-	float maxV = m_height;//1.0f;
+	float minU = 0.0f;
+	float maxU = 1.0f;//m_width;//1.0f
+	float minV = 1.0f;
+	float maxV = 0.0f;//m_height;//1.0f;
 
 	m_layerGeode = new osg::Geode();
 
@@ -80,10 +84,10 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 	coords->push_back(osg::Vec3(m_width, m_height, 0.0f));
 	coords->push_back(osg::Vec3(0.0f, m_height, 0.0f));
 
-	tcoords->push_back(osg::Vec2(0.0f, 0.0f));
-	tcoords->push_back(osg::Vec2(maxU, 0.0f));
+	tcoords->push_back(osg::Vec2(minU, minV));
+	tcoords->push_back(osg::Vec2(maxU, minV));
 	tcoords->push_back(osg::Vec2(maxU, maxV));
-	tcoords->push_back(osg::Vec2(0.0f, maxV));
+	tcoords->push_back(osg::Vec2(minU, maxV));
 	
 
 	m_geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
@@ -105,7 +109,7 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 }
 
 //apply a different texture to our fs quad
-void FSVideoLayer::setTextureFromVideoStream(VideoStreamBase* videoStream, int channel)
+void FSVideoLayer::setTextureFromVideoStream(VideoStream* videoStream, int channel)
 {
 	//apply the video stream to the geom state set using hogbox helper
 	//CHogBox::ApplyVideoTextureToState(this->getOrCreateStateSet(), videoStream, channel); 
@@ -114,6 +118,12 @@ void FSVideoLayer::setTextureFromVideoStream(VideoStreamBase* videoStream, int c
 void FSVideoLayer::setTextureFromTex2D(osg::Texture2D* texture, int channel)
 {
     this->getOrCreateStateSet()->setTextureAttributeAndModes(channel, texture, osg::StateAttribute::ON);
+	
+	//NOTE@tom, below isn't needed on platforms supporting glu
+	//apply a non power of two rezie callback if required
+	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(texture, channel, this->getOrCreateStateSet());
+	if(resizer->useAsCallBack()){texture->setSubloadCallback(resizer.get());}
+	
 }
 
 void FSVideoLayer::setTextureFromTexRect(osg::TextureRectangle* texture, int channel)

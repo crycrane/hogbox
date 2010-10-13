@@ -4,7 +4,8 @@ using namespace hogboxVision;
 
 TrackedObject::TrackedObject(TrackedDimensions dimensions) 
 			: m_trackingDimensions( dimensions ),
-			m_poseMatrix(), m_isDetected(false)
+			m_poseMatrix(), m_isDetected(false),
+			m_confidence(0.0f)
 {
 }
 
@@ -18,8 +19,9 @@ TrackedObject::TrackedObject(const TrackedObject& object,const osg::CopyOp& copy
 {
 }
 
-bool TrackedObject::Init()
+bool TrackedObject::Init(const std::string& config)
 {
+	this->setName(config);
 	return true;
 }
 

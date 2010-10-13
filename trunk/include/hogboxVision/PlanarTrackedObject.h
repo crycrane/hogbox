@@ -19,8 +19,14 @@ public:
 
 	META_Box(hogboxVision, PlanarTrackedObject);
 
+	//set by implementations
 	std::vector<osg::Vec2> GetCorners(){return m_corners;}
+	int GetDirection(){return m_direction;}
 
+	//get set the width
+	float GetWidth(){return m_width;}
+	void SetWidth(float width){m_width = width;}
+	
 protected:
 
 	virtual ~PlanarTrackedObject();
@@ -28,7 +34,10 @@ protected:
 protected:
 
 	std::vector<osg::Vec2> m_corners;
-	int direction; //which side is local up
+	int m_direction; //which side is local up/y
+	
+	//width of planar quad in mm
+	float m_width;
 
 };
 

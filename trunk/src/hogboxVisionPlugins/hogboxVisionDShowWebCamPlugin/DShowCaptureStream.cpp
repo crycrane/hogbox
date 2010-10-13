@@ -110,7 +110,7 @@ void DShowCaptureStream::QuitImplementation()
 //
 //perform implementation specific showing of props
 //
-bool DShowCaptureStream::ShowWebCamPropertiesImplementation()
+bool DShowCaptureStream::ShowPropertiesDialogImplementation()
 {
 	//cast capture device to dshow
 	DirectShowCaptureDevice* dshowDevice = dynamic_cast<DirectShowCaptureDevice*>(m_captureDevice.get());

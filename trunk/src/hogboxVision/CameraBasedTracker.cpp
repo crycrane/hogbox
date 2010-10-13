@@ -3,7 +3,8 @@
 using namespace hogboxVision;
 
 CameraBasedTracker::CameraBasedTracker(void) 
-		: HogTracker()
+	: HogTracker(),
+	m_modifiedCount(-1)
 {
 }
 
@@ -43,6 +44,10 @@ void CameraBasedTracker::Update(hogbox::ImagePtr image)
 	//set new
 	p_image = image;
 
-	//call base to trigger detection and tracking of new image
-	HogTracker::Update();
+	if(m_modifiedCount != p_image->getModifiedCount())
+	{
+		//call base to trigger detection and tracking of new image
+		HogTracker::Update();
+		m_modifiedCount = p_image->getModifiedCount();
+	}
 }

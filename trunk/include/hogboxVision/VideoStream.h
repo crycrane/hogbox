@@ -5,12 +5,9 @@
 #include <osg/ImageStream>
 #include <osg/notify>
 
-#include <OpenThreads/Thread>
-#include <OpenThreads/Mutex>
 
 namespace hogboxVision {
 
-#define NUM_CMD_INDEX 5
 
 //
 //Macro fro defining the osg base funcs
@@ -23,7 +20,7 @@ namespace hogboxVision {
 
 
 //
-//VideoStreamBase
+//VideoStream
 //
 // Base class for running video streams in osg
 // Inherits from osg image so the stream can be used as a texture in osg
@@ -33,15 +30,15 @@ namespace hogboxVision {
 // Call pause to stop at current position
 // Call rewind to return to the first frame of a stream
 //
-class HOGBOXVIS_EXPORT VideoStreamBase : public osg::ImageStream, protected OpenThreads::Thread
+class HOGBOXVIS_EXPORT VideoStream : public osg::ImageStream
 {
 public:
-	VideoStreamBase();
+	VideoStream();
 	
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
-	VideoStreamBase(const VideoStreamBase& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
+	VideoStream(const VideoStream& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Stream(MagicSymbol, VideoStreamBase);
+	META_Stream(hogboxVision, VideoStream);
 
 	//
 	//Actually setup the stream using file name as a video or capture source config file
@@ -52,36 +49,48 @@ public:
 	bool isValid(){return m_isValid;}
 
 	//
-	//Play stream from current position, calls PlayImplementation 
-	//when thread is ready
-	void play(){ PlayImplementation();setCmd(THREAD_PLAY); }
+	//Play stream from current position only if not already playing
+	void play(){ 
+		if(_status != PLAYING )
+		{
+			osg::ImageStream::play();
+			PlayImplementation();
+		}
+	}
 	//
-	//Stop stream at current position, calls StopImplementation 
-	//when thread is ready
-	void pause() { PauseImplementation();setCmd(THREAD_STOP); }
+	//Stop stream at current position only if not already stopped
+	void pause(){
+		if(_status != PAUSED && _status != INVALID)
+		{
+			osg::ImageStream::pause();
+			PauseImplementation();
+		}
+	}
 	//
 	//Rewind stream to beginning, calls RewindImplementation 
 	//when thread is ready
-	void rewind() { RewindImplementation();setCmd(THREAD_REWIND); }
+	void rewind() {
+		RewindImplementation();
+	}
 
 	//
 	//Quit the thread if it is running, calls QuitImplementation 
 	//when thread is ready
-	void quit() { setCmd(THREAD_QUIT); }
+	void quit() { QuitImplementation(); }
 	
 	//
 	//Request a stream to be fliped vertically
-	void SetVerticalFlip(bool flip){m_vFlip = flip;}
+	virtual void SetVerticalFlip(bool flip){m_vFlip = flip;}
 	bool GetVerticalFlip(){return m_vFlip;}
 
 	//
 	//Request a stream to be flipped horizontally
-	void SetHorizontalFlip(bool flip){m_hFlip=flip;}
+	virtual void SetHorizontalFlip(bool flip){m_hFlip=flip;}
 	bool GetHorizontalFlip(){return m_hFlip;}
 
 	//
 	//Request a stream have deinterlacing applied, i.e. remo
-	void SetDeinterlace(bool deInter){m_isInter=deInter;}
+	virtual void SetDeinterlace(bool deInter){m_isInter=deInter;}
 	bool GetDeinterlace(){return m_isInter;}
 
 	//
@@ -96,7 +105,7 @@ public:
 
 protected:
 
-	virtual ~VideoStreamBase(void);
+	virtual ~VideoStream(void);
 
 	//
 	//The threaded function
@@ -121,28 +130,6 @@ protected:
 
 
 protected:
-	enum ThreadCommand {
-		THREAD_IDLE = 0,  //thread calls sleep
-		THREAD_STOP,      //thread request stopping of stream, stops calls to updateStream
-		THREAD_PLAY,      //thread request play stream, starts calls to update stream
-		THREAD_REWIND,    //request rewind does not effect thread run state
-		THREAD_QUIT      //stop threading function
-	};
-	ThreadCommand _cmd[NUM_CMD_INDEX];
-	int _wrIndex, _rdIndex;
-
-	OpenThreads::Mutex _mutex;
-
-	// Lock/unlock object.
-	inline void lock() { _mutex.lock(); }
-	inline void unlock() { _mutex.unlock(); }
-
-	/// Set command.
-	void setCmd(ThreadCommand cmd);
-
-	/// Get command.
-	ThreadCommand getCmd();
-protected:
 
 	//is the stream ready to play
 	bool m_isValid;
@@ -161,7 +148,7 @@ protected:
 
 };
 
-typedef osg::ref_ptr<VideoStreamBase> VideoStreamBasePtr;
+typedef osg::ref_ptr<VideoStream> VideoStreamPtr;
 
 };
 

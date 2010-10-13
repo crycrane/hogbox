@@ -42,10 +42,10 @@ VideoTex2DCallBack::VideoTex2DCallBack(osg::Texture* texture, int channel, osg::
 		
 		//its not power of two, find next up
 		if(m_scaledWidth != m_imageWidth)
-		{m_scaledWidth = VideoStreamBase::computeNextPowerOfTwo((unsigned int) m_imageWidth);}
+		{m_scaledWidth = VideoStream::computeNextPowerOfTwo((unsigned int) m_imageWidth);}
 		//same for height
 		if(m_scaledHeight != m_imageHeight)
-		{m_scaledHeight = VideoStreamBase::computeNextPowerOfTwo((unsigned int) m_imageHeight);}
+		{m_scaledHeight = VideoStream::computeNextPowerOfTwo((unsigned int) m_imageHeight);}
 		
 		//set the texture to beleive it is of power of two size
 		texture2D->setTextureSize(m_scaledWidth, m_scaledHeight);

@@ -17,7 +17,7 @@ namespace hogbox {
 //
 //MeshMapping Visitor is used to apply a group of states and parameters to a group of named
 //geodes. The MeshMapping applies Material/StateSet and visibility (via node mask)
-//to all nodes that meet the required maTo parameter
+//to all nodes that meet the required mapTo parameter
 //
 class MeshMappingVisitor : public osg::NodeVisitor
 {

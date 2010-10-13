@@ -365,7 +365,7 @@ bool HogBoxViewer::CreateAppWindow()
 			m_resizeCallback = NULL;
 		}
 		m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
-		m_graphicsContext->setResizedCallback(m_resizeCallback);
+		//m_graphicsContext->setResizedCallback(m_resizeCallback);
 		
 		//force a resize to acount for the initial state
 		m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());

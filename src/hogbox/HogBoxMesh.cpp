@@ -125,8 +125,8 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 									geom->setVertexAttribArray(6, tangentArray);
 									geom->setVertexAttribBinding(6, osg::Geometry::BIND_PER_VERTEX);  
 
-									geom->setVertexAttribArray(7, biNormalArray);
-									geom->setVertexAttribBinding(7, osg::Geometry::BIND_PER_VERTEX);  
+									//geom->setVertexAttribArray(7, biNormalArray);
+									//geom->setVertexAttribBinding(7, osg::Geometry::BIND_PER_VERTEX);  
 								}
 							}
 						}

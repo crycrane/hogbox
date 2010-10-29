@@ -37,9 +37,17 @@ unsigned int computeNextPowerOfTwo(unsigned int x)
 
 NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::StateSet* state)
 	: osg::Texture2D::SubloadCallback(),
-	m_modifiedCount(0)
+	m_modifiedCount(0),
+	m_useAsCallback(false),
+	m_scaledTexCoordX(1.0f),
+	m_scaledTexCoordY(1.0f)
 {
 	m_texMat = new osg::TexMat;
+	//set our scale matrix to crop any empty region left by the power of two size up
+	m_texMat->setMatrix(osg::Matrix::scale(m_scaledTexCoordX, m_scaledTexCoordY, 0));	
+	
+	if(!texture){return;}
+	
 	//if its a rectangle set rect matrix and return
 	if(dynamic_cast<osg::TextureRectangle*>(texture))
 	{
@@ -54,28 +62,36 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 
 		//if its a texture2D we need to find the power of two size up
 		//and calc a texture matrix to scale coord to crop any boarder
-		m_useAsCallback = true;
-
 		osg::Texture2D* texture2D = dynamic_cast<osg::Texture2D*>(texture); 
 
-		const osg::Image* _image = texture2D->getImage();
-		//dirty the image to ensure our subload is called
-		//_image->dirty();
-		
-		//set the new scaled cords
+		osg::Image* _image = texture2D->getImage(0);
+		//if no image the we don't want to use this (i.e. we've been passed a render to texture texture)
+		if(!_image){
+			return;
+		}
+
+		//set the true image size
 		m_imageWidth = _image->s();
 		m_imageHeight = _image->t();
-
+		
 		//first find nearest to see if it is a power of two already (having problems with calcnext power of two)
-		m_scaledWidth = osg::Image::computeNearestPowerOfTwo((int)_image->s());//
-		m_scaledHeight = osg::Image::computeNearestPowerOfTwo((int)_image->t()); 
+		m_scaledWidth = osg::Image::computeNearestPowerOfTwo((int)m_imageWidth);//
+		m_scaledHeight = osg::Image::computeNearestPowerOfTwo((int)m_imageHeight); 
 		
 		//its not power of two, find next up
-		if(m_scaledWidth != m_imageWidth)
-		{m_scaledWidth = computeNextPowerOfTwo((unsigned int) m_imageWidth);}
-		//same for height
-		if(m_scaledHeight != m_imageHeight)
-		{m_scaledHeight = computeNextPowerOfTwo((unsigned int) m_imageHeight);}
+		if(m_scaledWidth != m_imageWidth || m_scaledHeight != m_imageHeight)
+		{
+			m_scaledWidth = computeNextPowerOfTwo((unsigned int) m_imageWidth);
+			//same for height
+			m_scaledHeight = computeNextPowerOfTwo((unsigned int) m_imageHeight);
+		}else{
+			//they are both already power of two so treturn before flaging to use
+			return;
+		}
+		
+		
+		//we have a texture that isn't power of two so flag to use the callback
+		m_useAsCallback = true;
 		
 		//set the texture to beleive it is of power of two size
 		texture2D->setTextureSize(m_scaledWidth, m_scaledHeight);

@@ -21,12 +21,12 @@ endif()
 # Trying to get CMake to generate an XCode IPhone project, current efforts are to get iphoneos sdk 3.1 working
 # Added option which needs manually setting to select the IPhone SDK for building. We can only have one of the below 
 # set to true. Should realy have an OSG_BUILD_PLATFORM variable that we set to our desired platform
-OPTION(OSG_BUILD_PLATFORM_IPHONE "Enable IPhoneSDK Device support" OFF)
+OPTION(OSG_BUILD_PLATFORM_IPHONE "Enable IPhoneSDK Device support" ON)
 OPTION(OSG_BUILD_PLATFORM_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" OFF)
 IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
   
   #you need to manually set the default sdk version here
-  SET (IPHONE_SDKVER "3.1")
+  SET (IPHONE_SDKVER "4.1")
   #the below is taken from ogre, it states the gcc stuff needs to happen before PROJECT() is called. I've no clue if we even need it
   # Force gcc <= 4.2 on iPhone
   include(CMakeForceCompiler)

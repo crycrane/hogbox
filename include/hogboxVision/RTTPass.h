@@ -50,7 +50,8 @@ class RTTPass : public osg::Object
 {
 public:
 
-	typedef osg::ref_ptr<osg::TextureRectangle> TextureRef;
+	typedef osg::Texture2D TextureType;
+	typedef osg::ref_ptr<TextureType> TextureRef;
 	typedef std::map<std::string, TextureRef> SamplerToTextureMap;
 	typedef std::pair<std::string, TextureRef> SamplerToTexturePair;
 
@@ -68,8 +69,8 @@ public:
 		//if the input texture count is 0 a model can be passed instead, which
 		//is rendered using the provided modelview and projection matrix
 		osg::ref_ptr<osg::Node> rttScene;
-		osg::ref_ptr<osg::Projection> projectMatrix;
-		osg::ref_ptr<osg::MatrixTransform> modelViewMatrix;
+		osg::Matrix projectMatrix;
+		osg::Matrix modelViewMatrix;
 
 		//the fragment shader used (can be  empty)
 		std::string fragmentShaderFile;
@@ -111,7 +112,7 @@ public:
 	int getOutputCount();
 
 	//
-	//set a texture to a chosen channel also setting it related unifomr variable
+	//set a texture to a chosen channel also setting its related uniform variable
 	//
 	bool setInputTexture(int channel, TextureRef tex, std::string uniformName);
 	

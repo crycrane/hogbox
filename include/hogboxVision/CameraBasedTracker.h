@@ -27,6 +27,7 @@ public:
 	bool InitTracker(int width=640, int height=480, const std::string& cameraCalibrationFile="");
 
 	//update the tracker then call base update which calls update tracker
+	//if the image modified count is different to ours
 	virtual void Update(hogbox::ImagePtr image);
 	
 	//should be pure virtual but it complains?
@@ -46,7 +47,7 @@ protected:
 	int m_videoWidth;
 	int m_videoHeight;
 
-	//pointer to the image currently being tracked
+	//pointer to the image from the camera currently being tracked
 	osg::ref_ptr<osg::Image> p_image;
 	
 	//camera tracker keeps track of p_images previous

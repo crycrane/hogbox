@@ -4,7 +4,7 @@ using namespace hogboxVision;
 
 TrackedObject::TrackedObject(TrackedDimensions dimensions) 
 			: m_trackingDimensions( dimensions ),
-			m_poseMatrix(), m_isDetected(false),
+			m_isEnabled(true), m_poseMatrix(), m_isDetected(false),
 			m_confidence(0.0f)
 {
 }
@@ -23,6 +23,19 @@ bool TrackedObject::Init(const std::string& config)
 {
 	this->setName(config);
 	return true;
+}
+
+//
+//our we tracking this object
+//
+void TrackedObject::SetEnabled(const bool& enabled)
+{
+	m_isEnabled=enabled;
+}
+
+const bool& TrackedObject::GetEnabled()const
+{
+	return m_isEnabled;
 }
 
 //

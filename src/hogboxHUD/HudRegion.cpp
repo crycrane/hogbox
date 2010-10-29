@@ -9,6 +9,36 @@
 
 using namespace hogboxHUD;
 
+#define SHADER_COMPAT \ 
+"#ifndef GL_ES\n" \ 
+"#if (__VERSION__ <= 110)\n" \ 
+"#define lowp\n" \ 
+"#define mediump\n" \ 
+"#define highp\n" \ 
+"#endif\n" \ 
+"#endif\n" 
+
+static const char* texturedVertSource = { 
+	SHADER_COMPAT 
+	"attribute vec4 osg_Vertex;\n"
+	"attribute vec4 osg_MultiTexCoord0;\n"
+	"uniform mat4 osg_ModelViewProjectionMatrix;\n"
+	"varying mediump vec2 texCoord0;\n"
+	"void main(void) {\n" 
+	"  gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;\n" 
+	"  texCoord0 = osg_MultiTexCoord0.xy;\n"
+	"}\n" 
+}; 
+
+static const char* texturedFragSource = { 
+	SHADER_COMPAT 
+	"uniform sampler2D diffuseTexture;\n"
+	"varying mediump vec2 texCoord0;\n"
+	"void main(void) {\n" 
+	"  gl_FragColor = texture2D(diffuseTexture, texCoord0);\n" 
+	"}\n" 
+};
+
 HudRegion::HudRegion(bool isProcedural) 
 	: osg::Object(),
 	m_isProcedural(isProcedural),
@@ -19,7 +49,7 @@ HudRegion::HudRegion(bool isProcedural)
 	m_transformInheritMask(INHERIT_ALL_TRANSFORMS),
 	m_visible(true),
 	m_stateChanged(false),
-	m_depth(0.1f),
+	m_depth(0.0f),
 	//animation
 	m_isRotating(false),
 	m_isTranslating(false),
@@ -72,8 +102,16 @@ HudRegion::HudRegion(bool isProcedural)
 	m_rotate->addChild(m_childMount.get());
 	
 	m_stateset = new osg::StateSet(); 
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 	m_stateset->setMode(GL_LIGHTING, osg::StateAttribute::OVERRIDE | osg::StateAttribute::OFF);
     //stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF);
+#else
+	osg::Program* program = new osg::Program; 
+	program->setName("textureShader"); 
+	program->addShader(new osg::Shader(osg::Shader::VERTEX, texturedVertSource)); 
+	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, texturedFragSource)); 
+	m_stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
+#endif
 	m_region->setStateSet(m_stateset.get()); 
 
 	m_material = new osg::Material();

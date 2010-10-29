@@ -47,7 +47,14 @@ public:
 		m_xmlAttributes["TwoSided"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxMaterial,bool>(material,
 																	&hogbox::HogBoxMaterial::GetTwoSidedLightingEnabled,
 																	&hogbox::HogBoxMaterial::SetTwoSidedLightingEnabled);
+		
+		m_xmlAttributes["BinNumber"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxMaterial,int>(material,
+																									  &hogbox::HogBoxMaterial::GetBinNumber,
+																									  &hogbox::HogBoxMaterial::SetBinNumber);
 
+		m_xmlAttributes["BinHint"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxMaterial,int>(material,
+																									&hogbox::HogBoxMaterial::GetBinHint,
+																									&hogbox::HogBoxMaterial::SetBinHint);
 
 		//wrap textures
 		m_xmlAttributes["TextureChannels"] = new hogboxDB::CallbackXmlClassPointerMap<hogbox::HogBoxMaterial,int,osg::Texture>(material,

@@ -97,44 +97,17 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
     m_geometry->setColorArray(quad_colors.get());
     m_geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
-	osg::StateSet* geoState = this->getOrCreateStateSet();// m_geometry->getOrCreateStateSet();
-
-	geoState->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-	geoState->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+	
+	//disable depth	
+	this->getOrCreateStateSet()->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+	
+	//
+	//this->setStateSet(m_material->GetStateSet());
 	
 	m_layerGeode->addDrawable(m_geometry.get());
 
 	return m_layerGeode;
 
-}
-
-//apply a different texture to our fs quad
-void FSVideoLayer::setTextureFromVideoStream(VideoStream* videoStream, int channel)
-{
-	//apply the video stream to the geom state set using hogbox helper
-	//CHogBox::ApplyVideoTextureToState(this->getOrCreateStateSet(), videoStream, channel); 
-}
-
-void FSVideoLayer::setTextureFromTex2D(osg::Texture2D* texture, int channel)
-{
-    this->getOrCreateStateSet()->setTextureAttributeAndModes(channel, texture, osg::StateAttribute::ON);
-	
-	//NOTE@tom, below isn't needed on platforms supporting glu
-	//apply a non power of two rezie callback if required
-	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(texture, channel, this->getOrCreateStateSet());
-	if(resizer->useAsCallBack()){texture->setSubloadCallback(resizer.get());}
-	
-}
-
-void FSVideoLayer::setTextureFromTexRect(osg::TextureRectangle* texture, int channel)
-{
-	this->getOrCreateStateSet()->setTextureAttributeAndModes(channel, texture, osg::StateAttribute::ON);
-	//requires coord scaling
-	osg::ref_ptr<osg::TexMat> texMat = new osg::TexMat();
-	//texMat->setScaleByTextureRectangleSize(true);
-	//apply the texture to the quads stateset
- 	this->getOrCreateStateSet()->setTextureAttributeAndModes(channel, texMat.get(), osg::StateAttribute::ON);
-	
 }
 
 void FSVideoLayer::SetRotation(float x, float y, float z, int vFlip, int hFlip)

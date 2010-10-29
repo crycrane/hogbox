@@ -86,11 +86,24 @@ public:
 
 		if(!shader->getFileName().empty())
 		{
+			osg::notify(osg::INFO) << "XML INFO: Loading shader source file '" << shader->getFileName() << "', for Shader node '" << shader->getName() << "'." << std::endl;
+
 			//load the shader source
 			if(!shader->loadShaderSourceFromFile(shader->getFileName()))
 			{
-				osg::notify(osg::WARN) << "XML ERROR: Loading shader source file '" << shader->getFileName() << "', for Shader node '" << shader->getName() << "'." << std::endl;
+				//if not try using findDataFile
+				std::string tryFileName = osgDB::findDataFile( shader->getFileName() );
+				osg::notify(osg::WARN) << "           Trying '" << tryFileName << "'." << std::endl;
+				if(!tryFileName.empty()){
+					osg::notify(osg::WARN) << "           Found Alternative file'" << tryFileName << "', attempting to load," << std::endl;
+					if(!shader->loadShaderSourceFromFile(tryFileName)){return false;}
+					shader->setFileName(tryFileName);
+				}else{
+					osg::notify(osg::WARN) << "          Failed Loading shader source file '" << shader->getFileName() << "', for Shader node '" << shader->getName() << "'." << std::endl;
+					return false;
+				}
 			}
+			osg::notify(osg::INFO) << "          Success loading shader source file '" << shader->getFileName() << "', for Shader node '" << shader->getName() << "'." << std::endl;
 		}
 		return true;
 	}

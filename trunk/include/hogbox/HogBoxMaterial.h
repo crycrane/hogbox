@@ -54,6 +54,37 @@ public:
 	HogBoxMaterial(const HogBoxMaterial&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
 	META_Box(hogbox, HogBoxMaterial);
+	
+	//mapping mask, all can be combined to make uber shader :)
+	enum MappingMask
+    {
+        BLEND = 1,
+        LIGHTING = 2,
+        FOG = 4,
+        DIFFUSE_MAP = 8, //< Texture in unit 0
+		//REFLECTION_MAP = 16,  //< Texture in unit 1 
+        NORMAL_MAP = 16,  //< Texture in unit 2 and vertex attribute array 12
+		//MASK_MAP = 64, //< Texture unit 4, r = mask specular, g = mask reflection, b = ? 
+		//PARALLAX_MAP = 128,  //< Texture in unit 4
+		//GLOW_MAP = 256, //<Texture unit 5 buffer 1 (all above go to default color buffer 0)
+    };
+	
+	//a single lighting style can be set
+	enum LightingMode
+	{
+		PER_VERTEX,
+		PER_PIXEL,
+		IMAGE_BASED
+	};
+	
+	//shader can have a precision level set
+	//this effects the precision level given to varyings in shaders
+	enum ShaderDetail
+	{
+		LOW,
+		MEDIUM,
+		HIGH
+	};
 
 	//
 	//Return the materials stateset
@@ -93,33 +124,54 @@ public:
 	//enable/disable gl bending
 	void SetAlphaEnabled(const bool& enabled);
 	const bool& GetAlphaEnabled() const;
+	
+	//enable disable lighting
+	void SetLightingEnabled(const bool& val);
+	const bool& GetLightingEnabled()const{return m_isLit;}
 
 	//enable disable 2 sided lighting
 	void SetTwoSidedLightingEnabled(const bool& val);
 	const bool& GetTwoSidedLightingEnabled()const{return m_backFaceLit;}
+	
+	//render bins
+	void SetBinNumber(const int& num);
+	const int& GetBinNumber()const;
 
+	//0=default, 1=opaque, 2=trasparent
+	void SetBinHint(const int& hint);
+	const int& GetBinHint()const;
 //textures
 
 	//set a texture to a specified channel, also creating a shader
 	//sampler for the texture. The samplers name is taken from the
-	//textures name
+	//textures name, to allow unique texture names but the correct sampler
+	//name the sampler name portion of the texture name can be seperated
+	//at the end by a dot for example 'mytexture.diffuseMap' would provide
+	//the shader with sampler name 'diffuseMap'.
 	void SetTexture(const int& channel,osg::Texture* tex);
 
 	//return the texture if any in the channel, if
 	//there is no texture in the channel NULL is returned
 	osg::Texture* GetTexture(const int& channel);
+	std::string GetTextureSamplerName(const int& channel);
 
 	//is there an enabled texture in the channel
 	bool IsTextureEnabled(const int& channel);
 
-	//enable/diable the texture in channel
+	//enable/disable the texture in channel
 	void EnableTexture(const int& channel, bool on);
 
 	//return the number of channels containing a valid texture
 	unsigned int GetNumTextures()const;
+	
+	
+	//texture matrix
+	//apply a texture matrix to this stateset also setting the hb_texmax uniform to represent it
+	void ApplyTextureMatrix(const int& channel, osg::TexMat* texMat);
 
 //uniforms
 
+	//add a unform to the state and to our list
 	bool AddUniform(osg::Uniform* uni); 
 	bool RemoveUniform(osg::Uniform* uni); 
 	osg::Uniform* GetUniform(const unsigned int index);
@@ -127,7 +179,7 @@ public:
 	const unsigned int GetNumUniforms(){return m_uniforms.size();}
 
 	//get set the entire list of uniforms for easier xmlwrapping, setUniformList
-	//list perform AddUniform on each of the passed list
+	//performa AddUniform on each of the passed list
 	UniformPtrVector GetUniformList()const{return m_uniforms;}
 	void SetUniformList(const UniformPtrVector& list);
 
@@ -153,10 +205,20 @@ public:
 	//will perform AddShader on each of the passed list
 	ShaderPtrVector GetShaderList()const{return m_shaders;}
 	void SetShaderList(const ShaderPtrVector& list);
+	
+	//Add shader of type from file
+	bool AddShaderFromFile(const std::string file, osg::Shader::Type type=osg::Shader::VERTEX); 
 
 
 	void UseTangentSpace(const bool& useTangent);
 	const bool& IsUsingTangetSpace()const{return m_useTangentSpace;}
+	
+	//
+	//Shader composer
+	
+	//Create a shader based on the materials current state, 
+	//overideExiting, optionally overwrite existing shaders
+	void ComposeShaderFromMaterialState(ShaderDetail detail = HIGH, LightingMode lightingMode = PER_VERTEX, bool overrideExisting = false);
 
 
 	//Load a shader from a file into the shader passed in
@@ -183,9 +245,23 @@ public:
 protected:
 
 	virtual ~HogBoxMaterial(void);
-
+	
 	//the osg stateset this material is wrapping
 	osg::ref_ptr<osg::StateSet> m_stateset; 
+	
+	//the mapping mask for the material to describe to auto shader gen how to handle the textures etc
+	MappingMask m_mappingMask;
+	
+	//the light style for shader gen
+	LightingMode m_lightingMode;
+	
+	//the detail/precision level of the shader gen
+	ShaderDetail m_shaderDetailLevel;
+
+	//hogbox material handles to the various osg stateset values used to describe a hogboxmaterial
+	
+	//is the material affected by lights
+	bool m_isLit;
 
 	//basic gl material
 	osg::ref_ptr<osg::Material> m_material; 
@@ -202,6 +278,9 @@ protected:
 	bool m_backFaceLit;
 	osg::Material::Face m_lightFace;  
 	
+	int m_binNumber;
+	int m_binMode;
+	
 
 //Textures
 	//map a texture to a sampler uniform
@@ -211,11 +290,17 @@ protected:
 		bool enabled;
 		osg::ref_ptr<osg::Texture> texture;
 		osg::ref_ptr<osg::Uniform> sampler;
+		//texture matrix for the uni
+		osg::ref_ptr<osg::TexMat> texmat;
+		osg::ref_ptr<osg::Uniform> matUniform;
 	protected:
 		virtual ~TextureUnit(){}
 	};
 	typedef osg::ref_ptr<TextureUnit> TextureUnitPtr;
 	typedef std::map<int, TextureUnitPtr> TextureChannelMap; 
+	
+	//the list of texture units applied to the material mapped
+	//by their channel
 	TextureChannelMap m_textureList;
 
 
@@ -234,9 +319,18 @@ protected:
 	//the list of shaders attached to the material
 	ShaderPtrVector m_shaders;
 
-	//flags if the shaders require tangent and binormal vectors
+	//flags if the shaders requires tangent and binormal vectors, these are currently bound to channels 12 and 13
 	bool m_useTangentSpace;
 
+	//the built in uniforms provided by hogbox material to replace gl_material etc in gles2 shaders
+	osg::ref_ptr<osg::Uniform> m_ambientColourUni;
+	osg::ref_ptr<osg::Uniform> m_diffuseColourUni;
+	osg::ref_ptr<osg::Uniform> m_specularColourUni;
+	osg::ref_ptr<osg::Uniform> m_specularExpUni;
+	
+	osg::ref_ptr<osg::Uniform> m_alphaUni;
+	
+	osg::ref_ptr<osg::Uniform> m_twoSidedUni;
 
 //Fallback system
 

@@ -29,6 +29,8 @@ public:
 
 	void load(const osg::Texture2D& texture, osg::State&) const;
 	void subload(const osg::Texture2D& texture, osg::State&) const;
+	
+	osg::TexMat* GetScaleMatrix(){return m_texMat.get();};
 
 	inline float getScaledTexCoordX() const { return (m_scaledTexCoordX);};
 	inline float getScaledTexCoordY() const { return (m_scaledTexCoordY);};

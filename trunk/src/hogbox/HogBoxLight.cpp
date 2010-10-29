@@ -8,9 +8,9 @@ using namespace hogbox;
 
 /////////////////////////////////////LIGHT////////////////////////////////
 
-HogBoxLight::HogBoxLight(void) 
+HogBoxLight::HogBoxLight(int id) 
 	: osg::Object(),
-	m_glID(0),
+	m_glID(id),
 	m_polygonOffset(NULL),
 	m_shadowMap(NULL),
 	m_shadowMatrix(NULL),
@@ -23,6 +23,7 @@ HogBoxLight::HogBoxLight(void)
 	
 	//create light, ID has to be set manually
 	m_light = new osg::Light();
+	 m_light->setLightNum(m_glID);
 	m_light->setPosition(osg::Vec4(0,0,0,1));
 
 	//create the transform to attach the light to
@@ -36,25 +37,29 @@ HogBoxLight::HogBoxLight(void)
 	//add the lightsource to a transform 
 	m_transform->addChild(m_lightSource.get());
 
-	//create the light uniforms
-/*	char* name = new char[64];
+	
+	std::ostringstream oss;
+	oss << "hb_lightPosition" << m_glID;
+	//sprintf(name,"light[%d].lightPos", id); 
+	m_uLightPos = new osg::Uniform(oss.str().c_str(), m_lightPos);
+	
+	oss.str("");
+	
+	oss << "hb_lightColor" << m_glID;
+	m_uLightColor = new osg::Uniform(oss.str().c_str(), m_diffuseColor);
+	
+	oss.str("");
+	
+	//sprintf(name,"light[%d].constant", id); 
+	//m_uConstant = new osg::Uniform(name, constant);
+	
+	//sprintf(name,"light[%d].linear", id); 
+	//m_uLinear = new osg::Uniform(name, lin);
+	
+	//sprintf(name,"light[%d].quadratic", id); 
+	//m_uQuadratic = new osg::Uniform(name, quad);
 
-	sprintf(name,"light[%d].lightPos", id); 
-	m_uLightPos = new osg::Uniform(name, pos);
-	
-	sprintf(name,"light[%d].lightColor", id); 
-	m_uLightColor = new osg::Uniform(name, colour);
-	
-	sprintf(name,"light[%d].constant", id); 
-	m_uConstant = new osg::Uniform(name, constant);
-	
-	sprintf(name,"light[%d].linear", id); 
-	m_uLinear = new osg::Uniform(name, lin);
-	
-	sprintf(name,"light[%d].quadratic", id); 
-	m_uQuadratic = new osg::Uniform(name, quad);
-
-	delete [] name;*/
+	//delete [] name;
 
 }
 
@@ -70,85 +75,25 @@ HogBoxLight::~HogBoxLight(void)
 
 }
 
-//
-// Set a light, it is also given a unique id between 0 and MAXLIGHTS
-//
-void HogBoxLight::SetLight(int id, osg::Vec4 pos, osg::Vec4 colour, float constant, float lin, float quad)
-{
-	// Actual light data.
-	m_diffuseColor = colour;
-//	m_lightAmbi=colour*0.001f;
-//	m_lightSpec=colour;
-
-
-	m_lightPos = pos;
-	m_constant = constant; m_linear = lin; m_quadratic = quad;
-
-	//create and set the light transform
-	m_transform = new osg::MatrixTransform();
-	m_transform->setMatrix( osg::Matrix::translate(pos.x(), pos.y(), pos.z()) );   
-
-	//tore the id
-	//SetNameID(id);
-
-	char* name = new char[64];
-
-		sprintf(name,"light[%d].lightPos", id); 
-		m_uLightPos = new osg::Uniform(name, pos);
-		
-		sprintf(name,"light[%d].lightColor", id); 
-		m_uLightColor = new osg::Uniform(name, colour);
-		
-		sprintf(name,"light[%d].constant", id); 
-		m_uConstant = new osg::Uniform(name, constant);
-		
-		sprintf(name,"light[%d].linear", id); 
-		m_uLinear = new osg::Uniform(name, lin);
-		
-		sprintf(name,"light[%d].quadratic", id); 
-		m_uQuadratic = new osg::Uniform(name, quad);
-
-		delete [] name;
-
-	//create and set the lights attributes
-	m_light = new osg::Light();
-    m_light->setLightNum(id);
-	m_light->setPosition(osg::Vec4(0,0,0,1));
-	m_light->setAmbient(m_lightAmbi);
-    m_light->setDiffuse(m_diffuseColor);
-	m_light->setSpecular(m_lightSpec); 
-	m_light->setConstantAttenuation(constant);
-	m_light->setLinearAttenuation(lin);
-	m_light->setQuadraticAttenuation(quad); 
-
-	m_lightSource = new osg::LightSource();
-	m_lightSource->setLight(m_light.get());
-	m_lightSource->setLocalStateSetModes(osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
- 
-	//add the lightsource to a transform 
-	m_transform->addChild(m_lightSource.get());
-
-}
-
 void HogBoxLight::ApplyLightToGraph(osg::Node* root)
 {
 	if(!root){return;}
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 	m_lightSource->setStateSetModes(*root->getOrCreateStateSet() ,osg::StateAttribute::ON);
+#else
+	AttachUniformsToStateSet(root->getOrCreateStateSet());
+#endif
 }
 
-void HogBoxLight::SetGLID(const int& id)
-{
-	m_glID = id;
-	m_light->setLightNum(m_glID);
-}
 
 void HogBoxLight::SetPosition(const osg::Vec4& pos)
 {
 	m_lightPos=pos;
 	m_transform->setMatrix( osg::Matrix::translate(osg::Vec3(pos.x(),pos.y(),pos.z())) );   
 	m_light->setPosition(osg::Vec4(0,0,0,pos.w()));
-	//m_light->setPosition(pos);
-
+	m_light->setPosition(pos);
+	
+	m_uLightPos->set(m_lightPos);
 }
 
 void HogBoxLight::SetDiffuse(const osg::Vec4& color)
@@ -202,9 +147,9 @@ void HogBoxLight::AttachUniformsToStateSet(osg::StateSet* state)
 {
 	state->addUniform( m_uLightPos, osg::StateAttribute::ON);
 	state->addUniform( m_uLightColor, osg::StateAttribute::ON);
-	state->addUniform( m_uConstant, osg::StateAttribute::ON);
-	state->addUniform( m_uLinear, osg::StateAttribute::ON);
-	state->addUniform( m_uQuadratic, osg::StateAttribute::ON);
+//	state->addUniform( m_uConstant, osg::StateAttribute::ON);
+//	state->addUniform( m_uLinear, osg::StateAttribute::ON);
+//	state->addUniform( m_uQuadratic, osg::StateAttribute::ON);
 }
 
 

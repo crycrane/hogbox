@@ -13,16 +13,35 @@ HogBoxMaterial::HogBoxMaterial(void)
 	: osg::Object(),
 	m_stateset(new osg::StateSet()),
 	m_material(new osg::Material()),
+	m_isLit(true),
 	m_backFaceLit(false),
 	m_lightFace(osg::Material::FRONT),
 	m_alphaUsed(false),
 	m_alpha(1.0f),
+	m_binNumber(0),
+	m_binMode(0),
 	m_isShaderMaterial(false),
 	m_program(NULL),
 	m_useTangentSpace(false),
 	m_featureLevel(NULL),
 	p_fallbackMaterial(NULL)
-{
+{	
+	//the built in uniforms provided by hogbox material to replace gl_material etc in gles2 shaders
+	m_ambientColourUni = new osg::Uniform("hb_ambientColor", m_ambientColour);
+	this->AddUniform(m_ambientColourUni.get());
+	m_diffuseColourUni = new osg::Uniform("hb_diffuseColor", m_diffuseColor);
+	this->AddUniform(m_diffuseColourUni.get());
+	m_specularColourUni = new osg::Uniform("hb_specularColor", m_specularColour);
+	this->AddUniform(m_specularColourUni.get());
+	m_specularExpUni = new osg::Uniform("hb_shine", (float)m_shininess);
+	this->AddUniform(m_specularExpUni.get());
+	
+	m_alphaUni = new osg::Uniform("hb_alpha", (float)m_alpha);
+	this->AddUniform(m_alphaUni.get());
+	
+	m_twoSidedUni = new osg::Uniform("hb_isTwoSided", (int)m_backFaceLit);
+	this->AddUniform(m_twoSidedUni.get());
+	
 	SetDefaultMaterial();
 }
 
@@ -109,12 +128,25 @@ void HogBoxMaterial::SetMaterial(osg::Vec3 ambi, osg::Vec3 diffuse, osg::Vec3 sp
 	m_material->setColorMode(osg::Material::OFF);
 
 	//apply the material to the stateset
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 	m_stateset->setAttributeAndModes(m_material.get(), osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
-
-	this->SetTwoSidedLightingEnabled(m_backFaceLit);
-
 	//normalise
 	m_stateset->setMode( GL_NORMALIZE, osg::StateAttribute::ON);
+#endif
+	
+	this->SetTwoSidedLightingEnabled(m_backFaceLit);
+
+
+	
+	//set hogbox material uniforms
+	m_ambientColourUni->set(m_ambientColour);
+	m_diffuseColourUni->set(m_diffuseColor);
+	m_specularColourUni->set(m_specularColour);
+	m_specularExpUni->set((float)m_shininess);
+	
+	m_alphaUni->set((float)m_alpha);
+	
+	m_twoSidedUni->set((int)m_backFaceLit);
 
 }
 
@@ -125,6 +157,7 @@ void HogBoxMaterial::SetAlphaValue(const double& blend)
 {
 	m_alpha = blend;
 	m_material->setAlpha(m_lightFace, blend);
+	m_alphaUni->set((float)m_alpha);
 }
 
 void HogBoxMaterial::SetAlphaEnabled(const bool& enabled)
@@ -157,6 +190,22 @@ const bool& HogBoxMaterial::GetAlphaEnabled() const
 	return m_alphaUsed;
 }
 
+//enable disable lighting
+void HogBoxMaterial::SetLightingEnabled(const bool& val)
+{
+	m_isLit = val;
+	if(m_isLit)
+	{
+		//enable lighting
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
+		m_stateset->setMode(GL_LIGHTING,osg::StateAttribute::ON);
+#endif
+	}else{
+		//diable lighting	
+		m_stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);		
+	}
+}
+
 //BACK FACE LIGHTING
 
 //
@@ -174,6 +223,30 @@ void HogBoxMaterial::SetTwoSidedLightingEnabled(const bool& val)
 		m_stateset->setMode(GL_CULL_FACE, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 		m_backFaceLit = false;
 	}
+	m_twoSidedUni->set((int)m_backFaceLit);
+}
+
+void HogBoxMaterial::SetBinNumber(const int& num)
+{
+	m_binNumber = num;
+	m_stateset->setBinNumber(num);
+}
+
+const int& HogBoxMaterial::GetBinNumber()const
+{
+	return m_binNumber;
+}
+
+//0=default, 1=opaque, 2=trasparent
+void HogBoxMaterial::SetBinHint(const int& hint)
+{
+	m_binMode = hint;
+	m_stateset->setRenderingHint(m_binMode);
+}
+
+const int& HogBoxMaterial::GetBinHint()const
+{
+	return m_binMode;
 }
 
 //
@@ -230,10 +303,14 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	//use the word following the last dot
 	size_t found;
 	found = tex->getName().find_last_of(".");
-	if(found+1 != std::string::npos)
+	if(found != std::string::npos)
 	{
-		uniformName = tex->getName().substr(found+1,tex->getName().size()-1);
+		if(found+1 < uniformName.size()-1)
+		{
+			uniformName = tex->getName().substr(found+1,tex->getName().size()-1);
+		}
 	}
+	OSG_WARN << "UNIFOM SAMPLER NAME: '" << uniformName << "'."<<std::endl; 
 	unit->sampler = new osg::Uniform(uniformName.c_str(), channel);
 
 	//store texture
@@ -246,13 +323,14 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*>(tex); 	
 	if(tex2D){
 		//if we don't want to resize the texture to power of two
-		//and the hardware dows not support npot textures. The apply
+		//and the hardware does not support npot textures. Then apply
 		//a NPOTResizeCallback
 		if(tex2D->getResizeNonPowerOfTwoHint() == false){
-			osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex2D, channel, m_stateset.get());
+			osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex2D, channel, NULL);
 			if(resizer->useAsCallBack()){
 				tex2D->setSubloadCallback(resizer.get());
 			}
+			this->ApplyTextureMatrix(channel, resizer->GetScaleMatrix());
 		}
 	}
 
@@ -274,6 +352,16 @@ osg::Texture* HogBoxMaterial::GetTexture(const int& channel)
 		return m_textureList[channel]->texture;
 	}
 	return NULL;
+}
+
+std::string HogBoxMaterial::GetTextureSamplerName(const int& channel)
+{
+	//see if we can find a texture in channel
+	if(m_textureList.count(channel) > 0)
+	{
+		return m_textureList[channel]->sampler->getName();
+	}
+	return "";
 }
 
 bool HogBoxMaterial::IsTextureEnabled(const int& channel)
@@ -328,6 +416,42 @@ unsigned int HogBoxMaterial::GetNumTextures()const
 	return count;
 }
 
+//
+//apply a texture matrix to this stateset also setting the hb_texmax uniform to represent it
+//
+void HogBoxMaterial::ApplyTextureMatrix(const int& channel, osg::TexMat* texMat)
+{
+	
+	TextureUnit* unit = NULL;
+	//see if the channel is already occupied
+	if(m_textureList.count(channel) > 0)
+	{
+		//remove the existing texture from the material
+		unit = m_textureList[channel];
+	}
+	
+	//if the unit is still null, allocate a new one and add it to the map
+	if(!unit){
+		unit = new TextureUnit();
+		m_textureList[channel] = unit;
+	}
+	
+	if(!unit->matUniform.get()){
+		//create the hogbox uniform to represent the tex matrix based on the the channel
+		std::ostringstream uniformName;
+		uniformName << "hb_texmat" << channel;
+		unit->matUniform = new osg::Uniform(uniformName.str().c_str(), texMat->getMatrix());
+		m_stateset->addUniform(unit->matUniform, osg::StateAttribute::ON);		
+	}
+	
+	unit->texmat = texMat;
+	unit->matUniform->set(texMat->getMatrix());
+	
+	//apply the texture matrix to the stateset
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
+	m_stateset->setTextureAttributeAndModes(channel, texMat, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
+#endif
+}
 
 //Uniforms
 
@@ -413,10 +537,10 @@ void HogBoxMaterial::SetUniformList(const UniformPtrVector& list)
 bool HogBoxMaterial::AddShader(osg::Shader* shader)
 {
 	if(!shader){return false;}
-	if(!m_stateset){return false;}
+	if(!m_stateset.get()){return false;}
 
 	//if the program is null, create it
-	if(m_program == NULL)
+	if(!m_program.get())
 	{
 		m_program = new osg::Program();
 		m_program->setName( this->getName()+"_ShaderProgram" );
@@ -475,6 +599,32 @@ void HogBoxMaterial::SetShaderList(const ShaderPtrVector& list)
 	}
 }
 
+//
+//Add shader of type from file
+//
+bool HogBoxMaterial::AddShaderFromFile(const std::string file, osg::Shader::Type type)
+{
+	osg::Shader* shader = new osg::Shader(type);
+	if(!shader){return false;}
+	
+	//load the source file
+	if(!shader->loadShaderSourceFromFile(file))
+	{
+		//if it fails once then try using osgDB::findFile which is needed on IPhone at mo
+		std::string tryFileName = osgDB::findDataFile(shader->getFileName());
+		if(!tryFileName.empty())
+		{
+			if(!shader->loadShaderSourceFromFile(file))
+			{return false;}
+		}
+		
+		shader->setFileName(tryFileName);
+			
+	}else{
+		shader->setFileName(file);
+	}
+	return AddShader(shader);
+}
 
 //
 //tell the shader to where to find tangent space vectors
@@ -485,11 +635,21 @@ void HogBoxMaterial::UseTangentSpace(const bool& useTangentSpace )
 	//bind the tangent space attributes
 	if(m_useTangentSpace)
 	{
-		m_program->addBindAttribLocation ("tangent", 6);
-		m_program->addBindAttribLocation ("binormal", 7);
+		//if the program is null, create it
+		if(!m_program.get())
+		{
+			m_program = new osg::Program();
+			m_program->setName( this->getName()+"_ShaderProgram" );
+			//add the shader program to this materials stateset
+			m_stateset->setAttributeAndModes(m_program.get(), osg::StateAttribute::ON);
+			//UseTangentSpace();
+		}
+		
+		m_program->addBindAttribLocation ("hb_tangent", 6);
+		//m_program->addBindAttribLocation ("hb_binormal", 7);
 	}else{
-		m_program->removeBindAttribLocation("tangent");
-		m_program->removeBindAttribLocation("binormal");
+		if(m_program){m_program->removeBindAttribLocation("hb_tangent");}
+		//m_program->removeBindAttribLocation("hb_binormal");
 	}
 }
 
@@ -515,6 +675,306 @@ void HogBoxMaterial::CombineShaders(osg::Shader* main, const std::string & addFi
 
 	main->setShaderSource(newMainSource);
 }
+
+//
+//Shader composer
+
+//Create a shader based on the materials current state, 
+//overideExiting, optionally overwrite existing shaders
+//
+void HogBoxMaterial::ComposeShaderFromMaterialState(ShaderDetail detail, LightingMode lightingMode, bool overrideExisting)
+{
+	
+	std::string diffuseName, normalName, reflectionName = "";
+	//create our mapping mask
+	int stateMask;
+	bool dif=false;
+	bool norm=false;
+	
+	if(m_alphaUsed)
+	{
+		OSG_INFO << "HOGBOX ShaderGen: Using Alpha." << std::endl;
+		stateMask |= BLEND;
+	}
+	
+	if(m_isLit)
+	{
+		OSG_INFO << "HOGBOX ShaderGen: Using Lighting." << std::endl;
+		stateMask |= LIGHTING;
+	}
+	
+	//is diffuse map present
+	if(GetTexture(0))
+	{
+		dif=true;
+		OSG_INFO << "HOGBOX ShaderGen: Using Diffuse Map." << std::endl;
+		stateMask |= DIFFUSE_MAP;diffuseName=GetTextureSamplerName(0);
+	}
+
+	if(GetTexture(1))
+	{
+		norm=true;
+		OSG_INFO << "HOGBOX ShaderGen: Using Reflection Map." << std::endl;
+		//stateMask |= REFLECTION_MAP;
+	}
+	
+	//if(GetTexture(2))
+	//{stateMask |= NORMAL_MAP;}
+	
+	if(GetTexture(3))
+	{
+		OSG_INFO << "HOGBOX ShaderGen: Using Mask Map." << std::endl;
+		//stateMask |= MASK_MAP;
+	}
+	
+	if(GetTexture(4))
+	{
+		//stateMask |= PARALLAX_MAP;
+	}
+	
+	if(GetTexture(5))
+	{
+		//stateMask |= GLOW_MAP;
+	}
+	
+	//m_mappingMask = stateMask;
+	m_lightingMode = lightingMode;
+	m_shaderDetailLevel = detail;
+	
+	//set the precision string from our detail level
+	std::string plevel;
+	if(detail == LOW)
+	{
+		plevel = "lowp";
+	}else if(detail == MEDIUM){
+		plevel = "mediump";
+	}else {
+		plevel = "highp";
+	}
+
+	
+	
+	//common defines form vert and frag
+	std::ostringstream vert;
+	std::ostringstream frag;
+	
+	//define precision if not avaliable
+	vert <<	"#ifndef GL_ES" << std::endl <<
+			"	#if (__VERSION__ <= 110)" << std::endl << 
+			"		#define lowp" << std::endl <<
+			"		#define mediump" << std::endl <<
+			"		#define highp" << std::endl <<
+			"	#endif" << std::endl <<
+			"#endif" << std::endl;
+	
+	//varying variables
+	
+	vert << "varying " << plevel << " vec4 vertColor;\n";
+	
+    // write varyings
+    if (m_isLit && !norm)
+    {
+        vert << "varying " << plevel << " vec3 normalDir;\n";
+    }
+	
+    if (m_isLit || norm)
+    {
+        vert << "varying " << plevel << " vec3 lightDir;\n";
+        vert << "varying " << plevel << " vec3 viewDir;\n";
+    }
+	
+	//add tex coords channel one if any texture mappings are used
+	if (dif || norm) 
+	{
+		vert << "varying " << plevel << " vec2 texCoord" << 0 << ";" << std::endl;
+	}
+	
+	vert << std::endl;
+	
+	//copy header and varying into fragment shader
+    frag << vert.str();
+
+	
+	//vertex attributes
+	
+	//vetex
+	vert << "attribute vec4 osg_Vertex;" << std::endl;
+	
+	//only use normal for lighting
+	if (m_isLit || norm)
+    {vert << "attribute vec3 osg_Normal;" << std::endl;}
+	
+		
+	//add tex coords channel one if any texture mappings are used
+	if (dif || norm) 
+	{
+		vert << "attribute vec4 osg_MultiTexCoord" << 0 << ";" << std::endl;
+		vert << "" << " uniform mat4 hb_texmat" << 0 << ";" << std::endl;
+	}
+	
+	vert << std::endl;
+	
+	//osg built in uniforms
+	vert << "" << " uniform mat3 osg_NormalMatrix;" << std::endl <<
+			"" << " uniform mat4 osg_ModelViewProjectionMatrix;" << std::endl <<
+			"" << " uniform mat4 osg_ModelViewMatrix;" << std::endl;
+
+	
+	vert << std::endl;
+	
+	//hogbox built in uniforms
+	//the hogbox material uniforms are written to either the vertex or fragment shader
+	//depending on if we are vertex or pixel lighting
+	if (m_isLit || norm)
+	{
+		frag << "" << " uniform vec3 hb_ambientColor;" << std::endl <<
+				"" << " uniform vec3 hb_diffuseColor;" << std::endl <<
+				"" << " uniform vec3 hb_specularColor;" << std::endl <<
+				"" << " uniform float hb_shine;" << std::endl <<
+				"" << " uniform float hb_alpha;" << std::endl <<
+				"" << " uniform float hb_isTwoSided;" << std::endl;
+		frag << std::endl;
+	}else{
+		vert << "uniform vec3 hb_ambientColor;" << std::endl <<
+		"" << " uniform vec3 hb_diffuseColor;" << std::endl <<
+		"" << " uniform vec3 hb_specularColor;" << std::endl <<
+		"" << " uniform float hb_shine;" << std::endl <<
+		"" << " uniform float hb_alpha;" << std::endl <<
+		"" << " uniform float hb_isTwoSided;" << std::endl;
+		vert << std::endl;		
+	}
+	
+	
+	//decalre vertex main
+	
+	vert << "\n"\
+	"void main()\n"\
+	"{\n"\
+	"  gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;\n";
+	
+	if (dif || norm) 
+	{
+		vert << "  " << plevel << " vec4 tc0 = osg_MultiTexCoord0* hb_texmat0;\n";// * hb_texmat0;
+		//vert << "  tc0.x *= hb_texmat0[0][0];\n";// tc0.y*=hb_texmat0[1][1];\n";
+		vert << "  texCoord0 = tc0.xy;\n";
+	}
+
+	if (norm) 
+	{
+		vert << 
+		"  " << plevel << " vec3 n = osg_NormalMatrix * osg_Normal;\n"\
+		"  " << plevel << " vec3 t = osg_NormalMatrix * tangent;\n"\
+		"  " << plevel << " vec3 b = cross(n, t);\n"\
+		"  " << plevel << " vec3 dir = -vec3(osg_ModelViewMatrix * osg_Vertex);\n"\
+		"  viewDir.x = dot(dir, t);\n"\
+		"  viewDir.y = dot(dir, b);\n"\
+		"  viewDir.z = dot(dir, n);\n"\
+		"  " << plevel << " vec4 lpos = vec4(100.0,100.0,100.0,1.0);\n"\
+		"  if (lpos.w == 0.0)\n"\
+		"    dir = lpos.xyz;\n"\
+		"  else\n"\
+		"    dir += lpos.xyz;\n"\
+		"  lightDir.x = dot(dir, t);\n"\
+		"  lightDir.y = dot(dir, b);\n"\
+		"  lightDir.z = dot(dir, n);\n";
+	}
+	else if (m_isLit)
+	{
+		vert << 
+		"  normalDir = osg_NormalMatrix * osg_Normal;\n"\
+		"  " << plevel << " vec3 dir = -vec3(osg_ModelViewMatrix * osg_Vertex);\n"\
+		"  viewDir = dir;\n"\
+		"  " << plevel << " vec4 lpos = vec4(100.0,100.0,100.0,1.0);\n"\
+		"  if (lpos.w == 0.0)\n"\
+		"    lightDir = lpos.xyz;\n"\
+		"  else\n"\
+		"    lightDir = lpos.xyz + dir;\n";
+	}
+	else
+	{
+		vert << "  vertColor.xyz = hb_diffuseColor;vertColor.a=1.0;\n";
+	}
+	
+	vert << "}\n";
+		
+		
+	//
+	//fragment shader
+	
+	//decalre any samplers
+	hogbox::HogBoxMaterial::TextureChannelMap::const_iterator itr = m_textureList.begin();
+	for(; itr != m_textureList.end(); itr++)
+	{
+		//check we have a valid sampler first
+		if((*itr).second->sampler)
+		{
+			//add tex sampler (needs to handle rects)
+			frag << "uniform sampler2D " << diffuseName << ";" << std::endl;
+		}
+	}
+	
+	frag << std::endl;
+	
+	frag << "\n"\
+	"void main()\n"\
+	"{\n";
+	
+	if (dif)
+	{
+		frag << "  " << plevel << " vec4 base = texture2D(" << diffuseName << ", texCoord0.xy);\n";
+	}
+	else
+	{
+		frag << "  " << plevel << " vec4 base = vec4(1.0);\n";
+	}
+	
+	if (norm)
+	{
+		//frag << "  vec3 normalDir = texture2D(normalMap, texCoord.xy).xyz*2.0-1.0;\n";
+	}
+	
+	if (m_isLit || norm)
+	{
+		frag << 
+		"  " << plevel << " vec3 nd = normalize(normalDir);\n"\
+		"  " << plevel << " vec3 ld = normalize(lightDir);\n"\
+		"  " << plevel << " vec3 vd = normalize(viewDir);\n"\
+		"  " << plevel << " vec4 color = vec4(0.0,0.0,0.0,1.0);\n"\
+		"  color += hb_ambientColor;\n"\
+		"  float diff = max(dot(ld, nd), 0.0);\n"\
+		"  color += hb_diffuseColor * diff;\n"\
+		"  color *= base;\n"\
+		"  if (diff > 0.0)\n"\
+		"  {\n"\
+		"    " << plevel << " vec3 halfDir = normalize(ld+vd);\n"\
+		"    color.rgb += base.a * hb_specularColor.rgb * \n"\
+		"      pow(max(dot(halfDir, nd), 0.0), hb_shine);\n"\
+		"  }\n";
+	}
+	else
+	{
+		frag << "  " << plevel << " vec4 color = base;\n";
+	}
+	
+	if (!m_isLit)
+	{
+		//frag << "  color *= vertColor;\n";
+	}
+	
+	
+	frag << "  gl_FragColor = color;\n";
+	frag << "}\n";
+	
+	std::string vertstr = vert.str();
+	std::string fragstr = frag.str();
+	
+	OSG_INFO << "HogBox ShaderGen Vertex shader:\n" << vertstr << std::endl;
+	OSG_INFO << "HogBox ShaderGen Fragment shader:\n" << fragstr << std::endl;
+	
+	this->AddShader(new osg::Shader(osg::Shader::VERTEX, vertstr));
+	this->AddShader(new osg::Shader(osg::Shader::FRAGMENT, fragstr));
+}
+
 
 //
 // Load a shader source file into the passed in shader object

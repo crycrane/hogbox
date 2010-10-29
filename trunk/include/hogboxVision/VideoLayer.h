@@ -14,6 +14,7 @@
 #include <osg/Texture2D>
 #include <osg/TextureRectangle>
 
+#include <hogbox/HogBoxMaterial.h>
 #include <hogboxVision/VideoStream.h>
 
 namespace hogboxVision {
@@ -33,12 +34,6 @@ public:
 
 
 	void SetRotation(float x, float y, float z, int vFlip, int hFlip);	
-		
-	//apply a different texture to our fs quad
-	void setTextureFromVideoStream(VideoStream* videoStream, int channel=0);
-	void setTextureFromTex2D(osg::Texture2D* texture, int channel=0);
-	void setTextureFromTexRect(osg::TextureRectangle* texture, int channel=0);
-	
 	
 	//get the screen space width
 	inline float getWidth() const {

@@ -131,7 +131,7 @@ class HOGBOX_EXPORT HogBoxLight : public osg::Object
 {
 public:
 
-	HogBoxLight(void);
+	HogBoxLight(int id=0);
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HogBoxLight(const HogBoxLight&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
@@ -183,9 +183,7 @@ public:
 
 
 	//fixed function atts
-
 	const int& GetGLID()const{return m_glID;}
-	void SetGLID(const int& id);
 
 	const osg::Vec4& GetPosition()const{return m_lightPos;}
 	void SetPosition(const osg::Vec4& pos);

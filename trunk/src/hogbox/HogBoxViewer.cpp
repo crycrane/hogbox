@@ -49,15 +49,15 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 //rendering
 	m_clearColor(osg::Vec4(0.2f, 0.2f, 0.4f, 1.0f)),
 	//antialiasing samples
-	m_aaSamples(4), //try for 4, systeminfo will prevent it if not supported
+	m_aaSamples(0), //try for 4, systeminfo will prevent it if not supported
 //view/camera
 	//field of view of camera
 	m_vfov(45.0f),
 	m_cameraViewMatrix(osg::Matrix::identity()),
 	m_viewDistance(4.0f), //used for saving trackball distances
-	m_cameraHomePos(osg::Vec3(0.0f,2.0f,1.0f)),
-	m_cameraHomeLookAt(osg::Vec3(0.0f,0.0f,0.5f)),
-	m_cameraHomeUp(osg::Vec3(0,0,1)),
+	m_cameraHomePos(osg::Vec3(0.0f,0.0f,0.0f)),
+	m_cameraHomeLookAt(osg::Vec3(0.0f,0.0f,-1.0f)),
+	m_cameraHomeUp(osg::Vec3(0,1,0)),
 //saving
 	m_viewerSettingsFile(""),
 //renderOffscreen
@@ -199,7 +199,6 @@ void HogBoxViewer::addEventHandler(osgGA::GUIEventHandler* eventHandler)
 //
 bool HogBoxViewer::CreateAppWindow()
 {
-//	CMsgLog::Inst()->WriteToLog("Create Window");
 	//if not philips mode
 	if( m_iStereoMode != 9 && m_iStereoMode != 10)
 	{
@@ -348,6 +347,7 @@ bool HogBoxViewer::CreateAppWindow()
 		//attach the graphics context to the viewers camera
 		m_viewer->getCamera()->setGraphicsContext(m_graphicsContext.get());
 		m_viewer->getCamera()->setViewport(0,0,m_winSize.x(),m_winSize.y());
+		//m_viewer->getCamera()->setClearMask(GL_DEPTH_BUFFER_BIT);
 		m_viewer->getCamera()->setClearColor(m_clearColor);
 		
 		//also bind our buffer image if rendering offscreen
@@ -365,10 +365,10 @@ bool HogBoxViewer::CreateAppWindow()
 			m_resizeCallback = NULL;
 		}
 		m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
-		//m_graphicsContext->setResizedCallback(m_resizeCallback);
+		m_graphicsContext->setResizedCallback(m_resizeCallback);
 		
 		//force a resize to acount for the initial state
-		m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+		//m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
 	
 		// set the scene to render
 		//check a scene has been set
@@ -408,7 +408,7 @@ bool HogBoxViewer::CreateAppWindow()
 		m_viewer->realize();
 
 		//force a resize to get a proper initial state
-		m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
+		//m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
 	
 		//set request back to false
 		m_requestReset = false;
@@ -431,7 +431,7 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 	}
 
-	return false;
+	return true;
 }
 
 //

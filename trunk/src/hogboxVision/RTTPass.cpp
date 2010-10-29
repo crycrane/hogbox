@@ -79,9 +79,9 @@ bool RTTPass::Init(RTTArgs args)
 	}else{
 
 		//adjust camera for render scene to texture
-		_camera->setProjectionMatrix(args.projectMatrix->getMatrix());
+		_camera->setProjectionMatrix(args.projectMatrix);
 		_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-		_camera->setViewMatrix(args.modelViewMatrix->getMatrix());
+		_camera->setViewMatrix(args.modelViewMatrix);
 
 		//attach the scene to the camera
 		_camera->addChild(args.rttScene);
@@ -119,10 +119,15 @@ void RTTPass::setupCamera()
     _camera->setViewport(0, 0, _outputWidth, _outputHeight);
 
     _camera->setRenderOrder(osg::Camera::PRE_RENDER);
-	_camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-    
+	_camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER);
+/*	FRAME_BUFFER_OBJECT,
+	PIXEL_BUFFER_RTT,
+	PIXEL_BUFFER,
+	FRAME_BUFFER,
+	SEPERATE_WINDOW */
+	
     // attach the 4 textures
-    for (int i=0; i<_outTextures.size(); i++) {
+    for (unsigned int i=0; i<_outTextures.size(); i++) {
 		_camera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0+i), _outTextures[i].get());
     }
 }
@@ -137,15 +142,19 @@ void RTTPass::createOutputTextures()
 {
     for (int i=0; i<_outputTextureCount; i++) 
 	{	
-		osg::ref_ptr<osg::TextureRectangle> newTex = new osg::TextureRectangle();
+		TextureRef newTex = new TextureType();
 		_outTextures.push_back(newTex);
 
+		std::ostringstream samplerName;
+		samplerName << "rttTexture" << i;
+		_outTextures[i]->setName(samplerName.str());
+		
 		_outTextures[i]->setTextureSize(_outputWidth, _outputHeight);
-		//_outTextures[i]->setInternalFormat(GL_RGBA);
-		_outTextures[i]->setInternalFormat(GL_RGBA32F_ARB);
+		_outTextures[i]->setInternalFormat(GL_RGBA);
+		//_outTextures[i]->setInternalFormat(GL_RGBA32F_ARB);
 	    _outTextures[i]->setSourceFormat(GL_RGBA);
-		//_outTextures[i]->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::NEAREST);
-		//_outTextures[i]->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::NEAREST);
+		_outTextures[i]->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::NEAREST);
+		_outTextures[i]->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::NEAREST);
 		_outTextures[i]->setResizeNonPowerOfTwoHint(false);
     }
 }
@@ -237,10 +246,13 @@ bool RTTPass::setInputTexture(int channel, TextureRef tex, std::string uniformNa
 	//_inTextures[channel] = tex;
 	_inTextures.insert(textureSampler);
 
-    //_stateSet->setTextureAttributeAndModes(channel, _inTextures[channel].get(), osg::StateAttribute::ON);
+	if(_videoQuad.get())
+	{
+		_videoQuad->getOrCreateStateSet()->setTextureAttributeAndModes(channel, tex, osg::StateAttribute::ON);
+	}
 
 	//if we are using screen aligned render
-	if(_videoQuad){_videoQuad->setTextureFromTexRect(tex, channel);}
+	//if(_videoQuad){_videoQuad->setTextureFromTexRect(tex, channel);}
 	_stateSet->addUniform(new osg::Uniform(uniformName.c_str(), channel));
 
 	return true;

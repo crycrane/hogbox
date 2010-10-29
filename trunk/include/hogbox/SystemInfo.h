@@ -248,7 +248,9 @@ public:
 
 			//max texture coord channels avaliable
 			GLint maxTextureCoordUnits = 0;
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 			glGetIntegerv(GL_MAX_TEXTURE_COORDS , &maxTextureCoordUnits);
+#endif
 			_maxTextureCoordUnits = (int)maxTextureCoordUnits;
 
 			

@@ -48,6 +48,10 @@ public:
 
 	//get pose
 	osg::Matrix GetTransform(){return m_poseMatrix;}
+	
+	//our we tracking this object
+	void SetEnabled(const bool& enabled);
+	const bool& GetEnabled()const;
 
 	//is the object currently visible/being tracked
 	bool IsObjectDetected(){return m_isDetected;}
@@ -71,6 +75,9 @@ protected:
 	//the 4x4 pose matrix for the marker, relative
 	//to the trackers camera
 	osg::Matrix m_poseMatrix;
+	
+	//our we trying to detect this object
+	bool m_isEnabled;
 
 	//was the object detected in the last update of its tracker
 	bool m_isDetected;

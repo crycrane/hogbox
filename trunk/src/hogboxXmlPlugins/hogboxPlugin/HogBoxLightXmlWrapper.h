@@ -20,8 +20,19 @@ public:
 	HogBoxLightXmlWrapper(osgDB::XmlNode* node) 
 			: hogboxDB::XmlClassWrapper(node, "HogBoxLight")
 	{
+		
+		//All lights require a unique lightID propertey to be passed to the contructor
+		int lightID;
+		if(!hogboxDB::getXmlPropertyValue(node, "lightID", lightID))
+		{
+			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype '" << node->name << "' should have a lightID property." <<std::endl 
+			<< "                    i.e. <" << node->name << " lightID='0'>" << std::endl
+			<< "                          The lightID is expected to be unique and start from 0" << std::endl;
+			//return;
+		}
+		
 		//allocate the HogBoxObject
-		hogbox::HogBoxLight* hogboxLight = new hogbox::HogBoxLight();
+		hogbox::HogBoxLight* hogboxLight = new hogbox::HogBoxLight(lightID);
 		if(!hogboxLight){return;}
 
 		//add the attributes required to exposue the HogBoxObjects members to the xml wrapper
@@ -51,21 +62,11 @@ public:
 	{
 		if(!XmlClassWrapper::deserialize(in)){return false;}
 
-		//All lights require a unique lightID propertey
-		int lightID;
-		if(!hogboxDB::getXmlPropertyValue(in, "lightID", lightID))
-		{
-			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype '" << in->name << "' should have a lightID property." <<std::endl 
-									<< "                    i.e. <" << in->name << " lightID='0'>" << std::endl
-									<< "                          The lightID is expected to be unique and start from 0" << std::endl;
-			return false;
-		}
-
 		//cast to light
 		hogbox::HogBoxLight* light = dynamic_cast<hogbox::HogBoxLight*>(p_wrappedObject.get());
 		if(light)
 		{
-			light->SetGLID(lightID);
+			//light->SetGLID(lightID);
 		}
 
 		return true;

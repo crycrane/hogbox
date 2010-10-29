@@ -71,7 +71,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 	m_hudRegion = new HudRegion(true);
 	m_hudRegion->Create(osg::Vec2(0.0f,0.0f), m_screenSize, "");
 	//set the root region layer far back so we have plenty of positive layers infront
-	m_hudRegion->SetLayer(-10.0f);
+	m_hudRegion->SetLayer(-1.0f);
 	
 	//attach our root region to the hud graph
 	m_regionGroup->addChild(m_hudRegion->GetRegion());

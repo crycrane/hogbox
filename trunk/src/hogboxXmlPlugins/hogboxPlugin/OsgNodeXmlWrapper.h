@@ -73,7 +73,7 @@ public:
 				}
 				
 				//
-				osg::notify(osg::NOTICE) << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
+				OSG_NOTICE << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
 			}
 			//add the node to our base group
 			group->addChild(fileNode);

@@ -57,11 +57,21 @@ public:
 
 	struct RTTArgs {
 
+		RTTArgs()
+			: outWidth(256),
+			outHeight(256),
+			requiredOutCount(1),
+			requiredInCount(0),
+			startChannel(0),
+			rttScene(NULL)
+		{}
+		
 		int outWidth; //output texture width
 		int outHeight; //output texture height
 		int requiredOutCount; //the number of output textures bound to the camera
 
 		int requiredInCount; //the number of input textures required
+		int startChannel; //the first input channel for textures to be bound (then incs by one per input unit, default is 0)
 
 		//list of input sampler names and their associated textures if inCount > 0
 		SamplerToTextureMap inputTextures;
@@ -159,6 +169,11 @@ protected:
 	//list of input textures needed for the pass
 	unsigned int _requiredInputTextures;
 	SamplerToTextureMap _inTextures;
+	
+	//channel to bind net input texture to
+	//set by init args startChannel then increased
+	//as each input texture is bound
+	unsigned int _channelIndex;
 
 	//list of output textures created by this pass
 	unsigned int _outputTextureCount;

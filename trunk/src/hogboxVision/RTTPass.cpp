@@ -14,7 +14,8 @@ RTTPass::RTTPass()
 	_outputWidth(0),
 	_outputHeight(0),
 	_requiredInputTextures(0),
-	_outputTextureCount(0)
+	_outputTextureCount(0),
+	_channelIndex(0)
 {
 	osg::notify(osg::WARN) << "RTTPass: Constructor" << std::endl;
 }
@@ -49,7 +50,7 @@ bool RTTPass::Init(RTTArgs args)
 	_outputHeight = args.outHeight;
 	_requiredInputTextures = args.requiredInCount;
 	_outputTextureCount = args.requiredOutCount;
-
+	_channelIndex = args.startChannel;
 
     _rootGroup = new osg::Group;
    
@@ -59,6 +60,7 @@ bool RTTPass::Init(RTTArgs args)
 
 	//default camera setup for screen algined rtt
     _camera = new osg::Camera;
+	_camera->setName("RttPass Camera");
     setupCamera();
 
 	//if we have input textures create our screen alighned quad to render them full viewport
@@ -66,21 +68,23 @@ bool RTTPass::Init(RTTArgs args)
 	{
 		_videoQuad = new FSVideoLayer(_outputWidth, _outputHeight);
 		_camera->addChild(_videoQuad.get());
+		//ensure camera only creates a color buffer for fullscreen rtt and doesn't perform any clears
+		_camera->setImplicitBufferAttachmentMask(osg::DisplaySettings::IMPLICIT_COLOR_BUFFER_ATTACHMENT);
+		_camera->setClearMask(0);
 		_stateSet = _videoQuad->getOrCreateStateSet();
 
-		int channel = 0;
 		//apply all the textures to the fsquads render stateset
 		for(SamplerToTextureMap::iterator it=args.inputTextures.begin(); it != args.inputTextures.end(); it++)
 		{
-			this->setInputTexture(channel, (*it).second, (*it).first);
-			channel++;
+			this->setInputTexture(_channelIndex, (*it).second, (*it).first);
+			_channelIndex++;
 		}
 
 	}else{
 
 		//adjust camera for render scene to texture
 		_camera->setProjectionMatrix(args.projectMatrix);
-		_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+		//_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
 		_camera->setViewMatrix(args.modelViewMatrix);
 
 		//attach the scene to the camera
@@ -119,7 +123,7 @@ void RTTPass::setupCamera()
     _camera->setViewport(0, 0, _outputWidth, _outputHeight);
 
     _camera->setRenderOrder(osg::Camera::PRE_RENDER);
-	_camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER);
+	_camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 /*	FRAME_BUFFER_OBJECT,
 	PIXEL_BUFFER_RTT,
 	PIXEL_BUFFER,
@@ -238,8 +242,8 @@ int RTTPass::getOutputCount()
 //	
 bool RTTPass::setInputTexture(int channel, TextureRef tex, std::string uniformName)
 {
-	//check the channel bounds against required input size
-	if(channel < 0 || channel >= _requiredInputTextures)
+	//check the channel bounds
+	if(channel < 0)
 	{return false;}
 
 	SamplerToTexturePair textureSampler(uniformName, tex);

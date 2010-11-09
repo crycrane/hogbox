@@ -1,6 +1,5 @@
 #pragma once
 #include "hogtracker.h"
-//#include <cv.h>
 #include "CameraCalibration.h"
 
 namespace hogboxVision {
@@ -8,8 +7,9 @@ namespace hogboxVision {
 //
 //CameraBasedTracker 
 //Tracks objects in images using computer vision techniques
-//Children of CameraBasedTracker are expected to have achild implementation
+//Children of CameraBasedTracker are expected to have a child implementation
 //of CameraCalibration
+//
 class HOGBOXVIS_EXPORT CameraBasedTracker : public HogTracker
 {
 public:

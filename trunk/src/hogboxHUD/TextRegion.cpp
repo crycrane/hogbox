@@ -76,15 +76,13 @@ TextRegion::~TextRegion(void)
 //
 bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight)
 {
-	m_string = label;
-	m_text->setText(label);
-	
-
 	//load the base assets and apply names and sizes, do this
 	//after creating and adding the text so that the text geode 
 	//name will also be changed
 	bool ret = HudRegion::Create(corner,size,fileName);
 
+	SetText(label);
+	
 	return ret;
 }
 
@@ -156,7 +154,7 @@ void TextRegion::SetText(const std::string& str)
 {
 	m_string = str;
 	m_text->setText(str);
-	
+	OSG_FATAL << "Set Text to '" << str << "'." << std::endl;
 	osg::ref_ptr<HudInputEvent> dummyEvent;
 	m_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
 }

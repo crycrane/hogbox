@@ -6,25 +6,119 @@
 
 #pragma once
 
+#include <osg/Image>
+#include <time.h>
+
 namespace hogbox {
+	
+	static void SetSeed(const unsigned int& seed=-1)
+	{
+		if(seed>=0)
+		{
+			srand(seed);
+		}else{
+			srand ( time(NULL) );
+		}		
+	}
+	
+	//generates a psuedo-random int b
+	static int RandInt()
+	{
+		return rand();
+	} 
+	
+	//generates a psuedo-random float 
+	static float RandFloat()
+	{
+		return rand()/(float(RAND_MAX)+1);
+	} 
+	
+	//generates a psuedo-random int between min and max
+	static float RandInt(int min, int max)
+	{
+		if (min>max)
+		{
+			return rand()%((min-max)+1)+max ; 
+		}
+		else
+		{
+			return rand()%((max-min)+1)+min;
+		}    
+	}
+	
+	//generates a psuedo-random float between min and max
+	static float RandFloat(float min, float max)
+	{
+		if (min>max)
+		{
+			return RandFloat()*(min-max)+max;    
+		}
+		else
+		{
+			return RandFloat()*(max-min)+min;
+		}    
+	}
+	
+	static osg::Vec2 RandVec2(float min, float max)
+	{
+		float disX = hogbox::RandFloat(min, max);
+		float disY = hogbox::RandFloat(min, max);
+		
+		return osg::Vec2(disX,disY);
+	}
+	
+	static osg::Vec3 RandNormalisedVec3()
+	{
+		float disX = hogbox::RandFloat(-1.0, 1.0);
+		float disY = hogbox::RandFloat(-1.0, 1.0);
+		float disZ = hogbox::RandFloat(-1.0, 1.0);
+		osg::Vec3 vec = osg::Vec3(disX,disY,disZ);
+		vec.normalize();
+		return vec;
+	}
+	
+	static osg::Vec3 RandVec3(float min, float max)
+	{
+		/* generate secret number: */
+		float disX = hogbox::RandFloat(min, max);
+		float disY = hogbox::RandFloat(min, max);
+		float disZ = hogbox::RandFloat(min, max);
+		
+		return osg::Vec3(disX,disY,disZ);
+	}
 
-extern void SetNoiseFrequency(int frequency);
-
-extern double noise1(double arg);
-extern double noise2(double vec[2]);
-extern double noise3(double vec[3]);
-extern void normalize2(double vec[2]);
-extern void normalize3(double vec[3]);
-
-/*
-   In what follows "alpha" is the weight when the sum is formed.
-   Typically it is 2, As this approaches 1 the function is noisier.
-   "beta" is the harmonic scaling/spacing, typically 2.
-*/
-
-extern double PerlinNoise1D(double x,double alpha, double beta, int n);
-extern double PerlinNoise2D(double x,double y,double alpha, double beta, int n);
-extern double PerlinNoise3D(double x,double y,double z,double alpha, double beta, int n);
-
+	static osg::Vec4 RandVec4(float min, float max)
+	{
+		/* generate secret number: */
+		float disX = hogbox::RandFloat(min, max);
+		float disY = hogbox::RandFloat(min, max);
+		float disZ = hogbox::RandFloat(min, max);
+		float disW = hogbox::RandFloat(min, max);
+		
+		return osg::Vec4(disX,disY,disZ,disW);
+	}
+	
+	//binary noise funcs
+	extern osg::ref_ptr<osg::Image> CreateGreyScaleBinaryNoiseImage2D(const int& width, const int& height, 
+																	  const float& color1= 0.0f, const float& color2=1.0f,
+																	  const unsigned int& seed = -1);
+	extern osg::ref_ptr<osg::Image> CreateRGBBinaryNoiseImage2D(const int& width, const int& height, 
+																const osg::Vec3& color1 = osg::Vec3(0,0,0), const osg::Vec3& color2=osg::Vec3(1,1,1),
+																const unsigned int& seed = -1);
+	extern osg::ref_ptr<osg::Image> CreateRGBABinaryNoiseImage2D(const int& width, const int& height, 
+																const osg::Vec4& color1 = osg::Vec4(0,0,0,0), const osg::Vec4& color2=osg::Vec4(1,1,1,1),
+																const unsigned int& seed = -1);
+	
+	//binary noise funcs
+	//returns false if image is not gl_luminance
+	extern bool FillGreyScaleBinaryNoiseImage2D(osg::Image* image,
+												const float& color1= 0.0f, const float& color2=1.0f,
+												const unsigned int& seed = -1);
+	extern bool FillRGBBinaryNoiseImage2D(osg::Image* image, 
+										const osg::Vec3& color1 = osg::Vec3(0,0,0), const osg::Vec3& color2=osg::Vec3(1,1,1),
+										const unsigned int& seed = -1);
+	extern bool FillRGBABinaryNoiseImage2D(osg::Image* image, 
+											const osg::Vec4& color1 = osg::Vec4(0,0,0,0), const osg::Vec4& color2=osg::Vec4(1,1,1,1),
+											const unsigned int& seed = -1);
 
 };//end hogbox namespace

@@ -17,7 +17,7 @@ XmlClassManager::XmlClassManager(const XmlClassManager& manager,const osg::CopyO
 
 XmlClassManager::~XmlClassManager(void)
 {
-	osg::notify(osg::NOTICE) << "Deallocating XmlClassManager: Type '" << this->getName() << "'," << std::endl
+	OSG_NOTICE << "Deallocating XmlClassManager: Type '" << this->getName() << "'," << std::endl
 							 << "                                                           Releasing '" << m_objectList.size() << "' managed objects." << std::endl;
 	
 	m_supportedClassTypes.clear();

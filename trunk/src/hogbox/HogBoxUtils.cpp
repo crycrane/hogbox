@@ -529,7 +529,7 @@ osg::Image*  hogbox::make3DNoiseImage(int texSize)
 
     for (f = 0, inc = 0; f < numOctaves; ++f, frequency *= 2, ++inc, amp *= 0.5)
     {
-        SetNoiseFrequency(frequency);
+       // SetNoiseFrequency(frequency);
         ptr = image->data();
         ni[0] = ni[1] = ni[2] = 0;
 
@@ -542,7 +542,7 @@ osg::Image*  hogbox::make3DNoiseImage(int texSize)
                 inck = 1.0 / (texSize / frequency);
                 for (k = 0; k < texSize; ++k, ni[2] += inck, ptr += 4)
                 {
-                    *(ptr+inc) = (GLubyte) (((noise3(ni) + 1.0) * amp) * 128.0);
+                   // *(ptr+inc) = (GLubyte) (((noise3(ni) + 1.0) * amp) * 128.0);
                 }
             }
         }

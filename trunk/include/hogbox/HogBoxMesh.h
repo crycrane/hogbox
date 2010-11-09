@@ -83,7 +83,7 @@ class HOGBOX_EXPORT MeshMapping : public osg::Object
 {
 public:
 	MeshMapping();
-	MeshMapping(const std::string& name, HogBoxMaterial* mat, bool vis, bool checkGeoms);
+	MeshMapping(const std::string& name, HogBoxMaterial* mat, bool vis=true, bool checkGeoms=false);
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	MeshMapping(const MeshMapping& mesh,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);

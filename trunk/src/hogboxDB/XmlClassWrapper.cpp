@@ -12,7 +12,7 @@ XmlClassWrapper::XmlClassWrapper(osgDB::XmlNode* node, const std::string& classT
 
 XmlClassWrapper::~XmlClassWrapper(void)
 {
-	osg::notify(osg::NOTICE) << "Deallocating XmlClassWrapper: Type '" << this->GetClassType() << "', UniqueID '" << this->GetUniqueID() << "'." << std::endl;
+	OSG_NOTICE << "Deallocating XmlClassWrapper: Type '" << this->GetClassType() << "', UniqueID '" << this->GetUniqueID() << "'." << std::endl;
 	p_wrappedObject=NULL;
 }
 
@@ -116,7 +116,7 @@ bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)
 				}
 			}else{
 				//no attribute matching that name, inform user 
-				osg::notify(osg::NOTICE) << "XML WARN: While reading uniqueID node '" << uniqueID << "' of type '" << in->name << "'" << std::endl
+				OSG_NOTICE << "XML WARN: While reading uniqueID node '" << uniqueID << "' of type '" << in->name << "'" << std::endl
 										 << "                    The attribute '" << attNode->name << "', was not recognised by the object type." << std::endl
 										 << "                    Could it be a typo?" << std::endl;
 			}
@@ -146,16 +146,16 @@ void XmlClassWrapper::printXmlInterface()
 	if(p_wrappedObject)
 	{
 		//print class type def with uniqueID property example
-		osg::notify(osg::NOTICE) << "XML INTERFACE: Classtype '" << p_wrappedObject->className() << "':" <<std::endl
+		OSG_NOTICE << "XML INTERFACE: Classtype '" << p_wrappedObject->className() << "':" <<std::endl
 								 << "                            <" << p_wrappedObject->className() << " uniqueID=''>" << std::endl;
 
 		//write out all the attributes
 		XmlAttributeMap::iterator _i = m_xmlAttributes.begin();
 		for (;_i != m_xmlAttributes.end(); ++_i) 
 		{
-			osg::notify(osg::NOTICE) << "                                    <" << (*_i).first << ">" << std::endl;
+			OSG_NOTICE << "                                    <" << (*_i).first << ">" << std::endl;
 		}
-		osg::notify(osg::NOTICE) << "                            </" << p_wrappedObject->className() << ">" << std::endl;
+		OSG_NOTICE << "                            </" << p_wrappedObject->className() << ">" << std::endl;
 	}
 }
 

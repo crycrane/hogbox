@@ -51,6 +51,7 @@ SystemInfo::SystemInfo(GatherLevel level)
 	_fragmentShadersSupported(false),
 	_geometryShadersSupported(false),
 	//texturing
+	_supportsNPOTTexture(true), //just till we get iphone systeminfo working
 	_maxTex2DSize(256),
 	_texRectangleSupported(false),
 	_maxTextureUnits(2),
@@ -139,16 +140,16 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 		{
 			graphicsContext = CreateGLContext(osg::Vec2(128,128));
 			if(!graphicsContext.get())
-			{osg::notify(osg::FATAL) << "SystemInfo::SetGLSystemInfoFromGather: ERROR: Failed to create a GL context." << std::endl;return false;}
+			{OSG_FATAL << "SystemInfo::SetGLSystemInfoFromGather: ERROR: Failed to create a GL context." << std::endl;return false;}
 				
 		}
 		
 		osg::ref_ptr<osgViewer::Viewer> viewer = new osgViewer::Viewer();
 		if(!viewer.get())
-		{osg::notify(osg::FATAL) << "SystemInfo::SetGLSystemInfoFromGather ." << std::endl;return false;}
+		{OSG_FATAL << "SystemInfo::SetGLSystemInfoFromGather ERROR: Failed to create GL Viewer." << std::endl;return false;}
 		//attach the graphics context to the viewers camera
 		viewer->getCamera()->setGraphicsContext(graphicsContext.get());
-		viewer->getCamera()->setViewport(0,0,0,0);
+		viewer->getCamera()->setViewport(0,0,128,128);
 		
 		//create our gl info gathering callback
 		m_renderSupportInfo = new GLSupportCallback();
@@ -162,7 +163,7 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 		//and gather the required gl support info. Single threaded as we want to be sure the
 		//callback is triggered before return from frame.
 		viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
-		viewer->realize();
+		//viewer->realize();
 		viewer->frame();
 		
 		//now create the memory info callback and attach as final draw
@@ -202,6 +203,7 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 	
 	//texturing
 	
+	_supportsNPOTTexture = m_renderSupportInfo->npotTextureSupported();
 	_maxTex2DSize = m_renderSupportInfo->maxTex2DSize();
 	_texRectangleSupported = m_renderSupportInfo->textureRectangleSupported();
 	
@@ -265,7 +267,7 @@ const unsigned int SystemInfo::getNumberOfScreens()
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN << "SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created." << std::endl;
 		return -1;
 	} 
 	//number of screens
@@ -278,7 +280,7 @@ const int SystemInfo::getScreenWidth(unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN << "SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created." << std::endl;
 		return -1;
 	} 
 
@@ -294,7 +296,7 @@ const int SystemInfo::getScreenHeight(unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN << "SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created." << std::endl;
 		return -1;
 	} 
 
@@ -315,7 +317,7 @@ const double SystemInfo::getScreenRefreshRate(unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN << "SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created." << std::endl;
 		return -1;
 	} 
 
@@ -332,7 +334,7 @@ const int SystemInfo::getScreenColorDepth(unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN << "SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created." << std::endl;
 		return -1;
 	} 
 
@@ -356,7 +358,7 @@ bool SystemInfo::setScreenResolution(osg::Vec2 pixels, unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN <<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
 		return -1;
 	} 
 
@@ -377,7 +379,7 @@ bool SystemInfo::setScreenRefreshRate(double hz, unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN <<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
 		return -1;
 	} 
 
@@ -397,7 +399,7 @@ bool SystemInfo::setScreenColorDepth(unsigned int depth, unsigned int screenID)
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
 	{
-		osg::notify(osg::WARN)<<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
+		OSG_WARN <<"SystemInfo ERROR: No WindowSystemInterface available, osg windows can not be created."<<std::endl;
 		return -1;
 	} 
 
@@ -517,6 +519,7 @@ unsigned int SystemInfo::FindDepthTraits(osg::GraphicsContext::Traits* currentTr
 	//create graphics context using requted traits
 	osg::ref_ptr<osg::GraphicsContext> graphicsContext = NULL;
 	
+	//osg doesn't throw exceptions?
 	try{
 		
 		graphicsContext = osg::GraphicsContext::createGraphicsContext(currentTraits);
@@ -670,7 +673,7 @@ bool SystemInfo::IsFeatureLevelSupported(const std::string& name)
 	SystemFeatureLevel* level = GetFeatureLevel(name);
 	if(!level)
 	{
-		osg::notify(osg::WARN) << "SystemInfo SUPPORT WARN: Feature Level '" << name << "' does not exist and so can't be checked for support." << std::endl;
+		OSG_WARN << "SystemInfo SUPPORT WARN: Feature Level '" << name << "' does not exist and so can't be checked for support." << std::endl;
 		return false;
 	}
 	return IsFeatureLevelSupported(level);
@@ -679,75 +682,77 @@ bool SystemInfo::IsFeatureLevelSupported(const std::string& name)
 
 void SystemInfo::PrintReportToLog()
 {
-	osg::notify(osg::NOTICE) << "OSG SystemInfo Report" <<std::endl;
+	OSG_NOTICE << "OSG SystemInfo Report" <<std::endl;
 
 	//report all screens
-	osg::notify(osg::NOTICE) << "        Number of Screens:= '" << this->getNumberOfScreens() << "'" << std::endl; 
+	OSG_NOTICE << "        Number of Screens:= '" << this->getNumberOfScreens() << "'" << std::endl; 
 	for(unsigned int i=0; i<this->getNumberOfScreens(); i++)
 	{
-		osg::notify(osg::NOTICE) << "                Screen " << i <<std::endl;
-		osg::notify(osg::NOTICE) << "                        Resolution (pixels) := " << this->getScreenWidth(i) << ", " << this->getScreenHeight(i) <<std::endl;
-		osg::notify(osg::NOTICE) << "                        Resolution Aspect := " << this->getScreenAspectRatio(i) <<std::endl;
-		osg::notify(osg::NOTICE) << "                        Refresh Rate (Hz) := " << this->getScreenRefreshRate(i) <<std::endl;
-		osg::notify(osg::NOTICE) << "                        ColorDepth (bits) := " << this->getScreenColorDepth(i) <<std::endl;
+		OSG_NOTICE << "                Screen " << i <<std::endl;
+		OSG_NOTICE << "                        Resolution (pixels) := " << this->getScreenWidth(i) << ", " << this->getScreenHeight(i) <<std::endl;
+		OSG_NOTICE << "                        Resolution Aspect := " << this->getScreenAspectRatio(i) <<std::endl;
+		OSG_NOTICE << "                        Refresh Rate (Hz) := " << this->getScreenRefreshRate(i) <<std::endl;
+		OSG_NOTICE << "                        ColorDepth (bits) := " << this->getScreenColorDepth(i) <<std::endl;
 	}
 		
-	osg::notify(osg::NOTICE) << "        GPU Name:= '" << this->getRendererName() << "'" << std::endl; 
+	OSG_NOTICE << "        GPU Name:= '" << this->getRendererName() << "'" << std::endl; 
 
-	osg::notify(osg::NOTICE) << "        GPU Vendor:= '" << this->getVendorName() << "'" << std::endl; 
+	OSG_NOTICE << "        GPU Vendor:= '" << this->getVendorName() << "'" << std::endl; 
 
-	osg::notify(osg::NOTICE) << "        GL Version number:= " << this->getGLVersionNumber() <<std::endl; 
+	OSG_NOTICE << "        GL Version number:= " << this->getGLVersionNumber() <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "        GL Memory:" <<std::endl;
+	OSG_NOTICE << "        GL Memory:" <<std::endl;
 
-	osg::notify(osg::NOTICE) << "                Onboard (MB):= " << (this->totalDedicatedGLMemory() > 0 ? this->totalDedicatedGLMemory()/1024 : 0) <<std::endl; 
+	OSG_NOTICE << "                Onboard (MB):= " << (this->totalDedicatedGLMemory() > 0 ? this->totalDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Avaliable Onboard (MB):= " << (this->avaliableDedicatedGLMemory() > 0 ? this->avaliableDedicatedGLMemory()/1024 : 0) <<std::endl; 
+	OSG_NOTICE << "                Avaliable Onboard (MB):= " << (this->avaliableDedicatedGLMemory() > 0 ? this->avaliableDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Total Avaliable (MB):= " << (this->avaliableGLMemory() > 0 ? this->avaliableGLMemory()/1024 : 0) <<std::endl; 
+	OSG_NOTICE << "                Total Avaliable (MB):= " << (this->avaliableGLMemory() > 0 ? this->avaliableGLMemory()/1024 : 0) <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "        Buffer Formats:" <<std::endl;
+	OSG_NOTICE << "        Buffer Formats:" <<std::endl;
 	
-	osg::notify(osg::NOTICE) << "                Quad Buffered Stereo supported:= " <<  (this->quadBufferedStereoSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                Quad Buffered Stereo supported:= " <<  (this->quadBufferedStereoSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Max Depth bits:= " << m_maxTestedDepthBits <<std::endl; 
+	OSG_NOTICE << "                Max Depth bits:= " << m_maxTestedDepthBits <<std::endl; 
 	
-	osg::notify(osg::NOTICE) << "                Max Stencil bits:= " << m_maxTestedStencilBits <<std::endl;  
+	OSG_NOTICE << "                Max Stencil bits:= " << m_maxTestedStencilBits <<std::endl;  
 
-	osg::notify(osg::NOTICE) << "                Max Multi Samples:= " << m_maxTestedMultiSamples <<std::endl; 
+	OSG_NOTICE << "                Max Multi Samples:= " << m_maxTestedMultiSamples <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "        Shaders:" <<std::endl;
+	OSG_NOTICE << "        Shaders:" <<std::endl;
 
-	osg::notify(osg::NOTICE) << "                GLSL supported:= " << (this->glslSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                GLSL supported:= " << (this->glslSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                GLSL Version:= " << this->getGLSLVersionNumber() <<std::endl;  
+	OSG_NOTICE << "                GLSL Version:= " << this->getGLSLVersionNumber() <<std::endl;  
 
-	osg::notify(osg::NOTICE) << "                Shader Objects supported:= " << (this->shaderObjectSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                Shader Objects supported:= " << (this->shaderObjectSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Vertex Shaders supported:= " << (this->vertexShadersSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                Vertex Shaders supported:= " << (this->vertexShadersSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Fragment Shaders supported:= " << (this->fragmentShadersSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                Fragment Shaders supported:= " << (this->fragmentShadersSupported() ? "True" : "False") <<std::endl; 
 	
-	osg::notify(osg::NOTICE) << "                Geometry Shaders supported:= " << (this->geometryShadersSupported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                Geometry Shaders supported:= " << (this->geometryShadersSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                GPU Shader 4 supported:= " << (this->gpuShader4Supported() ? "True" : "False") <<std::endl; 
+	OSG_NOTICE << "                GPU Shader 4 supported:= " << (this->gpuShader4Supported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "        Texture Units:" <<std::endl;
+	OSG_NOTICE << "        Texture Units:" <<std::endl;
 	
-	osg::notify(osg::NOTICE) << "                Max Texture Size:= " << this->maxTexture2DSize() <<std::endl; 
-
-	osg::notify(osg::NOTICE) << "                Texture Rectangles supported:= " << (this->textureRectangleSupported() ? "True" : "False") <<std::endl; 
-
-	osg::notify(osg::NOTICE) << "                Max Fixed Function Texture Units:= " << this->maxTextureUnits() <<std::endl; 
+	OSG_NOTICE << "                Max Texture Size:= " << this->maxTexture2DSize() <<std::endl; 
 	
-	osg::notify(osg::NOTICE) << "                Max Vertex Shader Texture Units:= " << this->maxVertexTextureUnits() <<std::endl;
+	OSG_NOTICE << "                NPOT Textures supported:= " << (this->npotTextureSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Max Fragment Shader Texture Units:= " << this->maxFragmentTextureUnits() <<std::endl;
+	OSG_NOTICE << "                Texture Rectangles supported:= " << (this->textureRectangleSupported() ? "True" : "False") <<std::endl; 
 
-	osg::notify(osg::NOTICE) << "                Max Geometry Shader Texture Units:= " << this->maxGeometryTextureUnits() <<std::endl;
+	OSG_NOTICE << "                Max Fixed Function Texture Units:= " << this->maxTextureUnits() <<std::endl; 
+	
+	OSG_NOTICE << "                Max Vertex Shader Texture Units:= " << this->maxVertexTextureUnits() <<std::endl;
 
-	osg::notify(osg::NOTICE) << "                Total avaliable Texture Units:= " << this->totalTextureUnitsAvaliable() <<std::endl;
+	OSG_NOTICE << "                Max Fragment Shader Texture Units:= " << this->maxFragmentTextureUnits() <<std::endl;
 
-	osg::notify(osg::NOTICE) << "                Max Texture Coord Units:= " << this->maxTextureCoordUnits() <<std::endl;
+	OSG_NOTICE << "                Max Geometry Shader Texture Units:= " << this->maxGeometryTextureUnits() <<std::endl;
+
+	OSG_NOTICE << "                Total avaliable Texture Units:= " << this->totalTextureUnitsAvaliable() <<std::endl;
+
+	OSG_NOTICE << "                Max Texture Coord Units:= " << this->maxTextureCoordUnits() <<std::endl;
 
 }

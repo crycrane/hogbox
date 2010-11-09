@@ -19,8 +19,14 @@ using namespace hogboxVision;
 
 // FSVideoLayer
 
-FSVideoLayer::FSVideoLayer(int width, int height) : osg::Group(),
-							m_width(width), m_height(height)
+FSVideoLayer::FSVideoLayer(int width, int height) 
+	: osg::Group(),
+	m_width(width), 
+	m_height(height),
+	m_rotDegrees(0.0f),
+	m_orientation(0),
+	m_hFlip(false),
+	m_vFlip(false)
 {
 	// build the layer as a child of this group
 	this->addChild(buildLayer().get());
@@ -45,7 +51,10 @@ FSVideoLayer::~FSVideoLayer()
 osg::ref_ptr<osg::Projection> FSVideoLayer::buildLayer() 
 {
 
-	m_layerProjectionMatrix = new osg::Projection(osg::Matrix::ortho2D(0, m_width, 0, m_height));
+	float hWidth = m_width * 0.5f;
+	float hHeight = m_height * 0.5f;
+	
+	m_layerProjectionMatrix = new osg::Projection(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
 
 	m_layerModelViewMatrix = new osg::MatrixTransform();
 	m_layerModelViewMatrix->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
@@ -60,7 +69,9 @@ osg::ref_ptr<osg::Projection> FSVideoLayer::buildLayer()
 	return m_layerProjectionMatrix;
 }
 
-
+//
+//Build quad with 0,0 at center to make fliping easier
+//
 osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry() 
 {
 	float minU = 0.0f;
@@ -78,11 +89,18 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 	osg::Vec2Array* tcoords = new osg::Vec2Array();
 	m_geometry->setTexCoordArray(0, tcoords);
 
+	float hWidth = m_width * 0.5f;
+	float hHeight = m_height * 0.5f;
 
-	coords->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	coords->push_back(osg::Vec3(-hWidth, -hHeight, 0.0f));
+	coords->push_back(osg::Vec3(hWidth, -hHeight, 0.0f));
+	coords->push_back(osg::Vec3(hWidth, hHeight, 0.0f));
+	coords->push_back(osg::Vec3(-hWidth, hHeight, 0.0f));
+	
+	/*coords->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
 	coords->push_back(osg::Vec3(m_width, 0.0f, 0.0f));
 	coords->push_back(osg::Vec3(m_width, m_height, 0.0f));
-	coords->push_back(osg::Vec3(0.0f, m_height, 0.0f));
+	coords->push_back(osg::Vec3(0.0f, m_height, 0.0f));*/
 
 	tcoords->push_back(osg::Vec2(minU, minV));
 	tcoords->push_back(osg::Vec2(maxU, minV));
@@ -100,7 +118,9 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 	
 	//disable depth	
 	this->getOrCreateStateSet()->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-	
+	//disable culling for flipping
+	this->getOrCreateStateSet()->setMode(GL_CULL_FACE,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+
 	//
 	//this->setStateSet(m_material->GetStateSet());
 	
@@ -110,12 +130,75 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 
 }
 
-void FSVideoLayer::SetRotation(float x, float y, float z, int vFlip, int hFlip)
+//apply all the orientation and transform information
+void FSVideoLayer::ApplyTransforms()
 {
-
-	m_layerModelViewMatrix->setMatrix(//	osg::Matrix::scale(vFlip, hFlip, 1) * 
-										osg::Matrix::rotate(x, 1,0,0)*
-										osg::Matrix::rotate(y, 0,1,0)*
-										osg::Matrix::rotate(z, 0,0,1)); 
+	float rads = osg::DegreesToRadians(m_rotDegrees);	
+	m_layerModelViewMatrix->setMatrix(osg::Matrix::rotate(rads, 0,0,1)); 
+	
+	//determin if we have changed the horizontal and vertical (left or right orientation)
+	bool isRotated = false;
+	if(m_orientation == 1 || m_orientation == 3)
+	{isRotated = true;}
+	
+	float hWidth = m_width * 0.5f;
+	float hHeight = m_height * 0.5f;
+	
+	if(isRotated)
+	{
+		float temp = hWidth;
+		hWidth = hHeight;
+		hHeight = temp;
+	}
+	
+	hHeight = m_vFlip ? -hHeight : hHeight;
+	hWidth = m_hFlip ? -hWidth : hWidth;
+	
+	m_layerProjectionMatrix->setMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+	
 }
+
+void FSVideoLayer::SetRotation(const float& rotDegrees)
+{
+	m_rotDegrees = rotDegrees;
+	ApplyTransforms();
+}
+
+//
+//set the orientation/up side, will set the rotation to increments of 90
+//plus also alter the ortho projection ratio. 0 is up, 1 is right, 2 is down
+//
+void FSVideoLayer::SetOrientation(const int& orientation)
+{
+	m_orientation = orientation;
+	switch (m_orientation) {
+		case 0://top
+			SetRotation(0.0f);
+			break;
+		case 1://right
+			SetRotation(90.0f);
+			break;
+		case 2://bottom
+			SetRotation(180.0f);
+			break;
+		case 3://left
+			SetRotation(270.0f);
+			break;
+		default:
+			break;
+	}
+}
+
+void FSVideoLayer::SetVerticalFlip(const bool& bVFlip)
+{
+	m_vFlip = bVFlip;
+	ApplyTransforms();	
+}
+
+void FSVideoLayer::SetHorizontalFlip(const bool& bHFlip)
+{
+	m_hFlip = bHFlip;
+	ApplyTransforms();
+}
+
 

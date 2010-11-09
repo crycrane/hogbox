@@ -103,6 +103,7 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 				{
 					//cast drawable to geometry
 					osg::Geometry* geom = geode->getDrawable(i)->asGeometry();
+					OSG_FATAL << "TRY TANGENTS" << std::endl;
 					if(geom)
 					{
 						//check if the geom already has the vectors
@@ -122,6 +123,7 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 
 								if( (size>0) && (sizeb>0))
 								{
+									OSG_FATAL << "SET TANGENTS" << std::endl;
 									geom->setVertexAttribArray(6, tangentArray);
 									geom->setVertexAttribBinding(6, osg::Geometry::BIND_PER_VERTEX);  
 

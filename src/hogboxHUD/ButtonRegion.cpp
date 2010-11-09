@@ -49,7 +49,6 @@ bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& f
 
 int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {	
-	osg::notify(osg::WARN) << "CLICK LICK SLICK" << std::endl;
 	return TextRegion::HandleInputEvent(hudEvent); 
 }
 

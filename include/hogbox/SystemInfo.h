@@ -130,6 +130,7 @@ public:
 			_gpuShader4Supported(false),
 			_vertexShadersSupported(false),
 			_fragmentShadersSupported(false),
+			_supportsNPOTTexture(false),
 			_maxTex2DSize(0),
 			_texRectangleSupported(false),
 			_maxTextureUnits(0),
@@ -147,9 +148,10 @@ public:
            OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_mutex);
 
 		   unsigned int contextID = renderInfo.getContextID();
-		  
+		 
 		   	osg::GL2Extensions* extensions = osg::GL2Extensions::Get(contextID,true);
-
+			osg::Texture::Extensions* texExtensions = osg::Texture::getExtensions(contextID,true);
+			
 		   //get gl versions
 			_glVersionNumber = osg::getGLVersionNumber();
 
@@ -211,6 +213,10 @@ public:
 
 		//TEXTURES
 
+			//npot texturing
+			_supportsNPOTTexture = texExtensions->isNonPowerOfTwoTextureSupported(osg::Texture::NEAREST);
+				
+			
 			//max fixed func tex size
 			GLint maxTextureSize = 0;
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
@@ -281,6 +287,7 @@ public:
 	const bool geometryShadersSupported(){ return _geometryShadersSupported;}
 
 	const int maxTex2DSize(){ return _maxTex2DSize;}
+	const bool npotTextureSupported(){return _supportsNPOTTexture;}
 	const bool textureRectangleSupported(){ return _texRectangleSupported;}
 
 	//fixed function limit
@@ -333,6 +340,7 @@ protected:
 	mutable int  _maxTex2DSize;
 	mutable bool _texRectangleSupported;
 
+	mutable bool _supportsNPOTTexture;
 	mutable int _maxTextureUnits;
 	mutable int _maxVertexTextureUnits;
 	mutable int _maxFragmentTextureUnits;
@@ -478,6 +486,8 @@ public:
 	const bool geometryShadersSupported(){return _geometryShadersSupported;}
 
 	//texturing
+	const bool npotTextureSupported(){return _supportsNPOTTexture;}
+	
 	const int maxTexture2DSize(){ return _maxTex2DSize;}
 
 	const bool textureRectangleSupported(){ 
@@ -617,6 +627,8 @@ private:
 	bool _geometryShadersSupported;
 	
 	//texturing
+	
+	bool _supportsNPOTTexture;
 	
 	int  _maxTex2DSize;
 	bool _texRectangleSupported;

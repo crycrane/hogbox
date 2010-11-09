@@ -20,7 +20,8 @@
 namespace hogboxVision {
 
 //
-//Drawable video layer
+//Drawable video layer, renders to the entire viewport
+//can be rotated and flipped to avoid image flipping
 //
 class HOGBOXVIS_EXPORT FSVideoLayer : public osg::Group
 {
@@ -33,7 +34,14 @@ public:
 	META_Node(hogboxVision,FSVideoLayer)
 
 
-	void SetRotation(float x, float y, float z, int vFlip, int hFlip);	
+	//set the model view matrix z rotation
+	void SetRotation(const float& rotDegrees);
+	//set the orientation/up side, will set the rotation to increments of 90
+	//plus also alter the ortho projection ration. 0 is up, 1 is right, 2 is down
+	void SetOrientation(const int& orientation);
+	
+	void SetVerticalFlip(const bool& bVFlip);
+	void SetHorizontalFlip(const bool& bHFlip);	
 	
 	//get the screen space width
 	inline float getWidth() const {
@@ -60,11 +68,19 @@ protected:
 	//build the actual geometry of the object
 	osg::ref_ptr<osg::Geode> buildLayerGeometry();
 	
+	//apply all the orientation and transform information
+	void ApplyTransforms();
+	
 protected:
 	
 	//dimensions of layer, should match the ortho projection dimensions
 	float m_width;
 	float m_height;
+	
+	float m_rotDegrees;
+	int m_orientation;
+	bool m_hFlip;
+	bool m_vFlip;
 
 	//actual verts etc
 	osg::ref_ptr<osg::Geode>			m_layerGeode;

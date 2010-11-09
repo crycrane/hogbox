@@ -95,11 +95,6 @@ namespace hogbox {
 	extern HOGBOX_EXPORT osg::Image*  make1DSineImage( int texSize );
 	extern HOGBOX_EXPORT osg::Texture1D*  make1DSineTexture( int texSize );
 
-	//video texture helpers
-/*	static CVideoStream* ApplyVideoTextureToState(osg::StateSet* state, std::string file, int channel );
-	static void ApplyVideoTextureToState(osg::StateSet* state, CVideoStream* videoStream, int channel);
-	static osg::Texture2D* CreateVideoTexture2D(CVideoStream* videoStream);
-	static osg::TextureRectangle* CreateVideoTextureRect(CVideoStream* videoStream);*/
 
 	//Geom helpers
 	extern HOGBOX_EXPORT osg::Geometry* BuildXYQuad(osg::Vec2 size, osg::Vec4 color, float depth);

@@ -3,6 +3,7 @@
 #include <hogbox/HogBoxUtils.h>
 #include <hogbox/SystemInfo.h>
 #include <osg/BlendEquation>
+#include <osg/BlendFunc>
 #include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogbox;
@@ -26,6 +27,10 @@ HogBoxMaterial::HogBoxMaterial(void)
 	m_featureLevel(NULL),
 	p_fallbackMaterial(NULL)
 {	
+	
+	//set this as the user data of our stateset so it can be retreived while transversing the graph
+	m_stateset->setUserData(this);
+	
 	//the built in uniforms provided by hogbox material to replace gl_material etc in gles2 shaders
 	m_ambientColourUni = new osg::Uniform("hb_ambientColor", m_ambientColour);
 	this->AddUniform(m_ambientColourUni.get());
@@ -167,7 +172,9 @@ void HogBoxMaterial::SetAlphaEnabled(const bool& enabled)
 		m_alphaUsed = true;
 
 		osg::BlendEquation* blendEquation = new osg::BlendEquation(osg::BlendEquation::FUNC_ADD);
-		m_stateset->setAttributeAndModes(blendEquation,osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
+		m_stateset->setAttributeAndModes(blendEquation,osg::StateAttribute::ON);
+		osg::BlendFunc* blendFunc = new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE);//GL_ONE_MINUS_SRC_ALPHA);
+		m_stateset->setAttributeAndModes(blendFunc,osg::StateAttribute::ON);
 		//tell to sort the mesh before displaying it
 		m_stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 		m_stateset->setMode(GL_BLEND, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
@@ -310,7 +317,7 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 			uniformName = tex->getName().substr(found+1,tex->getName().size()-1);
 		}
 	}
-	OSG_WARN << "UNIFOM SAMPLER NAME: '" << uniformName << "'."<<std::endl; 
+
 	unit->sampler = new osg::Uniform(uniformName.c_str(), channel);
 
 	//store texture
@@ -320,20 +327,31 @@ void HogBoxMaterial::SetTexture(const int& channel, osg::Texture* tex)
 	m_stateset->setTextureAttributeAndModes(channel, unit->texture, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
 	m_stateset->addUniform(unit->sampler, osg::StateAttribute::ON);
 
-	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*>(tex); 	
+	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*>(tex);
+	osg::TexMat* texMat = NULL;
 	if(tex2D){
-		//if we don't want to resize the texture to power of two
-		//and the hardware does not support npot textures. Then apply
-		//a NPOTResizeCallback
-		if(tex2D->getResizeNonPowerOfTwoHint() == false){
-			osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex2D, channel, NULL);
-			if(resizer->useAsCallBack()){
-				tex2D->setSubloadCallback(resizer.get());
+		//if we don't want to resize
+		if(tex2D->getResizeNonPowerOfTwoHint() == false)
+		{
+			//if npot isn't supported
+			if(!SystemInfo::Instance()->npotTextureSupported())
+			{
+				//if we don't want to resize the texture to power of two
+				//and the hardware does not support npot textures. Then apply
+				//a NPOTResizeCallback				
+				osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex2D, channel, NULL);
+				if(resizer->useAsCallBack()){
+					tex2D->setSubloadCallback(resizer.get());
+				}
+				texMat = resizer->GetScaleMatrix();
 			}
-			this->ApplyTextureMatrix(channel, resizer->GetScaleMatrix());
 		}
 	}
 
+	//make sure we have a default tex matrix
+	if(!texMat){texMat = new osg::TexMat();}
+	
+	this->ApplyTextureMatrix(channel, texMat);
 
 	//flag the texture as on
 	unit->enabled = true;
@@ -1013,7 +1031,7 @@ HogBoxMaterial* HogBoxMaterial::GetFunctionalMaterial()
 	}else{ //try fallback
 		if(p_fallbackMaterial)
 		{
-			osg::notify(osg::NOTICE) << "HogBoxMaterial NOTICE: Material '" << this->getName() << "' uses FeatureLevel '" << m_featureLevel->getName() << "' which is not supported," << std::endl
+			OSG_NOTICE << "HogBoxMaterial NOTICE: Material '" << this->getName() << "' uses FeatureLevel '" << m_featureLevel->getName() << "' which is not supported," << std::endl
 			<< "                                                                               Fallingback onto Material '" << p_fallbackMaterial->getName() << "'." << std::endl;
 			return p_fallbackMaterial->GetFunctionalMaterial();
 		}

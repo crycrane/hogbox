@@ -79,8 +79,8 @@ protected:
 	//The syncing clock being used
 	osg::ref_ptr<VideoFileSyncClock> m_syncClock;
 
-	//syncing (?)
-	bool m_isSynced;//flag indicating this is a synced source and thus should be played/paused by the video manager
+	//syncing 
+	bool m_isSynced;
 };
 
 typedef osg::ref_ptr<VideoFileStream> VideoFileStreamPtr;

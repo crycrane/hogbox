@@ -38,6 +38,7 @@ ADD_LIBRARY(${LIB_NAME}
 	Noise.cpp
 	SystemInfo.cpp
 	NPOTResizeCallback.cpp
+	Version.cpp
     #${HOGBOX_VERSIONINFO_RC}
 )
 

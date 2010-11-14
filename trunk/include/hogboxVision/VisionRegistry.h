@@ -215,7 +215,7 @@ static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_video_##ext);
 //Register a new videofilestream type plugin 
 #define REGISTER_VISION_VIDEO_PLUGIN(ext, classname) \
 	extern "C" void hogboxvision_video_##ext(void) {} \
-	static hogboxVision::VideoFileStreamRegistryProxy g_proxy_##ext(new (##classname), #ext );
+	static hogboxVision::VideoFileStreamRegistryProxy g_proxy_##ext(new classname, #ext );
 
 
 #define USE_VISION_WEBCAM_PLUGIN(ext) \
@@ -226,8 +226,11 @@ static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_webcam_##ext);
 //Register a new videofilestream type plugin 
 #define REGISTER_VISION_WEBCAM_PLUGIN(ext, classname) \
 	extern "C" void hogboxvision__webcam_##ext(void) {} \
-	static hogboxVision::WebCamStreamRegistryProxy g_proxy_##ext(new (##classname), #ext );
+	static hogboxVision::WebCamStreamRegistryProxy g_proxy_##ext(new classname, #ext );
 
+	
+	
+	
 
 }; //end hogboxVision namespace
 	

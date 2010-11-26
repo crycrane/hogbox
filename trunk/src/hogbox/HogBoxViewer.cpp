@@ -244,7 +244,7 @@ bool HogBoxViewer::CreateAppWindow()
 			windata = new osgViewer::GraphicsWindowWin32::WindowData(m_hwnd);
 #else
 			#if (TARGET_OS_IPHONE)
-				windata = new osgViewer::GraphicsWindowIPhone::WindowData((UIWindow*)m_hwnd);
+				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIWindow*)m_hwnd);
 			#else
 				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)m_hwnd);
 			#endif

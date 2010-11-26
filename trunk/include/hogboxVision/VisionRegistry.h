@@ -60,8 +60,8 @@ public:
 
 	//
 	//Try to allocate, create and return a video file stream using one of the registered types
-	WebCamStreamPtr CreateWebCamStream(const std::string& fileName, const std::string& plugin="",
-										bool hflip=false, bool vflip=false, bool deinter=false);
+	WebCamStreamPtr CreateWebCamStream(const std::string& fileName, const int& width=640, const int& height=480, const int& fps=30,
+									   bool hflip=false, bool vflip=false, bool deinter=false, const std::string& plugin="");
 
 
 
@@ -189,7 +189,7 @@ public:
 			//create the wrapper and add to the reg
 			proto->setName(name);
 			_wrapper = new WebCamStreamWrapper(std::string(name), proto);
-			
+			OSG_FATAL << "Register webcam plugin" << std::endl;
 			VisionRegistry::Instance()->AddWebCamStreamTypeToRegistry(_wrapper);
 					
 		}
@@ -225,7 +225,7 @@ static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_webcam_##ext);
 //
 //Register a new videofilestream type plugin 
 #define REGISTER_VISION_WEBCAM_PLUGIN(ext, classname) \
-	extern "C" void hogboxvision__webcam_##ext(void) {} \
+	extern "C" void hogboxvision_webcam_##ext(void) {} \
 	static hogboxVision::WebCamStreamRegistryProxy g_proxy_##ext(new classname, #ext );
 
 	

@@ -76,7 +76,7 @@ VideoFileStreamPtr VisionRegistry::AllocateVideoFileStream(const std::string& pl
 		if(!LoadVideoFileStreamPlugin(plugin))
 		{
 			//no plugins were loaded, inform user and return NULL
-			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin ERROR: Failed to load any WebCam Plugins. Video files can not be handled." << std::endl;
+			osg::notify(osg::WARN) << "HogBoxVision Video Plugin ERROR: Failed to load any Video Plugins. Video files can not be handled." << std::endl;
 			return NULL;
 		}
 		protoWrapper = GetVideoFileStreamPluginProto(plugin);
@@ -123,7 +123,9 @@ void VisionRegistry::AddWebCamStreamTypeToRegistry(WebCamStreamWrapper* protoWra
 	//already exist by manager class name
 	//VideoFileStream* existing = GetXmlClassManager(object->className());
 	//if(existing){return;}
+	OSG_FATAL << "ADD WEBCAM TYPE TO LIST" << std::endl;
 	m_webcamStreamTypes.push_back(protoWrapper);
+	OSG_FATAL << "NEW TYPES LIST COUNT '" << m_webcamStreamTypes.size() << "'" << std::endl;
 }
 
 //
@@ -138,7 +140,7 @@ WebCamStreamPtr VisionRegistry::AllocateWebCamStream(const std::string& plugin)
 		if(!LoadWebCamStreamPlugin(plugin))
 		{
 			//no plugins were loaded, inform user and return NULL
-			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin ERROR: Failed to load any WebCam Plugins. Video files can not be handled." << std::endl;
+			osg::notify(osg::WARN) << "HogBoxVision WebCam Plugin ERROR: Failed to load any WebCam Plugins. Webcams can not be handled." << std::endl;
 			return NULL;
 		}
 		protoWrapper = GetWebCamStreamPluginProto(plugin);
@@ -160,14 +162,14 @@ WebCamStreamPtr VisionRegistry::AllocateWebCamStream(const std::string& plugin)
 //
 //Try to allocate, create and return a video file stream using one of the registered types
 //
-WebCamStreamPtr VisionRegistry::CreateWebCamStream(const std::string& fileName, const std::string& plugin,
-													bool hflip, bool vflip, bool deinter)
+WebCamStreamPtr VisionRegistry::CreateWebCamStream(const std::string& fileName, const int& width, const int& height, const int& fps,
+												   bool hflip, bool vflip, bool deinter, const std::string& plugin)
 {
 	//clone the type then try calling create, if it works return it
 	WebCamStreamPtr type = AllocateWebCamStream(plugin);
 	if(type.get())
 	{
-		if(type->CreateStream(fileName, hflip, vflip, deinter))
+		if(type->CreateWebCamStream(fileName, width, height, fps, hflip, vflip, deinter))
 		{
 			return type;
 		}
@@ -392,6 +394,8 @@ const std::string VisionRegistry::FindWebCamLibraryName(int index)
 //
 WebCamStreamWrapperPtr VisionRegistry::GetWebCamStreamPluginProto(const std::string& plugin)
 {
+	OSG_FATAL << "WEBCAM PLUGIN NAME '" << plugin << "'" << std::endl;
+	OSG_FATAL << "WEBCAM PLUGIN COUNT '" << m_webcamStreamTypes.size() << "'" << std::endl;
 	//if no plugin name return the first
 	if(plugin.empty())
 	{

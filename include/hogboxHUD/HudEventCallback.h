@@ -37,7 +37,6 @@ namespace hogboxHUD {
 	//HudEventObjectCallback
 	//Used to register a single function of a class instance as a callback function
 	//for hudinputevents
-	//T the type sending events, the hudregions etc
 	//C the type receiving events, the app layer and parent regions etc
 	//
 	template <class C> class HudEventObjectCallback : public HudEventCallback

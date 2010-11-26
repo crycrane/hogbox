@@ -10,7 +10,7 @@
 #else
 	#include <TargetConditionals.h>
 	#if (TARGET_OS_IPHONE)
-		#include <osgViewer/api/IPhone/GraphicsWindowIPhone> 
+		#include <osgViewer/api/IOS/GraphicsWindowIOS> 
 		#define HWND UIWindow*
 		//USE_GRAPHICSWINDOW()
 	#else

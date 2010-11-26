@@ -27,7 +27,7 @@ typedef unsigned int InheritanceMask;
 class HudRegion;
 typedef osg::ref_ptr<HudRegion> HudRegionPtr;
 //forward declare our update callback
-	class HudRegionUpdateCallback;
+class HudRegionUpdateCallback;
 
 //helper func to rename geodes and attach region as user data
 extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* graph, HudRegion* region);

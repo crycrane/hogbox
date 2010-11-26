@@ -9,14 +9,18 @@
 
 using namespace hogboxHUD;
 
-#define SHADER_COMPAT \ 
-"#ifndef GL_ES\n" \ 
-"#if (__VERSION__ <= 110)\n" \ 
-"#define lowp\n" \ 
-"#define mediump\n" \ 
-"#define highp\n" \ 
-"#endif\n" \ 
-"#endif\n" 
+#ifndef WIN32
+	#define SHADER_COMPAT \ 
+	"#ifndef GL_ES\n" \
+	"#if (__VERSION__ <= 110)\n" \ 
+	"#define lowp\n" \ 
+	"#define mediump\n" \ 
+	"#define highp\n" \ 
+	"#endif\n" \ 
+	"#endif\n" 
+#else
+	#define SHADER_COMPAT ""
+#endif
 
 static const char* texturedVertSource = { 
 	SHADER_COMPAT 

@@ -11,7 +11,6 @@ SET(HEADER_PATH ${hogbox_SOURCE_DIR}/include/${LIB_NAME})
 
 SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/VideoStream.h
-	${HEADER_PATH}/VideoTex2DCallBack.h
 	${HEADER_PATH}/VisionRegistry.h
 	${HEADER_PATH}/VisionRegistryWrappers.h
 	${HEADER_PATH}/WebCamStream.h
@@ -37,7 +36,6 @@ ADD_LIBRARY(${LIB_NAME}
 	TrackedObject.cpp
 	VideoLayer.cpp
 	VideoStream.cpp
-	VideoTex2DCallBack.cpp
 	VisionRegistry.cpp
 	CameraBasedTracker.cpp
 	CameraCalibration.cpp

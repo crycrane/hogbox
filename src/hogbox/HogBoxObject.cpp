@@ -15,7 +15,7 @@ HogBoxObject::HogBoxObject(void)
 {
 	m_localTransform = new osg::MatrixTransform();
 	m_localTransform->setName("Object Local Trans"); 
-
+	
 	m_scaleMat = osg::Matrix::identity();
 	m_rotationMat = osg::Matrix::identity();
 	m_translationMat = osg::Matrix::identity(); 

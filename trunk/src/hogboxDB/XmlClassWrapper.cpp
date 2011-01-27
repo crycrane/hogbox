@@ -62,7 +62,7 @@ void XmlClassWrapper::SetObjectNameFromUniqueID(const std::string& name)
 }
 
 //
-//Read the in xmlNode into our wrapped object via the
+//Read the in xmlNodes into our wrapped object via the
 //registered XmlAtributes
 //
 bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)  

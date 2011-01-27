@@ -34,6 +34,7 @@ public:
 
 		//allocate Group to repesent any loaded nodes
 		osg::Group* group = new osg::Group();
+		group->setName("OsgNodeRoot");
 
 		//add the temporary wrapper attributes
 		m_xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
@@ -45,7 +46,10 @@ public:
 	//overload deserialise
 	virtual bool deserialize(osgDB::XmlNode* in)  
 	{
-		if(!XmlClassWrapper::deserialize(in)){return false;}
+		if(!XmlClassWrapper::deserialize(in))
+		{
+			return false;
+		}
 
 		//cast wrapped to Group
 		osg::Group* group = dynamic_cast<osg::Group*>(p_wrappedObject.get());

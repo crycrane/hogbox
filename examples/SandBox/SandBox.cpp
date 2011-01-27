@@ -54,10 +54,10 @@ int main( int argc, const char* argv[] )
 #endif	
 	
 	osg::setNotifyHandler(new hogbox::HogBoxNotifyHandler("./Data/MessageLog.html"));
-	osg::setNotifyLevel(osg::NOTICE);
+	osg::setNotifyLevel(osg::INFO);
 
 	hogboxDB::HogBoxManager* manager = hogboxDB::HogBoxManager::Instance();
-	manager->ReadDataBaseFile("Data/hogboxDB.xml");
+	manager->ReadDataBaseFile("./Data/hogboxDB.xml");
 
 	//load the main window
 	hogbox::HogBoxViewerPtr viewer = manager->ReadNodeByIDTyped<hogbox::HogBoxViewer>("MainWindow");
@@ -76,7 +76,7 @@ int main( int argc, const char* argv[] )
 	root->addChild(hogboxObject->GetRootNode());
 
 	//load the webcam
-	hogboxVision::WebCamStreamPtr webcam = manager->ReadNodeByIDTyped<hogboxVision::WebCamStream>("MainWebCam");
+	//hogboxVision::WebCamStreamPtr webcam = manager->ReadNodeByIDTyped<hogboxVision::WebCamStream>("MainWebCam");
 
 	//add hud
 	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));
@@ -87,13 +87,13 @@ int main( int argc, const char* argv[] )
 	viewer->addEventHandler(input);
 
 	//add a region to the hud
-	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("MainButton");
+	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("Button.SwapCamera");
 	hogboxHUD::HogBoxHud::Instance()->AddRegion(region);
 
 	//add a camera manipulator to control camera
 	osg::ref_ptr<osgGA::TrackballManipulator> cameraManipulator;
     cameraManipulator = new osgGA::TrackballManipulator; 
-	cameraManipulator->setHomePosition(osg::Vec3(0,-100,0), osg::Vec3(0,0,0),osg::Vec3(0,0,1));
+	//cameraManipulator->setHomePosition(osg::Vec3(0,-100,0), osg::Vec3(0,0,0),osg::Vec3(0,0,1));
 	
 	//add the cameraManipulator to the hogviewer
 	viewer->GetViewer()->setCameraManipulator(cameraManipulator);

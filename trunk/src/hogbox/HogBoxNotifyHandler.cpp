@@ -13,22 +13,22 @@ HogBoxNotifyHandler::HogBoxNotifyHandler(const std::string& outputFileName)
 	if(m_outputFile.is_open())
 	{
 		//create our html styles for each severity
-		HtmlStyle fatalStyle(osg::Vec3(1.0f,0.0f,0.0f));
+		HtmlStyle fatalStyle(osg::Vec3(0.9f,0.1f,0.1f));
 		m_levelToHtmlStyleList[osg::FATAL] = fatalStyle;
 
-		HtmlStyle warnStyle(osg::Vec3(0.8f,0.6f,0.0f));
+		HtmlStyle warnStyle(osg::Vec3(0.1f,0.1f,0.9f));
 		m_levelToHtmlStyleList[osg::WARN] = warnStyle;
 
-		HtmlStyle noticeStyle(osg::Vec3(0.2f,0.2f,1.0f));
+		HtmlStyle noticeStyle(osg::Vec3(0.1f,0.9f,0.1f));
 		m_levelToHtmlStyleList[osg::NOTICE] = noticeStyle;
 
-		HtmlStyle infoStyle(osg::Vec3(0.2f,1.0f,0.0f));
+		HtmlStyle infoStyle(osg::Vec3(0.0f,0.0f,0.0f));
 		m_levelToHtmlStyleList[osg::INFO] = infoStyle;
 
-		HtmlStyle debugStyle(osg::Vec3(0.0f,0.0f,0.0f));
+		HtmlStyle debugStyle(osg::Vec3(0.3f,0.3f,0.3f));
 		m_levelToHtmlStyleList[osg::DEBUG_INFO] = debugStyle;
 
-		HtmlStyle debugFPStyle(osg::Vec3(0.0f,0.0f,0.0f));
+		HtmlStyle debugFPStyle(osg::Vec3(0.6f,0.6f,0.6f));
 		m_levelToHtmlStyleList[osg::DEBUG_FP] = debugFPStyle;
 
 		//write our html header

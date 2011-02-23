@@ -8,9 +8,6 @@
 namespace hogbox 
 {
 
-	
-
-
 //
 //Animates a value based on a queue of keys, each key
 //has a start value, end value, duration in secs and 

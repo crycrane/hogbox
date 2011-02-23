@@ -47,16 +47,16 @@ public:
 																	&hogbox::HogBoxViewer::GetVSync,
 																	&hogbox::HogBoxViewer::SetVSync);
 
-		m_xmlAttributes["ColorBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,int>(hogboxViewer,
+		m_xmlAttributes["ColorBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,unsigned int>(hogboxViewer,
 																	&hogbox::HogBoxViewer::GetColorBits,
 																	&hogbox::HogBoxViewer::SetColorBits);
-		m_xmlAttributes["DepthBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,int>(hogboxViewer,
+		m_xmlAttributes["DepthBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,unsigned int>(hogboxViewer,
 																	&hogbox::HogBoxViewer::GetDepthBits,
 																	&hogbox::HogBoxViewer::SetDepthBits);
-		m_xmlAttributes["AlphaBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,int>(hogboxViewer,
+		m_xmlAttributes["AlphaBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,unsigned int>(hogboxViewer,
 																	&hogbox::HogBoxViewer::GetAlphaBits,
 																	&hogbox::HogBoxViewer::SetAlphaBits);
-		m_xmlAttributes["StencilBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,int>(hogboxViewer,
+		m_xmlAttributes["StencilBits"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,unsigned int>(hogboxViewer,
 																	&hogbox::HogBoxViewer::GetStencilBits,
 																	&hogbox::HogBoxViewer::SetStencilBits);
 

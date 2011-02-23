@@ -209,10 +209,22 @@ public:
 	//Add shader of type from file
 	bool AddShaderFromFile(const std::string file, osg::Shader::Type type=osg::Shader::VERTEX); 
 
+	//Get or create the materials shader program, will also apply to material
+	//stateset if it is created
+	osg::Program* GetOrCreateProgram();
 
+	//binds the hb_tangent anf hb_binormal attributes to the material program
 	void UseTangentSpace(const bool& useTangent);
 	const bool& IsUsingTangetSpace()const{return m_useTangentSpace;}
 	
+	//
+	//bind the hb_boneWeight 0-x(4?) attributes to the material program
+	//Will also add the default computeSkinning function to the vertex shader
+	//user must ensure the function is forward declared and used in there own 
+	//material shader
+	//note that the geode we apply the material to, must contain a rig etc
+	void UseSkinning(const bool& useSkinning);
+	const bool& IsUsingSkinning()const{return m_useSkinning;}
 	//
 	//Shader composer
 	
@@ -321,6 +333,10 @@ protected:
 
 	//flags if the shaders requires tangent and binormal vectors, these are currently bound to channels 12 and 13
 	bool m_useTangentSpace;
+
+	//flags if we are trying to use skinning by binding the expected boneWeight attributes and adding the default
+	//vertex shader functions used for skinning
+	bool m_useSkinning;
 
 	//the built in uniforms provided by hogbox material to replace gl_material etc in gles2 shaders
 	osg::ref_ptr<osg::Uniform> m_ambientColourUni;

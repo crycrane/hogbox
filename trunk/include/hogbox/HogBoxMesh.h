@@ -13,7 +13,6 @@
 
 namespace hogbox {
 
-
 //
 //MeshMapping Visitor is used to apply a group of states and parameters to a group of named
 //geodes. The MeshMapping applies Material/StateSet and visibility (via node mask)
@@ -22,11 +21,7 @@ namespace hogbox {
 class MeshMappingVisitor : public osg::NodeVisitor
 {
 public:
-	MeshMappingVisitor(std::string name="", hogbox::HogBoxMaterial* mat = NULL, bool vis = true, bool checkGeoms=false);
-
-	//Get set the material used in the mapping
-	HogBoxMaterial* GetMaterial(){return _material;}
-	void SetMaterial(HogBoxMaterial* mat){_material = mat;}
+	MeshMappingVisitor(std::string name="", hogbox::HogBoxMaterial* mat = NULL, bool skinned = false, bool vis = true, bool checkGeoms = false);
 
 	//Add mapto name
 	void AddMapToString(const std::string& mapTo){_mapToList.push_back(mapTo);}
@@ -34,11 +29,19 @@ public:
 	const std::vector<std::string>& GetMapToList()const{return _mapToList;}
 	void SetMapToList(const std::vector<std::string>& list){_mapToList = list;}
 
+	//Get set the material used in the mapping
+	HogBoxMaterial* GetMaterial(){return _material;}
+	void SetMaterial(HogBoxMaterial* mat){_material = mat;}
+
 	//Get Set the mapping visibility
 	const bool& GetVisible()const{return _isVisible;}
 	void SetVisible(const bool& vis){_isVisible = vis;}
 
-	
+	//Map a HogBoxHardwareRigTransform to the mesh, ready to be used with a compatible skinning shader
+	const bool& IsUsingSkinning()const{return _useSkinning;}
+	void UseSkinning(const bool& skinned){ _useSkinning = skinned;}
+
+	//apply the visitor
     virtual void apply(osg::Node& node);
 
 
@@ -70,6 +73,8 @@ protected:
 	//the visibility state to apply to the geodes
 	bool _isVisible;
 
+	//do we want to apply a HardwareRigTransform to any osgAnimation Geoms
+	bool _useSkinning;
 };
 
 typedef osg::ref_ptr<MeshMappingVisitor> MeshMappingVisitorPtr;

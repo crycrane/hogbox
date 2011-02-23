@@ -75,7 +75,10 @@ public:
 																						&hogbox::HogBoxMaterial::IsUsingTangetSpace,
 																						&hogbox::HogBoxMaterial::UseTangentSpace);
 
-
+		//Flag use of skinning
+		m_xmlAttributes["UseSkinning"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxMaterial,bool>(material,
+																						&hogbox::HogBoxMaterial::IsUsingSkinning,
+																						&hogbox::HogBoxMaterial::UseSkinning);
 
 		//fallback infomation
 

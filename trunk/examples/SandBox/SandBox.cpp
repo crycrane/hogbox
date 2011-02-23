@@ -17,6 +17,32 @@
 #include <hogboxHUD/ButtonRegion.h>
 #include <hogboxHUD/OsgInput.h>
 
+#include <hogboxStage/EntityManager.h>
+
+#include <osgAnimation/BasicAnimationManager>
+#include <osgAnimation/AnimationManagerBase>
+
+//
+//finds and returns the fist AnimationManagerBase in the subgraph
+struct AnimationManagerFinder : public osg::NodeVisitor
+{
+    osg::ref_ptr<osgAnimation::BasicAnimationManager> _am;
+    AnimationManagerFinder() : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) {}
+    void apply(osg::Node& node) {
+        if (_am.valid())
+            return;
+        if (node.getUpdateCallback()) {
+            osgAnimation::AnimationManagerBase* b = dynamic_cast<osgAnimation::AnimationManagerBase*>(node.getUpdateCallback());
+            if (b) {
+                _am = new osgAnimation::BasicAnimationManager(*b);
+				node.setUpdateCallback(_am.get());
+                return;
+            }
+        }
+        traverse(node);
+    }
+};
+
 
 int main( int argc, const char* argv[] )
 {
@@ -56,8 +82,15 @@ int main( int argc, const char* argv[] )
 	osg::setNotifyHandler(new hogbox::HogBoxNotifyHandler("./Data/MessageLog.html"));
 	osg::setNotifyLevel(osg::INFO);
 
+	//AnimationSplitter spiltter("./splitConfig.xml");
+	//return 0;
+
 	hogboxDB::HogBoxManager* manager = hogboxDB::HogBoxManager::Instance();
 	manager->ReadDataBaseFile("./Data/hogboxDB.xml");
+
+	//instance the entityManager to add its xml system to the hogboxDB Registry
+	hogboxStage::EntitytManager* entityManager = hogboxStage::EntitytManager::Instance();
+
 
 	//load the main window
 	hogbox::HogBoxViewerPtr viewer = manager->ReadNodeByIDTyped<hogbox::HogBoxViewer>("MainWindow");
@@ -68,19 +101,35 @@ int main( int argc, const char* argv[] )
 	//load the main light
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");
 
-	light1->ApplyLightToGraph(root);//(Don't like this)
-	root->addChild(light1->GetLight());
+	//light1->ApplyLightToGraph(root);//(Don't like this)
+	//root->addChild(light1->GetLight());
 
 	//load our main object
-	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("BoxMan.Object");
+	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("Terrorist.Object");
+	//root->addChild(osgDB::readNodeFile("./Data/Models/Terrorist/terrorist.FBX"));
 	root->addChild(hogboxObject->GetRootNode());
+
+	hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
+//entityManager->
+
+	//play the animation
+	AnimationManagerFinder aniFinder;
+	root->accept(aniFinder);
+	osgAnimation::BasicAnimationManager* anim = aniFinder._am;
+	//root->setUpdateCallback(anim);
+	const osgAnimation::AnimationList& list = anim->getAnimationList();
+    int v = 0;//getRandomValueinRange(list.size());
+        
+    anim->playAnimation(list[v].get());
+	//anim->playAnimation(list[v].get());
+
 
 	//load the webcam
 	//hogboxVision::WebCamStreamPtr webcam = manager->ReadNodeByIDTyped<hogboxVision::WebCamStream>("MainWebCam");
 
 	//add hud
 	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));
-	root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
+	//root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
 	
 	//add input handler for hud
 	hogboxHUD::HudInputHandler* input = new hogboxHUD::HudInputHandler(viewer->GetViewer(),osg::Vec2(800,600));

@@ -187,8 +187,8 @@ void HogBoxObject::UpdateRotationMatrix()
 	//get rotation as radians
 	osg::Vec3 rads = GetRotationRadians();
 	m_rotationMat.set(	osg::Matrix::rotate(rads.x(), osg::Vec3(1,0,0)) *
-							osg::Matrix::rotate(rads.y(), osg::Vec3(0,1,0)) *
-							osg::Matrix::rotate(rads.z(), osg::Vec3(0,0,1)) );
+						osg::Matrix::rotate(rads.y(), osg::Vec3(0,1,0)) *
+						osg::Matrix::rotate(rads.z(), osg::Vec3(0,0,1)) );
 }
 
 //

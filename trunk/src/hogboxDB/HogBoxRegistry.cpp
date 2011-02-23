@@ -32,7 +32,8 @@ HogBoxRegistry* HogBoxRegistry::Instance(bool erase)
 //
 //private constructor for singleton
 //
-HogBoxRegistry::HogBoxRegistry(void) : osg::Referenced()
+HogBoxRegistry::HogBoxRegistry(void) 
+	: osg::Referenced()
 {
 	//add the aliases for the standard osg and hogbox 
 	//types to the multi purpose hogbox xml plugin which 
@@ -150,22 +151,31 @@ std::string HogBoxRegistry::CreateXmlLibraryNameForClassType(const std::string& 
     ClassTypeAliasMap::iterator itr=m_classTypeAliasMap.find(lowercase_classtype);
     if (itr!=m_classTypeAliasMap.end() && classtype != itr->second) return CreateXmlLibraryNameForClassType(itr->second);
 
+	//set folder prepend
 #if defined(OSG_JAVA_BUILD)
     static std::string prepend = std::string("hogboxPlugins-")+std::string(hogboxGetVersion())+std::string("/java");
 #else
     static std::string prepend = std::string("hogboxPlugins-")+std::string(hogboxGetVersion())+std::string("/");
 #endif
 
-#if defined(__CYGWIN__)
-    return prepend+"cygwin_"+"hogboxxml_"+lowercase_classtype+".dll";
-#elif defined(__MINGW32__)
-    return prepend+"mingw_"+"hogboxxml_"+lowercase_classtype+".dll";
-#elif defined(WIN32)
-    return prepend+"hogboxxml_"+lowercase_classtype+".dll";
-#elif macintosh
-    return prepend+"hogboxxml_"+lowercase_classtype;
+	//get debug postfix for win32 plugins
+#if defined(_DEBUG ) && defined(WIN32)
+	static std::string postfix = std::string("d");
 #else
-    return prepend+"hogboxxml_"+lowercase_classtype+".so";//ADDQUOTES(OSG_PLUGIN_EXTENSION);
+	static std::string postfix = std::string("");
+#endif
+
+
+#if defined(__CYGWIN__)
+    return prepend+"cygwin_"+"hogboxxml_"+lowercase_classtype+postfix+".dll";
+#elif defined(__MINGW32__)
+    return prepend+"mingw_"+"hogboxxml_"+lowercase_classtype+postfix+".dll";
+#elif defined(WIN32)
+    return prepend+"hogboxxml_"+lowercase_classtype+postfix+".dll";
+#elif macintosh
+    return prepend+"hogboxxml_"+lowercase_classtype+postfix;
+#else
+    return prepend+"hogboxxml_"+lowercase_classtype+postfix+".so";//ADDQUOTES(OSG_PLUGIN_EXTENSION);
 #endif
 
 }

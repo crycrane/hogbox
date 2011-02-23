@@ -32,17 +32,16 @@ protected:
 	}
 	
 	//
-	//Create an HogBoxObject from xml
+	//Create an HudRegion from xml
 	//
 	virtual hogboxDB::XmlClassWrapperPtr ReadObjectFromXmlNodeImplementation(osgDB::XmlNode* xmlNode)
 	{
-		hogbox::ObjectPtr object;
 		HudRegionXmlWrapperPtr xmlWrapper;
 
 		//create our object and it's xml wrapper.
 		xmlWrapper = new HudRegionXmlWrapper(xmlNode);
 		
-		if(!xmlWrapper){return NULL;}
+		if(!xmlWrapper.get()){return NULL;}
 		//did the wrapper alocate an object
 		if(!xmlWrapper->getWrappedObject()){return NULL;}
 

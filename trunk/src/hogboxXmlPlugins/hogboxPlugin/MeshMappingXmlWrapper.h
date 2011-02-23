@@ -33,6 +33,11 @@ public:
 																			&hogbox::MeshMappingVisitor::GetVisible,
 																			&hogbox::MeshMappingVisitor::SetVisible);
 
+		//Flag use of skinning
+		m_xmlAttributes["UseSkinning"] = new hogboxDB::CallbackXmlAttribute<hogbox::MeshMappingVisitor,bool>(mapping->m_visitor,
+																						&hogbox::MeshMappingVisitor::IsUsingSkinning,
+																						&hogbox::MeshMappingVisitor::UseSkinning);
+
 		//store mesh
 		p_wrappedObject = mapping;
 	}

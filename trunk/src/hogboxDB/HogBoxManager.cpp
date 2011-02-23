@@ -21,7 +21,8 @@ HogBoxManager* HogBoxManager::Instance(bool erase)
 }
 
 HogBoxManager::HogBoxManager(void)
-	: m_databaseNode(NULL)
+	: osg::Referenced(),
+	m_databaseNode(NULL)
 {
 }
 

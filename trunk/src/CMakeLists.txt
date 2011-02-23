@@ -3,6 +3,7 @@ FOREACH( mylibfolder
         hogbox
         hogboxDB 
         hogboxHUD 
+		hogboxStage
         hogboxVision 
         hogboxXmlPlugins
 		hogboxVisionPlugins

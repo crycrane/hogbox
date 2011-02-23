@@ -8,6 +8,50 @@
 
 using namespace hogbox;
 
+//static default skinning shader function
+static const char* computeSkinningVertSource = {  
+"in vec4 boneWeight0;\n"
+"in vec4 boneWeight1;\n"
+"in vec4 boneWeight2;\n"
+"in vec4 boneWeight3;\n"
+"uniform int nbBonesPerVertex;\n"
+"uniform mat4 matrixPalette[19];//MAX_MATRIX];\n"
+"vec4 position;\n"
+"vec3 normal;\n"
+"\n"
+"void ComputeSkinnedNormalAndPosition(vec4 boneWeight)\n"
+"{\n"
+"    int matrixIndex;\n"
+"    float matrixWeight;\n"
+"    for (int i = 0; i < 2; i++)\n"
+"    {\n"
+"        matrixIndex =  int(boneWeight[0]);\n"
+"        matrixWeight = boneWeight[1];\n"
+"        mat4 matrix = matrixPalette[matrixIndex];\n"
+"        // correct for normal if no scale in bone\n"
+"        mat3 matrixNormal = mat3(matrix);\n"
+"        position += matrixWeight * (matrix * gl_Vertex );\n"
+"        normal += matrixWeight * (matrixNormal * gl_Normal );\n"
+"        boneWeight = boneWeight.zwxy;\n"
+"    }\n"
+"}\n"
+"\n"
+"void DoSkinning()\n"
+"{\n"
+"// there is 2 bone data per attributes\n"
+"    if (nbBonesPerVertex > 0)\n"
+"        ComputeSkinnedNormalAndPosition(boneWeight0);\n"
+"    if (nbBonesPerVertex > 2)\n"
+"        ComputeSkinnedNormalAndPosition(boneWeight1);\n"
+"    if (nbBonesPerVertex > 4)\n"
+"        ComputeSkinnedNormalAndPosition(boneWeight2);\n"
+"    if (nbBonesPerVertex > 6)\n"
+"        ComputeSkinnedNormalAndPosition(boneWeight3);\n"
+"//position = gl_Vertex;\n"
+"//normal = gl_Normal;\n"
+"}\n"
+}; 
+
 ////////////////////////////////////MATERIAL/////////////////////////////
 
 HogBoxMaterial::HogBoxMaterial(void)
@@ -24,6 +68,7 @@ HogBoxMaterial::HogBoxMaterial(void)
 	m_isShaderMaterial(false),
 	m_program(NULL),
 	m_useTangentSpace(false),
+	m_useSkinning(false),
 	m_featureLevel(NULL),
 	p_fallbackMaterial(NULL)
 {	
@@ -557,15 +602,7 @@ bool HogBoxMaterial::AddShader(osg::Shader* shader)
 	if(!shader){return false;}
 	if(!m_stateset.get()){return false;}
 
-	//if the program is null, create it
-	if(!m_program.get())
-	{
-		m_program = new osg::Program();
-		m_program->setName( this->getName()+"_ShaderProgram" );
-		//add the shader program to this materials stateset
-		m_stateset->setAttributeAndModes(m_program.get(), osg::StateAttribute::ON);
-		//UseTangentSpace();
-	}
+	GetOrCreateProgram();
 
 	//add the shader to the program and store
 	if(!m_program->addShader(shader)){return false;}
@@ -645,6 +682,23 @@ bool HogBoxMaterial::AddShaderFromFile(const std::string file, osg::Shader::Type
 }
 
 //
+//Get or create the materials shader program, will also apply to material
+//stateset if it is created
+//
+osg::Program* HogBoxMaterial::GetOrCreateProgram()
+{
+	//if the program is null, create it
+	if(!m_program.get())
+	{
+		m_program = new osg::Program();
+		m_program->setName( this->getName()+"_ShaderProgram" );
+		//add the shader program to this materials stateset
+		m_stateset->setAttributeAndModes(m_program.get(), osg::StateAttribute::ON);
+	}
+	return m_program.get();
+}
+
+//
 //tell the shader to where to find tangent space vectors
 //
 void HogBoxMaterial::UseTangentSpace(const bool& useTangentSpace )
@@ -654,20 +708,56 @@ void HogBoxMaterial::UseTangentSpace(const bool& useTangentSpace )
 	if(m_useTangentSpace)
 	{
 		//if the program is null, create it
-		if(!m_program.get())
-		{
-			m_program = new osg::Program();
-			m_program->setName( this->getName()+"_ShaderProgram" );
-			//add the shader program to this materials stateset
-			m_stateset->setAttributeAndModes(m_program.get(), osg::StateAttribute::ON);
-			//UseTangentSpace();
-		}
+		GetOrCreateProgram();
 		
 		m_program->addBindAttribLocation ("hb_tangent", 6);
 		//m_program->addBindAttribLocation ("hb_binormal", 7);
 	}else{
-		if(m_program){m_program->removeBindAttribLocation("hb_tangent");}
+		if(m_program.get()){m_program->removeBindAttribLocation("hb_tangent");}
 		//m_program->removeBindAttribLocation("hb_binormal");
+	}
+}
+
+//
+//bind the hb_boneWeight 0-x(4?) attributes to the material program
+//Will also add the default computeSkinning function to the vertex shader
+//user must ensure the function is forward declared and used in there own 
+//material shader
+//note that the geode we apply the material to, must contain a rig etc
+//
+void HogBoxMaterial::UseSkinning(const bool& useSkinning)
+{
+	m_useSkinning = useSkinning;
+	unsigned int nbAttribs = 2;
+	if(m_useSkinning)
+	{
+		GetOrCreateProgram();
+		//bind the boneWeight attribte location to the material program
+		//for now asume there are 4
+		unsigned int attribIndex = 9;
+		for (unsigned int i = 0; i < nbAttribs; i++)
+		{
+			std::stringstream ss;
+			ss << "boneWeight" << i;
+			m_program->addBindAttribLocation(ss.str(), attribIndex + i);
+			osg::notify(osg::INFO) << "set vertex attrib " << ss.str() << std::endl;
+		}
+
+		//now load the default computeSkinning function into a vertex shader to apply to the program
+		osg::Shader* skinningSource = new osg::Shader(osg::Shader::VERTEX, computeSkinningVertSource);
+		m_program->addShader(skinningSource);
+
+	}else{
+		//Remove hb_boneWeight attributes if any
+		if(m_program.get())
+		{
+			for (unsigned int i = 0; i < nbAttribs; i++)
+			{
+				std::stringstream ss;
+				ss << "boneWeight" << i;
+				m_program->removeBindAttribLocation(ss.str());
+			}
+		}
 	}
 }
 

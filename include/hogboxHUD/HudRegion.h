@@ -290,7 +290,7 @@ protected:
 
 protected:
 
-	//a value of tru indicates that this region was
+	//a value of true indicates that this region was
 	//auto created by a parent (a silder making the inc and dec buttons for example)
 	//these type of region do not want to be saved out
 	bool m_isProcedural;
@@ -379,8 +379,8 @@ protected:
 	//OnMouseUp, called when mouse up/release event occurs in the region
 	//OnMouseMove, called if mouse moves in the regions area
 	//OnMouseDrag, same as mouseMove only a mouse button is held down
-	//X OnMouseEnter, called when mouse first enters the regions area
-	//X OnMouseLeave, called when mouse leaves the area (input model will currently make this difficult to detect)
+	//OnMouseEnter, called when mouse first enters the regions area
+	//OnMouseLeave, called when mouse leaves the area (input model will currently make this difficult to detect)
 	
 	//mouse events
 	osg::ref_ptr<CallbackEvent> m_onMouseDownEvent;

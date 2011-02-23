@@ -253,7 +253,7 @@ public:
 		}
 
 		//now loop the formats and use the format compare func to find the closest to our target
-		float closestCompareDist = DBL_MAX;
+		float closestCompareDist = FLT_MAX;
 		int closestCompareIndex = -1;
 		for(unsigned int i=0; i< formats.size(); i++)
 		{

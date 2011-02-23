@@ -1,9 +1,10 @@
 #include <hogbox/HogBoxMesh.h>
+#include <hogbox/HogBoxHardwareRigTransform.h>
 
 using namespace hogbox;
 
 
-MeshMappingVisitor::MeshMappingVisitor(std::string name, hogbox::HogBoxMaterial* mat, bool vis, bool checkGeoms)
+MeshMappingVisitor::MeshMappingVisitor(std::string name, hogbox::HogBoxMaterial* mat, bool skinned, bool vis, bool checkGeoms)
 	: osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)        
 {
 	//add the name to the mapTo list
@@ -12,6 +13,7 @@ MeshMappingVisitor::MeshMappingVisitor(std::string name, hogbox::HogBoxMaterial*
 	//parameters
 	_material = mat;
 	_isVisible = vis;
+	_useSkinning = skinned;
 
 	_checkGeoms = checkGeoms;
 }
@@ -93,8 +95,9 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 		HogBoxMaterial* useMat = _material->GetFunctionalMaterial();
 		if(useMat)
 		{
+			//apply the actual material to the geode
 			geode->setStateSet(useMat->GetStateSet());
-			//also check if the material requires tangent space vectors generating
+			//also check if the mesh requires tangent space vectors generating
 			if(useMat->IsUsingTangetSpace())
 			{
 				//
@@ -103,7 +106,7 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 				{
 					//cast drawable to geometry
 					osg::Geometry* geom = geode->getDrawable(i)->asGeometry();
-					OSG_FATAL << "TRY TANGENTS" << std::endl;
+
 					if(geom)
 					{
 						//check if the geom already has the vectors
@@ -123,7 +126,6 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 
 								if( (size>0) && (sizeb>0))
 								{
-									OSG_FATAL << "SET TANGENTS" << std::endl;
 									geom->setVertexAttribArray(6, tangentArray);
 									geom->setVertexAttribBinding(6, osg::Geometry::BIND_PER_VERTEX);  
 
@@ -145,6 +147,14 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 		geode->setNodeMask(0xFFFFFFFF);
 	}else{
 		geode->setNodeMask(0x0);
+	}
+
+	//apply the HardwareRigTransform if requested
+	if(_useSkinning)
+	{
+		//
+		ApplyHardwareRigTransformToRigGeomVisitor applyRigging;
+		geode->accept(applyRigging);
 	}
 
 	return true;

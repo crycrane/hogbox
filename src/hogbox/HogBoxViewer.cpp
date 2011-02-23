@@ -563,18 +563,18 @@ const bool& HogBoxViewer::GetVSync()const
 	return m_vSync;
 }
 
-void HogBoxViewer::SetColorBits(const int& bits)
+void HogBoxViewer::SetColorBits(const unsigned int& bits)
 {
 	m_colorBits = bits;
 	this->m_requestReset = true;
 }
 
-const int& HogBoxViewer::GetColorBits()const
+const unsigned int& HogBoxViewer::GetColorBits()const
 {
 	return m_colorBits;
 }
 
-void HogBoxViewer::SetDepthBits(const int& bits)
+void HogBoxViewer::SetDepthBits(const unsigned int& bits)
 {
 	if(bits > m_glSystemInfo->maxDepthBufferBits())
 	{
@@ -585,23 +585,23 @@ void HogBoxViewer::SetDepthBits(const int& bits)
 	this->m_requestReset = true;	
 }
 
-const int& HogBoxViewer::GetDepthBits()const
+const unsigned int& HogBoxViewer::GetDepthBits()const
 {
 	return m_depthBits;
 }
 
-void HogBoxViewer::SetAlphaBits(const int& bits)
+void HogBoxViewer::SetAlphaBits(const unsigned int& bits)
 {
 	m_alphaBits = bits;
 	this->m_requestReset = true;
 }
 
-const int& HogBoxViewer::GetAlphaBits()const
+const unsigned int& HogBoxViewer::GetAlphaBits()const
 {
 	return m_alphaBits;
 }
 
-void HogBoxViewer::SetStencilBits(const int& bits)
+void HogBoxViewer::SetStencilBits(const unsigned int& bits)
 {
 	if(bits > m_glSystemInfo->maxStencilBitsSupported())
 	{
@@ -611,18 +611,18 @@ void HogBoxViewer::SetStencilBits(const int& bits)
 	}
 	this->m_requestReset = true;
 }
-const int& HogBoxViewer::GetStencilBits()const
+const unsigned int& HogBoxViewer::GetStencilBits()const
 {
 	return m_stencilBits;
 }
 
-void HogBoxViewer::SetAccumulationBits(const int& bits)
+void HogBoxViewer::SetAccumulationBits(const unsigned int& bits)
 {
 	m_accumulationBits = bits;
 	this->m_requestReset = true;
 }
 
-const int& HogBoxViewer::GetAcculationBits()const
+const unsigned int& HogBoxViewer::GetAcculationBits()const
 {
 	return m_accumulationBits;
 }

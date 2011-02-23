@@ -139,20 +139,20 @@ public:
 	void SetVSync(const bool& vsync);
 	const bool& GetVSync()const;
 
-	void SetColorBits(const int& bits);
-	const int& GetColorBits()const;
+	void SetColorBits(const unsigned int& bits);
+	const unsigned int& GetColorBits()const;
 
-	void SetDepthBits(const int& bits);
-	const int& GetDepthBits()const;
+	void SetDepthBits(const unsigned int& bits);
+	const unsigned int& GetDepthBits()const;
 
-	void SetAlphaBits(const int& bits);
-	const int& GetAlphaBits()const;
+	void SetAlphaBits(const unsigned int& bits);
+	const unsigned int& GetAlphaBits()const;
 
-	void SetStencilBits(const int& bits);
-	const int& GetStencilBits()const;
+	void SetStencilBits(const unsigned int& bits);
+	const unsigned int& GetStencilBits()const;
 
-	void SetAccumulationBits(const int& bits);
-	const int& GetAcculationBits()const;
+	void SetAccumulationBits(const unsigned int& bits);
+	const unsigned int& GetAcculationBits()const;
 
 	//set fullscreen resizing to m_sSize, must be set by init()
 	void SetFullScreen(const bool& fullScreen);

@@ -1,36 +1,34 @@
 
 IF(DYNAMIC_hogbox)
-    ADD_DEFINITIONS(-DHOGBOXHUD_LIBRARY)
+    ADD_DEFINITIONS(-DHOGBOXSTAGE_LIBRARY)
 ELSE()
     ADD_DEFINITIONS(-DHOGBOX_LIBRARY_STATIC)
 ENDIF()
 
-SET(LIB_NAME hogboxHUD)
+SET(LIB_NAME hogboxStage)
 SET(HEADER_PATH ${hogbox_SOURCE_DIR}/include/${LIB_NAME})
 
 SET(LIB_PUBLIC_HEADERS
-    ${HEADER_PATH}/ButtonRegion.h
     ${HEADER_PATH}/Export.h
-    ${HEADER_PATH}/HogBoxHud.h
-    ${HEADER_PATH}/HudInputEvent.h
-    ${HEADER_PATH}/HudRegion.h
-    ${HEADER_PATH}/OsgInput.h
-    ${HEADER_PATH}/TextRegion.h
-    ${HEADER_PATH}/HudEventCallback.h
+	${HEADER_PATH}/Entity.h
+	${HEADER_PATH}/Component.h
+	${HEADER_PATH}/ComponentEvent.h
+	${HEADER_PATH}/ComponentEventCallback.h
+	${HEADER_PATH}/EntityManager.h
+	${HEADER_PATH}/EntityXmlWrapper.h
+	${HEADER_PATH}/WorldTransformComponent.h
+	${HEADER_PATH}/CollidableComponent.h
+	${HEADER_PATH}/RenderableComponent.h
 )
 
 # FIXME: For OS X, need flag for Framework or dylib
 ADD_LIBRARY(${LIB_NAME}
     ${hogbox_USER_DEFINED_DYNAMIC_OR_STATIC}
     ${LIB_PUBLIC_HEADERS}
-    ButtonRegion.cpp
-	HogBoxHud.cpp
-	HudRegion.cpp
-	OsgInput.cpp
-	TextRegion.cpp
+    EntityManager.cpp
 )
 
-LINK_INTERNAL(${LIB_NAME} hogbox)
+LINK_INTERNAL(${LIB_NAME} hogbox hogboxDB hogboxHUD)
 
 LINK_WITH_VARIABLES(${LIB_NAME}     
     OSG_LIBRARY

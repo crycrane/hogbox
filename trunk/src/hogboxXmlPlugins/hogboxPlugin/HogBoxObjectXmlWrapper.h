@@ -28,20 +28,20 @@ public:
 
 		//Position attribute Vec3
 		m_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
-																	&hogbox::HogBoxObject::GetTranslation,
-																	&hogbox::HogBoxObject::SetTranslation);
+																	&hogbox::HogBoxObject::GetLocalTranslation,
+																	&hogbox::HogBoxObject::SetLocalTranslation);
 		//RotationRadians attribute Vec3 in radians
 		//m_xmlAttributes["RotationRadians"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
 		//															&hogbox::HogBoxObject::GetRotationRadians,
 		//															&hogbox::HogBoxObject::SetRotationRadians);
 		//RotationDegrees attribute Vec3 in degrees
 		m_xmlAttributes["Rotation"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
-																	&hogbox::HogBoxObject::GetRotation,
-																	&hogbox::HogBoxObject::SetRotation);
+																	&hogbox::HogBoxObject::GetLocalRotation,
+																	&hogbox::HogBoxObject::SetLocalRotation);
 		//scale Vec3
 		m_xmlAttributes["Scale"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
-															&hogbox::HogBoxObject::GetScale,
-															&hogbox::HogBoxObject::SetScale);
+															&hogbox::HogBoxObject::GetLocalScale,
+															&hogbox::HogBoxObject::SetLocalScale);
 
 		//hogbox objects wrap a set of osg nodes which need to be added to the object
 		//via AddNodeToObject. The xml reader will read the list of nodes, directly

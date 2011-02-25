@@ -460,7 +460,7 @@ public:
 	const bool quadBufferedStereoSupported(){ return _quadBufferedStereoSupported && m_maxTestedBuffers == 4;}
 
 	const bool depthBufferSupported(){return m_maxTestedDepthBits > 0;} //TODO
-	const int maxDepthBufferBits(){ return m_maxTestedDepthBits;}
+	const unsigned int maxDepthBufferBits(){ return m_maxTestedDepthBits;}
 
 	const bool stencilBufferSupported(){return _bStencilBufferedSupported && m_maxTestedStencilBits > 0;}
 	const unsigned int& maxStencilBitsSupported(){return m_maxTestedStencilBits;}

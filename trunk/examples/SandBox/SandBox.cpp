@@ -18,6 +18,7 @@
 #include <hogboxHUD/OsgInput.h>
 
 #include <hogboxStage/EntityManager.h>
+#include <hogboxStage/RenderableComponent.h>
 
 #include <osgAnimation/BasicAnimationManager>
 #include <osgAnimation/AnimationManagerBase>
@@ -110,6 +111,8 @@ int main( int argc, const char* argv[] )
 	root->addChild(hogboxObject->GetRootNode());
 
 	hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
+	//add a renderable component to the entity
+	entity->AddComponent(new hogboxStage::RenderableComponent(entity.get()));
 //entityManager->
 
 	//play the animation

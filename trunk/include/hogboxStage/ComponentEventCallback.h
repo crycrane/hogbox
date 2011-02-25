@@ -65,14 +65,12 @@ namespace hogboxStage {
 		{
 		}
 		
-		virtual void TriggerCallback(ComponentEventPtr* entityEvent) 
+		virtual void TriggerCallback(ComponentEventPtr entityEvent) 
 		{
-			if (f_callbackFunc) 
-			{
+			if(f_callbackFunc){
 				//call our receiver objects callback function
 				(mp_object->*f_callbackFunc)(p_sender, entityEvent);			
-			} else 
-			{
+			}else{
 				OSG_WARN << "ComponentEventObjectCallback ERROR: No Callback function registered." << std::endl;
 			}
 		}

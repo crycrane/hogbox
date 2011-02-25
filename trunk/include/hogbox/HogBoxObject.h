@@ -55,19 +55,13 @@ public:
 
 
 	//returns the root node to allow this object to be added
-	//to a parent graph
-	virtual osg::ref_ptr<osg::Group> GetRootNode(){return m_root;}
+	//to a parent graph/world
+	virtual osg::ref_ptr<osg::MatrixTransform> GetRootNode(){return m_root;}
 
 	//Attaches the node to our localTransfrom for rendering 
 	//then passes all maeshmapping visitors down the new subgraph
 	//to check for any mapto nodes
 	bool AddNodeToObject(osg::ref_ptr<osg::Node> node);
-
-	//see if the object needs updating
-	bool NeedUpdating(){return m_needUpdating;}
-	//force an update, (HACK till we have our update callback system inplace we will just update matrix on dirty)
-	void Dirty(){UpdateLocalTransform();m_needUpdating=true;}
-	void Clean(){m_needUpdating = false;}
 
 	//get and set visibility / node mask of the
 	//root object
@@ -76,28 +70,32 @@ public:
 
 	void SetSubMeshVisible(int index, bool vis);
 	bool GetSubMeshVisible(int index);
-	void SetSubMeshVisible(std::string name, bool vis);
-	bool GetSubMeshVisible(std::string name);
+	void SetSubMeshVisible(const std::string& name, const bool& vis);
+	bool GetSubMeshVisible(const std::string& name);
 
+//Transforms
+	//Set the world transform
+	void SetWorldTransform(const osg::Matrix& trans);
+	//Get the world transform
+	const osg::Matrix& GetWorldTransform()const;
 
 	//Set the scale on each axis for the local transfrom
-	void SetScale(const osg::Vec3& scale);
-	void SetScale(double x, double y, double z);
+	void SetLocalScale(const osg::Vec3& scale);
+	void SetLocalScale(const double& x, const double& y, const double& z);
 	//sets a uniform scale for local transform, all same value
-	void SetScale(double u);
-	const osg::Vec3& GetScale()const{return m_scale;}
+	void SetLocalScale(const double& u);
+	const osg::Vec3& GetLocalScale()const{return m_scale;}
 
 	//scale the file was loaded at
-	float GetLoadScale(){return m_loadScale;}
-
+	const float& GetLocalLoadScale()const{return m_loadScale;}
 
 	//set the local trans rotation for each axis
-	void SetRotation(const osg::Vec3& rot);
-	void SetRotationRadians(const osg::Vec3& rot);
-	void SetRotation(double x, double y, double z);
-	void SetRotationRadians(double x, double y, double z);
-	const osg::Vec3& GetRotation() const{return m_rotDegrees;}
-	const osg::Vec3 GetRotationRadians()const{
+	void SetLocalRotation(const osg::Vec3& rot);
+	void SetLocalRotationRadians(const osg::Vec3& rot);
+	void SetLocalRotation(const double& x, const double& y, const double& z);
+	void SetLocalRotationRadians(const double& x, const double& y, const double& z);
+	const osg::Vec3& GetLocalRotation() const{return m_rotDegrees;}
+	const osg::Vec3 GetLocalRotationRadians()const{
 		osg::Vec3 radians;
 		radians.x() = osg::DegreesToRadians(m_rotDegrees.x());
 		radians.y() = osg::DegreesToRadians(m_rotDegrees.y());
@@ -106,9 +104,9 @@ public:
 	}
 
 	//set the translation of the local transform for each axis
-	void SetTranslation(const osg::Vec3& pos);
-	void SetTranslation(double x, double y, double z);
-	const osg::Vec3& GetTranslation() const{return m_position;}
+	void SetLocalTranslation(const osg::Vec3& pos);
+	void SetLocalTranslation(const double& x, const double& y, const double& z);
+	const osg::Vec3& GetLocalTranslation() const{return m_position;}
 
 	//bounds of object including scale matrices etc
 	const osg::BoundingSphere GetTotalBounds(){return m_totalBounds;}
@@ -142,9 +140,9 @@ protected:
 
 
 	//Apply the translate rotate and scale values to thier matrices
-	void UpdateScaleMatrix();
-	void UpdateRotationMatrix();
-	void UpdateTranslationMatrix();
+	void UpdateLocalScaleMatrix();
+	void UpdateLocalRotationMatrix();
+	void UpdateLocalTranslationMatrix();
 
 	//Apply the translate rotate and scale matrices to our
 	//local transform node
@@ -156,18 +154,20 @@ protected:
 	//to be wrapped and controlled.
 	hogbox::NodePtrVector m_wrappedNodes;
 
-	//root node for the object/model
-	osg::ref_ptr<osg::Group> m_root;
+	//root node for the object/model is also the world space transform
+	osg::ref_ptr<osg::MatrixTransform> m_root;
 
 	//osg::ref_ptr<osg::Node> m_model; // node storing a referance to the loaded or generated model
 
 	//transformation members
 	osg::ref_ptr<osg::MatrixTransform> m_localTransform; // the final world transform matrix for the model
 
+	//local sub mats
 	osg::Matrix m_scaleMat;		// the scale matrix used to set the local transform
 	osg::Matrix m_rotationMat;	// the rotation matrix used to set the local transform
 	osg::Matrix m_translationMat; // the translation matrix used for the loacl transform
 
+	//local vars to set mats
 	osg::Vec3 m_scale;
 	osg::Vec3 m_rotDegrees;
 	osg::Vec3 m_position;
@@ -179,9 +179,6 @@ protected:
 	osg::BoundingSphere m_totalBounds; 
 	//bounds of just geometry (no lights etc)
 	osg::BoundingSphere m_geodeBounds; 
-
-	bool m_needUpdating; //has the objects transform etc changed since last update
-
 
 	//the list of mesh mappings to apply to this object (and all attched model nodes)
 	std::vector<MeshMappingPtr> m_meshMappings;

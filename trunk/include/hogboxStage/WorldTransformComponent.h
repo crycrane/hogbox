@@ -12,16 +12,16 @@ namespace hogboxStage
 class MovedEvent : public ComponentEvent
 {
 public:
-	MovedEvent(osg::Matrix trans)
+	MovedEvent(osg::Matrix trans=osg::Matrix())
 		: ComponentEvent(),
 		_transform(trans)
 	{
 	}
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
-	ComponentUpdate(const ComponentUpdate& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
+	MovedEvent(const MovedEvent& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
 		: ComponentEvent(ent, copyop),
-		_frameStamp(ent._frameStamp)
+		_transform(ent._transform)
 	{
 	}
 
@@ -68,6 +68,10 @@ public:
 	virtual bool OnUpdate(ComponentEventPtr eventData){return true;}
 
 	//
+	//pure virtual get type name to be implemented by concrete types
+	virtual const std::string GetTypeName(){return "WorldTransformComponent";}
+
+	//
 	//Get the transform
 	const osg::Matrix& GetTransform()const{return _transform;}
 	//
@@ -94,9 +98,9 @@ public:
 	//
 	//Set just rotation xyz in degrees
 	void SetRotation(float x, float y, float z){
-		osg::Matrix rot = osg::Matrix::makeRotate(osg::DegreesToRadians(x), osg::Vec3(1,0,0)) *
-						osg::Matrix::makeRotate(osg::DegreesToRadians(y), osg::Vec3(0,1,0)) *
-						osg::Matrix::makeRotate(osg::DegreesToRadians(z), osg::Vec3(0,0,1));
+		osg::Matrix rot = osg::Matrix::rotate(osg::DegreesToRadians(x), osg::Vec3(1,0,0)) *
+						osg::Matrix::rotate(osg::DegreesToRadians(y), osg::Vec3(0,1,0)) *
+						osg::Matrix::rotate(osg::DegreesToRadians(z), osg::Vec3(0,0,1));
 		SetRotation(rot.getRotate());
 	}
 
@@ -125,6 +129,6 @@ protected:
 	osg::Matrix _transform;
 
 };
-typedef osg::ref_ptr<RenderableComponent> RenderableComponentPtr;
+typedef osg::ref_ptr<WorldTransformComponent> WorldTransformComponentPtr;
 
 };

@@ -149,7 +149,7 @@ std::vector<hogboxVision::CaptureDevicePtr> DShowCaptureStream::GetConnectedDevi
 
 				VARIANT varName;
 				VARIANT varFilterClsid;
-				CLSID clsidFilter;
+				//CLSID clsidFilter;
 
 				VariantInit(&varName);
 				VariantInit(&varFilterClsid);
@@ -310,7 +310,7 @@ bool DShowCaptureStream::ApplyFormatImplementation(hogboxVision::CaptureFormat* 
 	
 	}
 	catch(char * str){
-		osg::notify(osg::WARN) << "WebCamStream ApplyFormat ERROR: Exception thrown while attempting to render DShow capture graph."<<std::endl;
+		osg::notify(osg::WARN) << "WebCamStream ApplyFormat ERROR: Exception thrown while attempting to render DShow capture graph. '" << str << "'" <<std::endl;
 	}
 	//check errors
 	if( FAILED( hr ) )

@@ -287,11 +287,11 @@ protected:
 	bool m_doubleBuffer;
 	bool m_vSync;
 
-	int m_colorBits;
-	int m_depthBits;
-	int m_alphaBits;
-	int m_stencilBits;
-	int m_accumulationBits;
+	unsigned int m_colorBits;
+	unsigned int m_depthBits;
+	unsigned int m_alphaBits;
+	unsigned int m_stencilBits;
+	unsigned int m_accumulationBits;
 
 	//is app in fullscreen mode
 	bool m_bIsFullScreen;

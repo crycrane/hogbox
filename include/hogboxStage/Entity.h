@@ -3,6 +3,7 @@
 #include <hogboxStage/Export.h>
 #include <hogbox/HogBoxBase.h>
 #include <hogboxStage/Component.h>
+#include <hogboxStage/RenderableComponent.h>
 
 namespace hogboxStage 
 {

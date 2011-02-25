@@ -144,7 +144,7 @@ void RTTPass::setupCamera()
 //
 void RTTPass::createOutputTextures()
 {
-    for (int i=0; i<_outputTextureCount; i++) 
+    for (unsigned int i=0; i<_outputTextureCount; i++) 
 	{	
 		TextureRef newTex = new TextureType();
 		_outTextures.push_back(newTex);

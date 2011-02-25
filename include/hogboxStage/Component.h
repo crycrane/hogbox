@@ -47,7 +47,7 @@ public:
 	virtual const std::string GetTypeName(){return "BaseComponent";}
 
 public:
-	//callback system so other components/objects can be informed when certain thing
+	//callback system so other components/objects can be informed when certain things
 	//occur within a component.
 
 	//

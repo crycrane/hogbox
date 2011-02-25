@@ -12,34 +12,25 @@ using namespace hogbox;
 
 HogBoxObject::HogBoxObject(void) 
 	: osg::Object()
-{
-	m_localTransform = new osg::MatrixTransform();
-	m_localTransform->setName("Object Local Trans"); 
-	
+{ 	
 	m_scaleMat = osg::Matrix::identity();
 	m_rotationMat = osg::Matrix::identity();
 	m_translationMat = osg::Matrix::identity(); 
 
-	m_root = new osg::Group();
-	m_root->setName("Object Root");
+	m_root = new osg::MatrixTransform();
+	m_root->setName("Object_Root_World_Transform");
+
+	m_localTransform = new osg::MatrixTransform();
+	m_localTransform->setName("Object_Local_Transform");
 
 	//hook together the basic subgraph
 	m_root->addChild(m_localTransform.get()); 
 
-	//add the callbacks for the group node so that we now when
-	//the object is entered by the scene visitor
-	//m_p_root->setUpdateCallback(this);
+	SetLocalScale(1.0f);
+	SetLocalRotation(0.0f,0.0f,0.0f);
+	SetLocalTranslation(0.0f,0.0f,0.0f);
 
-	//shouldn't need updating by default
-	m_needUpdating=false;
-
-	SetScale(1.0f);
-	SetRotation(0.0f,0.0f,0.0f);
-	SetTranslation(0.0f,0.0f,0.0f);
-
-	Dirty();
-
-	m_loadScale=0.0f;
+	m_loadScale=1.0f;
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -55,7 +46,7 @@ HogBoxObject::HogBoxObject(const HogBoxObject& object,const osg::CopyOp& copyop)
 {
 
 	//copy of root 
-	m_root = dynamic_cast<osg::Group*>(copyop(object.m_root.get()));
+	m_root = dynamic_cast<osg::MatrixTransform*>(copyop(object.m_root.get()));
 	//copy of root will have copied the local transform, we need to get it
 	for(unsigned int i=0; i<m_root->getNumChildren(); i++)
 	{
@@ -66,9 +57,9 @@ HogBoxObject::HogBoxObject(const HogBoxObject& object,const osg::CopyOp& copyop)
 		}
 	}
 
-	SetScale(m_scale);
-	SetRotation(m_rotDegrees);
-	SetTranslation(m_position);
+	SetLocalScale(m_scale);
+	SetLocalRotation(m_rotDegrees);
+	SetLocalTranslation(m_position);
 }
 
 HogBoxObject::~HogBoxObject(void)
@@ -105,66 +96,82 @@ bool HogBoxObject::GetVisible() const
 }
 
 //
+//Set the world transform
+//
+void HogBoxObject::SetWorldTransform(const osg::Matrix& trans)
+{
+	m_root->setMatrix(trans);
+}
+
+//
+//Get the world transform
+//
+const osg::Matrix& HogBoxObject::GetWorldTransform()const
+{
+	return m_root->getMatrix();
+}
+
+//
 //Set local transforms scale
 //
-void HogBoxObject::SetScale(const osg::Vec3& scale)
+void HogBoxObject::SetLocalScale(const osg::Vec3& scale)
 {
 	m_scale = scale;
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetScale(double x, double y, double z)
+void HogBoxObject::SetLocalScale(const double& x, const double& y, const double& z)
 {
 	m_scale = osg::Vec3(x,y,z);
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetScale(double u)
+void HogBoxObject::SetLocalScale(const double& u)
 {
 	m_scale = osg::Vec3(u,u,u);
-	Dirty();
+	UpdateLocalTransform();
 }
 
 
 //
 //Set the local transforms rotation
 //
-void HogBoxObject::SetRotation(const osg::Vec3& rot)
+void HogBoxObject::SetLocalRotation(const osg::Vec3& rot)
 {
 	m_rotDegrees = rot;
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetRotationRadians(const osg::Vec3& rot)
+void HogBoxObject::SetLocalRotationRadians(const osg::Vec3& rot)
 {
 	m_rotDegrees.x() = osg::RadiansToDegrees(rot.x());
 	m_rotDegrees.y() = osg::RadiansToDegrees(rot.y());
 	m_rotDegrees.z() = osg::RadiansToDegrees(rot.z());
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetRotation(double x, double y, double z)
+void HogBoxObject::SetLocalRotation(const double& x, const double& y, const double& z)
 {
 	m_rotDegrees = osg::Vec3(x,y,z);
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetRotationRadians(double x, double y, double z)
+void HogBoxObject::SetLocalRotationRadians(const double& x, const double& y, const double& z)
 {
 	m_rotDegrees.x() = osg::RadiansToDegrees(x);
 	m_rotDegrees.y() = osg::RadiansToDegrees(y);
 	m_rotDegrees.z() = osg::RadiansToDegrees(z);
-	Dirty();
+	UpdateLocalTransform();
 }
 
 
 //
 //Set the local transforms translation
 //
-void HogBoxObject::SetTranslation(const osg::Vec3& pos)
+void HogBoxObject::SetLocalTranslation(const osg::Vec3& pos)
 {
 	m_position = pos;
-	Dirty();
+	UpdateLocalTransform();
 }
-void HogBoxObject::SetTranslation(double x, double y, double z)
+void HogBoxObject::SetLocalTranslation(const double& x, const double& y, const double& z)
 {
 	m_position = osg::Vec3(x,y,z);
-	Dirty();
+	UpdateLocalTransform();
 }
 
 
@@ -172,7 +179,7 @@ void HogBoxObject::SetTranslation(double x, double y, double z)
 // Update the scale matrix using the values of
 // m_scaleX,Y,Z
 //
-void HogBoxObject::UpdateScaleMatrix()
+void HogBoxObject::UpdateLocalScaleMatrix()
 {
 	m_scaleMat.set( osg::Matrix::scale(m_scale) );  
 }
@@ -181,11 +188,11 @@ void HogBoxObject::UpdateScaleMatrix()
 // Update the rotation matrix using the values of
 // m_rotDegrees
 //
-void HogBoxObject::UpdateRotationMatrix()
+void HogBoxObject::UpdateLocalRotationMatrix()
 {
 	//have to create a sub matrix for each axis
 	//get rotation as radians
-	osg::Vec3 rads = GetRotationRadians();
+	osg::Vec3 rads = GetLocalRotationRadians();
 	m_rotationMat.set(	osg::Matrix::rotate(rads.x(), osg::Vec3(1,0,0)) *
 						osg::Matrix::rotate(rads.y(), osg::Vec3(0,1,0)) *
 						osg::Matrix::rotate(rads.z(), osg::Vec3(0,0,1)) );
@@ -195,7 +202,7 @@ void HogBoxObject::UpdateRotationMatrix()
 // Update the translation matrix using the values of
 // m_position
 //
-void HogBoxObject::UpdateTranslationMatrix()
+void HogBoxObject::UpdateLocalTranslationMatrix()
 {
 	m_translationMat.set( osg::Matrix::translate(m_position) ); 
 }
@@ -206,9 +213,9 @@ void HogBoxObject::UpdateTranslationMatrix()
 //
 void HogBoxObject::UpdateLocalTransform()
 {
-	UpdateTranslationMatrix();
-	UpdateRotationMatrix();
-	UpdateScaleMatrix();
+	UpdateLocalTranslationMatrix();
+	UpdateLocalRotationMatrix();
+	UpdateLocalScaleMatrix();
 	m_localTransform->setMatrix( m_scaleMat * m_rotationMat * m_translationMat );
 }
 

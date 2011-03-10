@@ -2,6 +2,7 @@
 
 #include <hogboxStage/Entity.h>
 #include <hogboxStage/EntityXmlWrapper.h>
+#include <hogboxStage/ComponentXmlWrapper.h>
 
 #include <hogboxDB/HogBoxRegistry.h>
 #include <hogboxDB/XmlClassManager.h>
@@ -19,6 +20,8 @@ namespace hogboxStage
 //the entity manager is also a hogboxDB xmlClassManager to allow us to
 //use the xml system for saving and loading the entities
 //All our entities our stored in the xml managers m_objectList
+//
+//Also responsible for loading entity components
 //
 class HOGBOXSTAGE_EXPORT EntitytManager : public hogboxDB::XmlClassManager
 {

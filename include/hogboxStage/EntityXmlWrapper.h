@@ -23,47 +23,11 @@ public:
 	EntityXmlWrapper(osgDB::XmlNode* node) 
 			: hogboxDB::XmlClassWrapper(node, "Entity")
 	{
-		hogboxStage::Entity* entity = NULL;
+		hogboxStage::Entity* entity = new hogboxStage::Entity();
 
-		//get the entity type from the nodes 'type' property
-		std::string streamTypeStr;
-		if(!hogboxDB::getXmlPropertyValue(node, "type", streamTypeStr))
-		{
-			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype 'Entity' should have a 'type' property." <<std::endl 
-									<< "                    i.e. <Entity uniqueID='myID' type='StaticModel'>. Defaulting to 'StaticModel' type" << std::endl;
-			return;
-		}
-
-		//allocate the correct type
-
-		//standard
-		if(streamTypeStr == "Base" || streamTypeStr.empty())
-		{
-			entity = new hogboxStage::Entity();
-		}
-
-		//button
-		if(streamTypeStr == "Button")
-		{
-			//region = new hogboxHUD::ButtonRegion();
-		}
-
-		//add type specific atts
-
-		//add text atts (and to any inherited (button etc)
-		if(streamTypeStr == "Button" || streamTypeStr == "Text")
-		{
-			//cast to text
-			/*hogboxHUD::TextRegion* text = dynamic_cast<hogboxHUD::TextRegion*>(region);
-			if(text)
-			{
-
-				m_xmlAttributes["Text"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,std::string>(text,
-																							&hogboxHUD::TextRegion::GetText,
-																							&hogboxHUD::TextRegion::SetText);
-			
-			}*/
-		}
+		m_xmlAttributes["Components"] = new hogboxDB::CallbackXmlClassPointerList<hogboxStage::Entity,hogboxStage::ComponentPtrVector, hogboxStage::Component>(entity,
+																																&hogboxStage::Entity::GetComponentsList,
+																																&hogboxStage::Entity::SetComponentsList);
 
 		//store the VideoFileStrem as the wrapped object
 		p_wrappedObject = entity;
@@ -74,16 +38,7 @@ public:
 	{
 		if(!XmlClassWrapper::deserialize(in)){return false;}
 
-		//cast wrapped to Highest type first
-
-		//Button
-		/*hogboxHUD::ButtonRegion* button = dynamic_cast<hogboxHUD::ButtonRegion*>(p_wrappedObject.get());
-		if(button)
-		{
-			return button->Create(button->GetPosition(), button->GetSize(), _assetDir, button->GetText());
-		}*/
-
-		//Base hudregion
+		//cast wrapped to entity
 		hogboxStage::Entity* entity = dynamic_cast<hogboxStage::Entity*>(p_wrappedObject.get());
 		if(entity)
 		{

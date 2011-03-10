@@ -27,6 +27,11 @@ public:
 
 	bool useAsCallBack(){return m_useAsCallback;}
 
+	virtual bool textureObjectValid(const osg::Texture2D& texture, osg::State& state) const
+    {
+        return true;//texture.textureObjectValid(state);
+    }
+
 	void load(const osg::Texture2D& texture, osg::State&) const;
 	void subload(const osg::Texture2D& texture, osg::State&) const;
 	

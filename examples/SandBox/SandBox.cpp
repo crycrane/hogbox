@@ -112,7 +112,7 @@ int main( int argc, const char* argv[] )
 
 	hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
 	//add a renderable component to the entity
-	entity->AddComponent(new hogboxStage::RenderableComponent(entity.get()));
+	//entity->AddComponent(new hogboxStage::RenderableComponent());
 //entityManager->
 
 	//play the animation

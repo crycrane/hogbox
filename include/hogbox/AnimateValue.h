@@ -58,7 +58,7 @@ public:
 	public:
 		KeyFrameQueue()
 			: osg::Object(),
-			m_isPlaying(false),
+			m_isPlaying(true),
 			m_currentKeyIndex(0)
 		{
 		}
@@ -86,7 +86,7 @@ public:
 			m_keyFrameQueue.push_back(frame);
 			
 			//if this is the first key ensure m_start is set to current value
-			return this->GetNumKeys();
+			return this->GetNumKeys()>0;
 		}
 		
 		//return a pointer to a specific key in the queue,
@@ -118,8 +118,12 @@ public:
 		//Update the current keys osgAAnimation motion time,
 		//also handle moving to the next key if the motion reaches it's
 		//duration time.
-		//Returns true if we are still animating, false if not
-		bool Update(const float& timePassed)
+		//Returns 
+		//0=if not animating
+		//1=if animating
+		//2=movekey
+		//3=end of queue
+		int Update(const float& timePassed)
 		{
 			if(m_isPlaying)
 			{
@@ -134,15 +138,19 @@ public:
 					if(key->motion->getTime() >= key->motion->getDuration())
 					{
 						//move to next key if we have one
-						this->MoveToNextKey();
-						return true;
+						if(this->MoveToNextKey()){
+							//if movetonext returns true then we moved to another key
+							return 2;
+						}
+						//otherwise we reached the end so return 3
+						return 3;
 					}
 					return true;
 				}else{
-					return false;
+					return 0;
 				}
 			}
-			return false;
+			return 0;
 		}
 		
 	protected:
@@ -155,11 +163,13 @@ public:
 			
 			//ensure we reset the current key
 			KeyFrame* key = GetCurrentKey();
-			if(key)
-			{key->motion->reset();}
+			if(key){key->motion->reset();}
+
+			//
+			this->RemoveKey(m_currentKeyIndex);
 			
 			//move forward a key (need transport direction here)
-			m_currentKeyIndex++;
+			//m_currentKeyIndex++;
 			unsigned int size = m_keyFrameQueue.size();
 			//if we reach the end reset m_currentKey to 0 and return false
 			if(m_currentKeyIndex >= size){m_currentKeyIndex = 0; return false;}
@@ -184,11 +194,11 @@ public:
 	//the template M is used to define the osgAnimation motion type
 	template <typename M>
 	void AddKey(const T& pos, const float& duration, const std::string& animationName="DEFAULT"){
-		KeyFrame frame;
-		frame.end = pos;
-		frame.duration = duration;
-		frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
-		m_keyFrameQueue.push_back(frame);
+		//KeyFrame frame;
+		//frame.end = pos;
+		//frame.duration = duration;
+		//frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
+		m_keyFrameQueue->AddKey<M>(pos,duration);
 
 		//if this is the first key ensure m_start is set to current value
 		if(this->GetNumKeys() == 1)
@@ -226,10 +236,15 @@ public:
 	//false is returned,
 	bool Update(const float& timePassed){
 		
-		return m_keyFrameQueue->Update(timePassed);
-		
+		int aniStatus = m_keyFrameQueue->Update(timePassed);
+	
+		//if we changed key or reached the end
+		if(aniStatus == 2){// || aniStatus == 3){
+			m_start = m_value;
+		}
+
 		//get current key frame
-		/*KeyFrame* key = this->GetCurrentKey();
+		KeyFrame* key = m_keyFrameQueue->GetCurrentKey();
 		if(key)
 		{	
 			//update the motions time
@@ -241,17 +256,10 @@ public:
 			T between = key->end - m_start;
 			m_value = m_start + (between * t);
 
-			//check if our motion has completed
-			if(key->motion->getTime() >= key->motion->getDuration())
-			{
-				//move to next key if we have one
-				this->ChangeToNextKey();
-				return true;
-			}
-			return true;
 		}else{
 			return false;
-		}*/
+		}
+		return aniStatus!=3;
 	}
 
 protected:

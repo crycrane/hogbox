@@ -52,7 +52,7 @@ public:
 	typedef std::vector<HudRegionPtr> HudRegionList;
 
 	//load assets, set size and position, then apply the names to any geodes for picking
-	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName);
+	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, bool microMemoryMode=false);
 
 	//was the region auto created by a parent (i.e. we don't want to save it to disk)
 	bool isProcedural(){return m_isProcedural;}
@@ -79,8 +79,8 @@ public:
 	
 	//
 	//general update, updates and syncs our animations etc
-	//normally called by an atteched updateCallback
-	void Update(float simTime);
+	//normally called by an attached updateCallback
+	virtual void Update(float simTime);
 	
 	//Handle a hud event passed by the picker, i.e. mouse click, key press
 	//geodeID is the name of the geode picked in the hud
@@ -254,8 +254,14 @@ public:
 		return false;
 	}
 	
+	//
+	//Enable disable any updates of animations
 	void SetAnimationDisabled(bool disable){m_animationDisabled = disable;}
 	
+	//
+	//Get/Set use of microMemory mode
+	const bool& GetMicroMemoryMode()const;
+	void SetMicroMemoryMode(const bool& on);
 	
 	//
 	//Funcs to register event callbacks
@@ -285,6 +291,11 @@ protected:
 	//rollover.png, used for mouse rollovers if present
 	virtual bool LoadAssest(const std::string& folderName);
 
+	//
+	//Unload assest, deleting bae/rollover textures and any children
+	//of m_region
+	virtual bool UnLoadAssests();
+
 	//used internally to alert others that a value has changed
 	void TriggerStateChanged();
 
@@ -294,6 +305,12 @@ protected:
 	//auto created by a parent (a silder making the inc and dec buttons for example)
 	//these type of region do not want to be saved out
 	bool m_isProcedural;
+
+	//
+	//Folder containing region render assests
+	std::string m_assetFolder;
+	//tracks if assets have been loaded
+	bool m_assestLoaded;
 
 	//main root attached to hud
 	osg::ref_ptr<osg::MatrixTransform> m_root;
@@ -338,6 +355,8 @@ protected:
 
 	//standard texture 
 	osg::ref_ptr<osg::Texture> m_baseTexture;
+
+
 	//texture used on rollover
 	osg::ref_ptr<osg::Texture> m_rollOverTexture;
 
@@ -353,6 +372,14 @@ protected:
 	osg::Vec3 m_color;
 	float m_alpha;
 	bool m_alphaEnabled;
+
+	//
+	//microMemoryMode=true, indicates that we want to unref our textures image data
+	//and we want to full delete the textures when hidden, the textures are reloaded
+	//when the region is shown again. Default is false/off
+	bool m_microMemoryMode;
+
+	
 	
 	//
 	//Our default update callback to ensure update is called each frame

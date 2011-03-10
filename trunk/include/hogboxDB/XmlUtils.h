@@ -166,6 +166,28 @@ namespace hogboxDB {
 		result.set(x,y,z,w);
 		return true;
 	}
+	static const bool stringStreamToType(std::stringstream& input, osg::Matrix& result, bool errorOnEndStream = false)
+	{
+		float e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14,e15,e16=0.0f;
+		if(!hogboxDB::stringStreamToType(input, e1,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e2,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e3,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e4,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e5,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e6,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e7,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e8,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e9,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e10,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e11,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e12,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e13,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e14,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e15,true)){return false;}
+		if(!hogboxDB::stringStreamToType(input, e16,errorOnEndStream)){return false;}
+		result.set(e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14,e15,e16);
+		return true;
+	}
 
 	//
 	//convert and return the input string as the result type
@@ -213,6 +235,11 @@ namespace hogboxDB {
 	{
 		std::stringstream vecStr(input);
 		return hogboxDB::stringStreamToType(vecStr, result);
+	}
+	static const bool asciiToType(const std::string& input, osg::Matrix& result)
+	{
+		std::stringstream matrixStr(input);
+		return hogboxDB::stringStreamToType(matrixStr, result);
 	}
 
 
@@ -309,6 +336,15 @@ namespace hogboxDB {
 		}
 		return false;
 	}
+	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Matrix& result)
+	{
+		if(!xmlNode){return false;}
+		if(xmlNode->properties.count(propertyName) > 0)
+		{
+			return hogboxDB::asciiToType(xmlNode->properties[propertyName], result);
+		}
+		return false;
+	}
 
 
 	//Read the content of a node as a certain type
@@ -354,6 +390,11 @@ namespace hogboxDB {
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
 	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec4& result)
+	{
+		if(!xmlNode){return false;}
+		return hogboxDB::asciiToType(xmlNode->contents, result);
+	}
+	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Matrix& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);

@@ -17,8 +17,6 @@ namespace hogboxStage
 //the main systems e.g. collision system, check each entity
 //for wheather or not they have a corresonding compnent e.g. collision component
 //and if so call its update accordingly
-//If for example and entity is involved in a collision
-//then its OnCollide event would be triggered ?
 //
 class HOGBOXSTAGE_EXPORT Entity : public osg::Object
 {
@@ -47,7 +45,16 @@ public:
 	bool AddComponent(Component* comp){
 		//check if the component type already exists
 		if(!GetComponentOfType(comp->GetTypeName())){
+
 			ComponentPair newComponent(comp->GetTypeName(), comp);
+			_components.insert(newComponent);
+
+			comp->OnAttach(this);
+
+			//resolve dependencies
+			CheckPassedForDependenciesOnExisting(comp);
+			CheckExistingForDependenciesOnPassed(comp);
+
 			return true;
 		}
 		return false;
@@ -93,6 +100,24 @@ public:
 		return newComponent;
 	}
 
+	//
+	//Get set the entire component list for use with xml loading
+	std::vector<ComponentPtr> GetComponentsList() const{
+		//convert the map into a vector and return
+		std::vector<ComponentPtr> vecList;
+		ComponentMap::const_iterator itr = _components.begin();
+		for( ;itr!=_components.end(); itr++){
+			vecList.push_back((*itr).second);
+		}
+		return vecList;
+	}
+	void SetComponentsList(const std::vector<ComponentPtr>& components){
+		//iterate over list and use AddComponent
+		for(unsigned int i=0; i<components.size(); i++){
+			this->AddComponent(components[i].get());
+		}
+	}
+
 protected:
 
 	virtual ~Entity(void) {
@@ -102,6 +127,32 @@ protected:
 	//
 	//Our main update function 
 	virtual bool OnUpdate(void* update){return true;}
+
+	//
+	//Check all existing components for dependency against the passed component
+	void CheckExistingForDependenciesOnPassed(Component* dependsOnComponent){
+		if(!dependsOnComponent){return;}
+		//iterate over comps
+		ComponentMap::iterator itr = _components.begin();
+		for( ; itr != _components.end(); itr++){
+			if((*itr).second->DependsOnType(dependsOnComponent->GetTypeName())){
+				(*itr).second->HandleComponentDependency(dependsOnComponent);
+			}
+		}
+	}
+
+	//
+	//Check passed component for dependency against existing 
+	void CheckPassedForDependenciesOnExisting(Component* checkDeps){
+		if(!checkDeps){return;}
+		//iterate over comps
+		ComponentMap::iterator itr = _components.begin();
+		for( ; itr != _components.end(); itr++){
+			if(checkDeps->DependsOnType((*itr).second->GetTypeName())){
+				checkDeps->HandleComponentDependency((*itr).second);
+			}
+		}
+	}
 
 protected:
 

@@ -16,7 +16,9 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/ComponentEventCallback.h
 	${HEADER_PATH}/EntityManager.h
 	${HEADER_PATH}/EntityXmlWrapper.h
+	${HEADER_PATH}/ComponentXmlWrapper.h
 	${HEADER_PATH}/WorldTransformComponent.h
+	${HEADER_PATH}/PhysicsComponent.h
 	${HEADER_PATH}/CollidableComponent.h
 	${HEADER_PATH}/RenderableComponent.h
 )
@@ -25,7 +27,10 @@ SET(LIB_PUBLIC_HEADERS
 ADD_LIBRARY(${LIB_NAME}
     ${hogbox_USER_DEFINED_DYNAMIC_OR_STATIC}
     ${LIB_PUBLIC_HEADERS}
+    Component.cpp
     EntityManager.cpp
+    ComponentXmlManager.cpp
+    RenderableComponent.cpp
 )
 
 LINK_INTERNAL(${LIB_NAME} hogbox hogboxDB hogboxHUD)

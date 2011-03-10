@@ -17,25 +17,23 @@ class Entity;
 class HOGBOXSTAGE_EXPORT Component : public osg::Object
 {
 public:
-	Component(Entity* parent=NULL)
-		: osg::Object(),
-		p_entity(parent)
-	{
-		//add the on desturct message
-		AddCallbackEventType("OnDestruct");
-		//AddCallbackEventType("OnUpdate");
-	}
+
+	typedef std::map<std::string, bool> ComponentDependencyMap;
+	typedef std::pair<std::string, bool> ComponentDependencyPair;
+
+	Component();
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
-	Component(const Component& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
-		: osg::Object(ent, copyop)
-	{
-		//add the on desturct message
-		AddCallbackEventType("OnDestruct");
-		//AddCallbackEventType("OnUpdate");
-	}
+	Component(const Component& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
 	META_Box(hogboxStage, Component);
+
+	//
+	//Called when a component is added to an entity
+	virtual bool OnAttach(Entity* parent){
+		p_entity = parent;
+		return true;
+	}
 
 
 	//
@@ -52,53 +50,38 @@ public:
 
 	//
 	//register a callback to one of our events, returns false if the event does not exist
-	bool RegisterCallbackForEvent(ComponentEventCallback* callback, const std::string& eventName){
-		if(!callback){return false;}
-		int eventIndex = GetCallbackEventIndex(eventName);
-		if(eventIndex == -1){return false;}
-
-		if(!_callbackEvents[eventIndex]->AddCallbackReceiver(callback)){
-			return false;
-		}
-		return true;
-	}
+	bool RegisterCallbackForEvent(ComponentEventCallback* callback, const std::string& eventName);
 
 	//
 	//returns the index of the callback if it exists else -1
-	int GetCallbackEventIndex(const std::string& eventName){
-		for(unsigned int i=0; i<_callbackEvents.size(); i++){
-			if(_callbackEvents[i]->GetEventName() == eventName){
-				return (int)i;
-			}
-		}
-		return -1;
+	int GetCallbackEventIndex(const std::string& eventName);
+
+	//
+	//Returns true if this component depends on the passed type
+	bool DependsOnType(const std::string& typeName);
+
+	//
+	//When a new component is attached to our parent component all components are checked
+	//for un resolved dependancies. If this component depends on the newly added component type
+	//then it is passed to this components HandleComponentDependency function
+	virtual bool HandleComponentDependency(Component* component){
+		return true;
 	}
 
 protected:
 
-	virtual ~Component(void) {
-		//inform callback receivers of destuct (TEST)
-		TriggerEventCallback("OnDestruct", NULL);
-	}
-
+	virtual ~Component(void);
 	//
 	//Adds a new ComponentCallbackEvent to our list ensuring the name is unique, this should be used
 	//during a types constuctor to register any new event types, returns false if name already used
-	bool AddCallbackEventType(const std::string& eventName){
-		int existingIndex = GetCallbackEventIndex(eventName);
-		if(existingIndex == -1){return false;}
-		_callbackEvents.push_back(new ComponentCallbackEvent(this, eventName));
-		return true;
-	}
+	bool AddCallbackEventType(const std::string& eventName);
 
 	//
 	//Trigger an event callback
-	bool TriggerEventCallback(const std::string& eventName, ComponentEventPtr entityEvent){
-		int eventIndex = GetCallbackEventIndex(eventName);
-		if(eventIndex == -1){return false;}
-		_callbackEvents[eventIndex]->TriggerCallback(entityEvent);
-		return true;
-	}
+	bool TriggerEventCallback(const std::string& eventName, ComponentEventPtr entityEvent);
+
+	//add a dependency on a component type
+	void AddComponentDependency(const std::string& typeName);
 
 protected:
 
@@ -108,7 +91,14 @@ protected:
 	//the list of callback events this etity has registered
 	std::vector<ComponentCallbackEventPtr> _callbackEvents;
 
+	//Components can register dependency on other components
+	//have all dependencies been resolved
+	bool _dependsResolved;
+	//map of component type name to a bool indicating if the dependency has been handled
+	ComponentDependencyMap _dependComponents;
+
 };
 typedef osg::ref_ptr<Component> ComponentPtr;
+typedef std::vector<ComponentPtr> ComponentPtrVector;
 
 };

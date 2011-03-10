@@ -16,7 +16,7 @@ namespace hogboxStage
 class HOGBOXSTAGE_EXPORT RenderableComponent : public Component
 {
 public:
-	RenderableComponent(Entity* parent=NULL);
+	RenderableComponent();
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	RenderableComponent(const RenderableComponent& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
@@ -30,16 +30,26 @@ public:
 	META_Box(hogboxStage, RenderableComponent);
 
 	//
+	//pure virtual get type name to be implemented by concrete types
+	virtual const std::string GetTypeName(){return "RenderableComponent";}
+
+	//
+	//Called when a component is added to an entity
+	virtual bool OnAttach(Entity* parent);
+
+	//
 	//Our main update function 
 	virtual bool OnUpdate(ComponentEvent* eventData){return true;}
 
 	//
-	//pure virtual get type name to be implemented by concrete types
-	virtual const std::string GetTypeName(){return "RenderableComponent";}
+	//When a new component is attached to our parent component all components are checked
+	//for un resolved dependancies. If this component depends on the newly added component type
+	//then it is passed to this components HandleComponentDependency function
+	virtual bool HandleComponentDependency(Component* component);
+
 
 	//Set the renderable object
 	void SetRenderableObject(hogbox::HogBoxObject* renderable);
-
 	hogbox::HogBoxObject* GetRenderableObject();
 
 public:

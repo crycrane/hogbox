@@ -67,6 +67,8 @@ HudRegion::HudRegion(bool isProcedural)
 	m_animateAlpha(new hogbox::AnimateFloat()),
 	m_prevTick(0.0f),
 	m_animationDisabled(false),
+	m_microMemoryMode(false),
+	m_assestLoaded(false),
 	//Create our callbacks
 	//mouse events
 	m_onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
@@ -202,18 +204,21 @@ void HudRegion::Update(float simTime)
 //
 // Create the region of size, in postion using a loaded model
 //
-bool HudRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName)
+bool HudRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& folderName, bool microMemoryMode)
 {
+	m_assetFolder = folderName;
+	SetMicroMemoryMode(microMemoryMode);
 
-	//load the assests that represent this region
-	//i.e. geometry and textures and apply to the region node
-	//for rendering
-	this->LoadAssest(fileName); 
-
-	//make the region identifiable by the picker
-	//by setting the regions geometry names to the
-	//unique ID
-	setName(this->getName()); 
+	if(!m_microMemoryMode)
+	{
+		//load the assests that represent this region
+		//i.e. geometry and textures and apply to the region node
+		//for rendering
+		this->LoadAssest(m_assetFolder);
+	}else{
+		//in micro mode hud regions defult to not visible
+		SetVisible(false);
+	}
 
 	//Set the regions position, size and rotation
 	SetPosition(corner);SetSize(size);
@@ -385,6 +390,7 @@ bool HudRegion::HandleChildEvents(HudInputEvent& hudEvent)
 //
 bool HudRegion::LoadAssest(const std::string& folderName)
 {
+	if(m_assestLoaded){return true;}
 	//if it has no name, then no assets are needed
 	if(folderName.size() == 0)
 	{return true;}
@@ -408,7 +414,8 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 	}
 
 	//now try to load a base texture
-	std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png" );
+	std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png");
+	if(baseTextureFile.empty()){baseTextureFile = osgDB::findDataFile( folderName+"/base.jpg");}
 	//if(osgDB::fileExists(baseTextureFile) )
 	{
 		m_baseTexture = hogbox::LoadTexture2D(baseTextureFile);
@@ -416,7 +423,8 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 		{
             m_baseTexture->setFilter(osg::Texture::MIN_FILTER,osg::Texture::LINEAR);
             m_baseTexture->setFilter(osg::Texture::MAG_FILTER,osg::Texture::LINEAR);
-            m_baseTexture->setResizeNonPowerOfTwoHint(false);
+			m_baseTexture->setUseHardwareMipMapGeneration(false);
+			m_baseTexture->setResizeNonPowerOfTwoHint(false);
 			
 			//apply the base as default
 			this->ApplyTexture(m_baseTexture.get());
@@ -425,8 +433,44 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 
 	//rollover
 	std::string rollOverTextureFile = folderName+"/rollover.png";
+	if(rollOverTextureFile.empty()){rollOverTextureFile = folderName+"/rollover.png";}
 	if(osgDB::fileExists(rollOverTextureFile) )
 	{m_rollOverTexture = hogbox::LoadTexture2D(rollOverTextureFile);}
+
+	//if in micro memory mode set textures to unref image data
+	if(m_microMemoryMode){
+		if(m_baseTexture.get()){m_baseTexture->setUnRefImageDataAfterApply(true);}
+		if(m_rollOverTexture.get()){m_rollOverTexture->setUnRefImageDataAfterApply(true);}
+	}
+
+	//make the region identifiable by the picker
+	//by setting the regions geometry names to the
+	//unique ID
+	setName(this->getName());
+
+	m_assestLoaded = true;
+
+	return true;
+}
+
+//
+//Unload assest, deleting bae/rollover textures and any children
+//of m_region
+//
+bool HudRegion::UnLoadAssests()
+{
+	if(!m_assestLoaded){return true;}
+
+	//remove children of m_region
+	m_region->removeChildren(0,m_region->getNumChildren());
+
+	if(m_baseTexture.get()){m_stateset->removeAssociatedTextureModes(0,m_baseTexture.get());}
+	m_baseTexture = NULL;
+	
+	if(m_rollOverTexture.get()){m_stateset->removeAssociatedTextureModes(0,m_rollOverTexture.get());}
+	m_rollOverTexture = NULL;
+
+	m_assestLoaded = false;
 
 	return true;
 }
@@ -552,8 +596,11 @@ void HudRegion::SetVisible(const bool& visible)
 	//set hud to invisable as default
 	if(visible)
 	{
+		//load assests if micoMemory mode
+		if(m_microMemoryMode){this->LoadAssest(m_assetFolder);}
 		m_root->setNodeMask(0xFFFFFFFF);
 	}else{
+		if(m_microMemoryMode){this->UnLoadAssests();}
 		m_root->setNodeMask(0x0);
 	}
 	m_visible=visible;
@@ -572,8 +619,8 @@ void HudRegion::SetBaseTexture(osg::Texture* texture)
 //
 void HudRegion::SetRolloverTexture(osg::Texture* texture)
 {
-	m_rollOverTexture = NULL;
-	m_rollOverTexture = texture;
+	m_baseTexture = NULL;
+	m_baseTexture = texture;
 }
 
 //
@@ -618,7 +665,6 @@ void HudRegion::ApplyRollOverTexture()
 //
 void HudRegion::SetColor(const osg::Vec3& color)
 {
-	OSG_WARN << "Set Region Color to " << color.x() << ", " << color.y() << ", " << color.z() << std::endl;
 	m_color = color;
 
 	osg::Vec4 vec4Color = osg::Vec4(color, m_alpha);
@@ -650,6 +696,16 @@ void HudRegion::SetAlpha(const float& alpha)
 
 	//set the materials alpha
 	m_material->setAlpha(osg::Material::FRONT_AND_BACK, m_alpha);
+
+	//if the alpha is zero and we are in microMemory mode
+	//we also full hide the region
+	if(m_microMemoryMode){
+		if(m_alpha>0.0f){
+			SetVisible(true);
+		}else{
+			SetVisible(false);
+		}
+	}
 
 	//call for children
 	for(unsigned int i=0; i<m_p_children.size(); i++)
@@ -795,6 +851,26 @@ void HudRegion::SetChildrenList(const HudRegionList& list)
 	}
 }
 
+//
+//Get/Set use of microMemory mode
+//
+const bool& HudRegion::GetMicroMemoryMode()const
+{
+	return m_microMemoryMode; 
+}
+
+void HudRegion::SetMicroMemoryMode(const bool& on)
+{
+	m_microMemoryMode = on;
+	if(m_microMemoryMode){
+		//if we already have some textures set them to unref image data
+		if(m_baseTexture.get()){m_baseTexture->setUnRefImageDataAfterApply(true);}
+		if(m_rollOverTexture.get()){m_rollOverTexture->setUnRefImageDataAfterApply(true);}
+	}else{
+		if(m_baseTexture.get()){m_baseTexture->setUnRefImageDataAfterApply(false);}
+		if(m_rollOverTexture.get()){m_rollOverTexture->setUnRefImageDataAfterApply(false);}
+	}
+}
 
 //
 //Funcs to register event callbacks

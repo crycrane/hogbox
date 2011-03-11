@@ -26,8 +26,6 @@
 namespace hogbox {
 
 
-typedef const void (*OnViewerRebuiltFunc)(void);
-
 //
 // HogViewer Resize callback,
 // Handle resizing glViewport as well as informing HogHud of a resize event
@@ -91,9 +89,11 @@ public:
 	
 
 	//init contructing window and viewer, optionaly passing in render mode args
-	int Init(osg::Node* scene, OnViewerRebuiltFunc onView = NULL, bool realizeNow = true, bool fullScreen = false, 
-				osg::Vec2 winSize = osg::Vec2(640, 480), osg::Vec2 winCr = osg::Vec2(-1,-1), 
-				unsigned int screenID = 0, bool useStereo = false, int stereoMode = 1, bool renderOffscreen = false);
+	int Init(osg::Node* scene,  bool fullScreen = false, 
+				osg::Vec2 winSize=osg::Vec2(640, 480), osg::Vec2 winCr=osg::Vec2(-1,-1), 
+				bool realizeNow = true,unsigned int screenID = 0, 
+				bool useStereo = false, int stereoMode = 1, 
+				bool renderOffscreen = false);
 
 
 	//mimic osgViewer funcs
@@ -261,7 +261,7 @@ protected:
 	std::string m_viewerSettingsFile;
 
 	//pointer to the application scene
-	osg::observer_ptr<osg::Node> m_p_scene;
+	osg::ref_ptr<osg::Node> m_p_scene;
 
 	//list of pointers to app event handlers, stored for if a rebuild of the
 	//osgViewer is required
@@ -270,8 +270,6 @@ protected:
 
 	bool m_requestReset;
 
-	//callback function for when window is reset internally (i.e. from switching stereoModes)
-	OnViewerRebuiltFunc p_onViewRebuiltFunc;
 
 //Window buffer res
 

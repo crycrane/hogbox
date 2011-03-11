@@ -3,10 +3,7 @@
 
 #include <osgUtil/TangentSpaceGenerator>
 
-#include <osgFX/Scribe>
-#include <osgFX/Cartoon>
-#include <osgFX/BumpMapping>
-#include <osgFX/AnisotropicLighting>
+#include <hogbox/HogBoxUtils.h>
 
 using namespace hogbox;
 
@@ -93,6 +90,15 @@ bool HogBoxObject::GetVisible() const
 	}else{
 		return true;
 	}
+}
+
+osg::Node* HogBoxObject::GetNodeByName(const std::string& name, const bool& subString)
+{
+	FindNodesByName findNodes(name,subString);
+	m_root->accept(findNodes);
+	if(findNodes._count>0)
+	{return findNodes._foundList[0];}
+	return NULL;
 }
 
 //

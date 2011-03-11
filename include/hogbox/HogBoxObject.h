@@ -68,6 +68,8 @@ public:
 	void SetVisible(const bool& vis);
 	bool GetVisible() const;
 
+	osg::Node* GetNodeByName(const std::string& name, const bool& subString);
+
 	void SetSubMeshVisible(int index, bool vis);
 	bool GetSubMeshVisible(int index);
 	void SetSubMeshVisible(const std::string& name, const bool& vis);

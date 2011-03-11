@@ -101,5 +101,46 @@ namespace hogbox {
 
 	extern HOGBOX_EXPORT double CalcAngleBetweenVectors(osg::Vec3 u, osg::Vec3 v);
 
+	//
+	//Find all nodes in the graph that match thename passed
+	class FindNodesByName : public osg::NodeVisitor
+	{
+	public:
+
+		FindNodesByName(std::string searchName, bool subString=false)
+			: osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),        
+			_searchName(searchName),
+			_searchSubString(subString),
+			_count(0)
+		{
+		}
+	    
+		virtual void apply(osg::Node& node)
+		{
+			if(_searchSubString)
+			{
+				size_t found=node.getName().rfind(_searchName);
+				if (found!=std::string::npos)
+				{
+					_foundList.push_back(&node);
+					_count++;
+				}
+			}else{
+				if(node.getName() == _searchName){
+					_foundList.push_back(&node);
+					_count++;
+				}
+			}
+			traverse(node);
+		}
+	    
+		std::string _searchName;
+		//search for name as substring of name
+		bool _searchSubString;
+
+		std::vector<osg::Node*> _foundList;
+		int _count;
+	};
+
 
 };//end hogbox namespace

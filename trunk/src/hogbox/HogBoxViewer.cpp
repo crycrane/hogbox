@@ -9,13 +9,13 @@ using namespace hogbox;
 
 HogBoxViewer::HogBoxViewer(HWND hwnd)
 	: osg::Object(),
+	m_p_scene(NULL),
 	m_hwnd(hwnd),
 	m_screenID(0),
 	m_viewer(NULL),
 	m_graphicsContext(NULL),
 	m_graphicsWindow(NULL),
 	m_resizeCallback(NULL),
-	p_onViewRebuiltFunc(NULL),
 	m_requestReset(false),
 	//window size in pixels
 	m_winSize(osg::Vec2(800, 600)),
@@ -78,21 +78,14 @@ HogBoxViewer::~HogBoxViewer(void)
 	m_resizeCallback = NULL;
 	
 	for(unsigned int i=0; i<m_p_appEventHandlers.size(); i++)
-	{
-		m_p_appEventHandlers[i] = NULL;
-	}
+	{m_p_appEventHandlers[i] = NULL;}
 	m_p_appEventHandlers.clear();
-
 
 	//handle to the context window for manipulaing fullscreen etc
 	m_graphicsWindow = NULL;
 	
-
 	//single context to attach to the viewers camera
 	m_graphicsContext = NULL;
-
-
-	p_onViewRebuiltFunc = NULL;
 
 	m_viewer = NULL;
 }
@@ -100,21 +93,20 @@ HogBoxViewer::~HogBoxViewer(void)
 //
 //init contructing window and viewer, optionaly passing in render mode args
 //
-int HogBoxViewer::Init(osg::Node* scene, OnViewerRebuiltFunc onView, bool realizeNow, bool fullScreen, 
-					   osg::Vec2 winSize, osg::Vec2 winCr, unsigned int screenID, bool useStereo, 
+int HogBoxViewer::Init(osg::Node* scene, bool fullScreen, 
+					   osg::Vec2 winSize, osg::Vec2 winCr, 
+					   bool realizeNow, unsigned int screenID, bool useStereo, 
 					   int stereoMode, bool renderOffscreen)
 {
-
-	p_onViewRebuiltFunc = onView;
 
 	m_screenID = screenID;
 
 	//good default fov
-	double height = m_glSystemInfo->getScreenWidth(m_screenID);
-    double width = m_glSystemInfo->getScreenHeight(m_screenID);
+	int width = m_glSystemInfo->getScreenWidth(m_screenID);
+    int height = m_glSystemInfo->getScreenHeight(m_screenID);
 	osg::Vec2 screenRes = osg::Vec2(width,height);
     double distance = 0.5; //osg::DisplaySettings::instance()->getScreenDistance();
-    m_vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
+   // m_vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
 
 	//set the scene to render
 	m_p_scene = scene;
@@ -408,16 +400,10 @@ bool HogBoxViewer::CreateAppWindow()
 		m_viewer->realize();
 
 		//force a resize to get a proper initial state
-		//m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
+		m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
 	
 		//set request back to false
 		m_requestReset = false;
-
-		//inform app of the change
-		if(p_onViewRebuiltFunc)
-		{
-			p_onViewRebuiltFunc();
-		}
 
 		if(m_viewer->isRealized())
 		{

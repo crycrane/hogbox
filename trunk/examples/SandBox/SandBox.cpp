@@ -94,10 +94,11 @@ int main( int argc, const char* argv[] )
 
 
 	//load the main window
-	hogbox::HogBoxViewerPtr viewer = manager->ReadNodeByIDTyped<hogbox::HogBoxViewer>("MainWindow");
-
+	//hogbox::HogBoxViewerPtr viewer = manager->ReadNodeByIDTyped<hogbox::HogBoxViewer>("MainWindow");
+	hogbox::HogBoxViewerPtr viewer = new hogbox::HogBoxViewer();
 	osg::MatrixTransform* root = new osg::MatrixTransform();
-	viewer->SetSceneNode(root);
+	viewer->Init(root);
+	//viewer->SetSceneNode(root);
 
 	//load the main light
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");

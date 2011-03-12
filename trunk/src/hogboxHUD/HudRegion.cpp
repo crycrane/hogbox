@@ -52,7 +52,6 @@ HudRegion::HudRegion(bool isProcedural)
 	//by default inherit all parent transforms
 	m_transformInheritMask(INHERIT_ALL_TRANSFORMS),
 	m_visible(true),
-	m_stateChanged(false),
 	m_depth(0.0f),
 	//animation
 	m_isRotating(false),
@@ -148,7 +147,6 @@ HudRegion::HudRegion(const HudRegion& region,const osg::CopyOp& copyop)
 	m_size(region.m_size),
 	m_rotation(region.m_rotation),
 	m_visible(region.m_visible),
-	m_stateChanged(region.m_stateChanged),
 	m_depth(region.m_depth),
 	m_color(region.m_color),
 	m_alpha(region.m_alpha),
@@ -761,16 +759,6 @@ osg::StateSet* HudRegion::GetStateSet()
 }
 
 
-//state changes
-bool HudRegion::StateChanged()
-{
-	if(m_stateChanged)
-	{
-		m_stateChanged=false;
-		return true;
-	}
-	return false;
-}
 
 
 //
@@ -816,11 +804,6 @@ float HudRegion::GetAbsoluteRotation()
 		ret+=m_p_parent->GetAbsoluteRotation();
 	}
 	return ret;
-}
-
-void HudRegion::TriggerStateChanged()
-{
-	m_stateChanged = true;
 }
 
 //

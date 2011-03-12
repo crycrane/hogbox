@@ -68,7 +68,35 @@ public:
 	void SetVisible(const bool& vis);
 	bool GetVisible() const;
 
+	//
+	//return the first node with the passed name
 	osg::Node* GetNodeByName(const std::string& name, const bool& subString);
+	//
+	//Return all nodes matching the passed name
+	std::vector<osg::Node*> GetNodesByName(const std::string& name, const bool& subString);
+	//
+	//Return the first node matching the name and template type
+	template <class T>
+	T* GetNodeByNameTyped(const std::string& name, const bool& subString){
+		std::vector<osg::Node*> nodes = GetNodesByName(name, subString);
+		for(unsigned int i=0; i<nodes.size(); i++){
+			T* typed = dynamic_cast<T*>(nodes[i]);
+			if(typed){return typed;}
+		}
+		return NULL;
+	}
+	//
+	//Return a list of all nodes matching the name and type
+	template <class T>
+	std::vector<T*> GetNodesByNameTyped(const std::string& name, const bool& subString){
+		std::vector<osg::Node*> nodes = GetNodesByName(name, subString);
+		std::vector<T*> found;
+		for(unsigned int i=0; i<nodes.size(); i++){
+			T* typed = dynamic_cast<T*>(nodes[i]);
+			if(typed){found.push_back(typed);}
+		}
+		return found;
+	}
 
 	void SetSubMeshVisible(int index, bool vis);
 	bool GetSubMeshVisible(int index);

@@ -11,6 +11,14 @@
 namespace hogbox
 {
 
+enum NodeMasks{
+	MAIN_CAMERA_CULL = 0x00000001,//render to the default viewer camera
+	MAIN_CAMERA_LEFT_CULL = 0x00000002,//for default cameras stereo pair
+	MAIN_CAMERA_RIGHT_CULL = 0x00000003,
+	PICK_MESH = 0x00000004, //object will be tested during intersection visitors
+	COLLIDE_MESH = 0x00000005 //object will be used in collision detection
+};
+
 //
 //All HogBox types inherit from osg Object so that we
 //can use osg ref_ptr form auto memory management

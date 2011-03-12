@@ -76,7 +76,7 @@ void HogBoxObject::SetVisible(const bool& vis)
 {
 	if(vis)
 	{
-		m_root->setNodeMask(0xFFFFFFFF);
+		m_root->setNodeMask(0xffffffff);
 	}else{
 		m_root->setNodeMask(0x0);
 	}
@@ -99,6 +99,16 @@ osg::Node* HogBoxObject::GetNodeByName(const std::string& name, const bool& subS
 	if(findNodes._count>0)
 	{return findNodes._foundList[0];}
 	return NULL;
+}
+
+//
+//Return all nodes matching the passed name
+//
+std::vector<osg::Node*> HogBoxObject::GetNodesByName(const std::string& name, const bool& subString)
+{
+	FindNodesByName findNodes(name,subString);
+	m_root->accept(findNodes);
+	return findNodes._foundList;
 }
 
 //
@@ -241,6 +251,10 @@ bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 	m_totalBounds = m_root->computeBound();
 
 	m_wrappedNodes.push_back(node);
+
+	//apply the default node masks to our geom
+	ApplyDefaultNodeMaskVisitor applyNodeMasks;
+	node->accept(applyNodeMasks);
 
 	//pass all the meshmappings over the the new node
 	//applying the material and other parameters to any geodes

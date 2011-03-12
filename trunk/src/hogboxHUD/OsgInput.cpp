@@ -36,10 +36,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			m_inputState->PressHeldKey(ea.getKey()); 
 
 			m_inputState->SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
-			
-			//pass key press to our infoucs region
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-
+			break;
         }
 
 		//key released
@@ -49,21 +46,16 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			m_inputState->ReleaseHeldKey(ea.getKey());
 			
 			m_inputState->SetEvent(ON_KEY_UP, ea, m_hudDimensions);
-
-			//pass key press to our infoucs region
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
+			break;
 		}
 
 		//mouse moving
 		case(osgGA::GUIEventAdapter::MOVE):
         {
-			//
-			pick(ea,2); //hover check
+			pick(ea,true); //hover check
 			
 			m_inputState->SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
-			
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-            return false;
+			break;
 		}
 
 		//mouse drag (moving with button held)
@@ -71,44 +63,57 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			//pass drag to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-			return false;
+			break;
         } 
 
 		//mouse down
 		case(osgGA::GUIEventAdapter::PUSH):
 		{
-			pick(ea,0);//MDOWN
+			pick(ea,true);//MDOWN
+			pick(ea,false);//MDOWN
 			//pass mouse down to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-			return false;
+			break;
 		}
 	
 		//mouse up
 		case(osgGA::GUIEventAdapter::RELEASE):
         {
-			pick(ea,1); //MUP
+			pick(ea,true);//MDOWN
+			pick(ea,false);//MDOWN
 			//pass mouse up to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-			return false;
+			break;
         } 
 
 		//double click do down and up
 		case(osgGA::GUIEventAdapter::DOUBLECLICK):
         {
-			pick(ea,0);//down
-			pick(ea,1);//up 
+			pick(ea,true);//MDOWN
+			pick(ea,false);//MDOWN
 			//pass double click to our infoucs region
 			m_inputState->SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
-			if(p_focusRegion){ p_focusRegion->HandleInputEvent(*m_inputState.get());}
-			return false;
+			break;
         } 
 
-        default:
-            return false;
+        default:break;
     }
+
+	if(p_focusRegion)
+	{
+		p_focusRegion->HandleInputEvent(*m_inputState.get());
+	}else{
+		if(p_clickObject){
+			osg::Referenced* userData = p_clickObject->getUserData();
+			CallbackEvent* callback = dynamic_cast<CallbackEvent*>(userData);
+			if(callback){
+				callback->TriggerEvent(*m_inputState.get());
+			}
+			//clear
+			p_clickObject=NULL;
+		}
+	}
+	return false;
 }
 
 //
@@ -145,6 +150,9 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 
 	//pass intersector through scene find the intersections
     osgUtil::IntersectionVisitor iv(picker);
+	if(!hudPick){
+		iv.setTraversalMask(hogbox::NodeMasks::PICK_MESH);
+	}
 	scene->accept(iv);
 
 	//toggle unpickable nodes back to previous
@@ -168,19 +176,23 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
         node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
         parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
 
-		osg::notify(osg::DEBUG_FP) << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
+		OSG_INFO << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
 		
 		//did we pick a node
         if (node && (node->getName().size() != 0) )
 		{
 			//successfully picked a node so store it then pass its name down to the basic hud system
-			m_clickObject = node;
+			p_clickObject = NULL;
 			//check if the node has user data
 			HudRegion* geodeRegion = dynamic_cast<HudRegion*> (node->getUserData());
 			SetFocusRegion(geodeRegion);
+			if(!geodeRegion){
+				p_clickObject = node;
+			}
 
 		}else{
 
+			p_clickObject=NULL;
 			SetFocusRegion(NULL);
 		}
 

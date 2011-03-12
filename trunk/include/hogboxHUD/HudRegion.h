@@ -157,9 +157,6 @@ public:
 	//return the stateset applied to root
 	osg::StateSet* GetStateSet(); 
 
-	//used to flag to the user that something about this region
-	//has changed, i.e. the text was altered, a slider was moved etc
-	bool StateChanged();
 
 	//convert coords into the regions local system with this corner as the origin
 	osg::Vec2 GetRegionSpaceCoords(osg::Vec2 spCoords);
@@ -296,8 +293,6 @@ protected:
 	//of m_region
 	virtual bool UnLoadAssests();
 
-	//used internally to alert others that a value has changed
-	void TriggerStateChanged();
 
 protected:
 
@@ -339,7 +334,8 @@ protected:
 	osg::Vec2 m_corner;
 	//rotation in degrees arond the z axis
 	float m_rotation;
-	//depth/layer of the region i.e. z coord
+	//depth/layer of the region i.e. z coord relative to parent
+	//the root region held by the hogboxHud sets its depth/layer to -1
 	float m_depth;
 
 	//the inherit mask, telling us which
@@ -350,7 +346,6 @@ protected:
 	bool m_visible;
 
 	//has the region changed since last time
-	bool m_stateChanged;
 	bool m_hovering; //is it in a hover state
 
 	//standard texture 

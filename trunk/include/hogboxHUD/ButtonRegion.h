@@ -40,12 +40,12 @@ public:
 	
 	//these realy need to be protected, but the callback system wil need to be made a friend of this?
 	//receive the base callbacks to detect our button click event
-	void OnMouseDown(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
-	void OnMouseUp(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseDown(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent);
 
 	//detect for rollover and to disable a mouseDown when focus is lost
-	void OnMouseEnter(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
-	void OnMouseLeave(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseEnter(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent);
+	void OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent);
 	
 protected:
 

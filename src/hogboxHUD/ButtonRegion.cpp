@@ -56,11 +56,11 @@ int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 //
 //receive the base callbacks to detect our button click event
 //
-void ButtonRegion::OnMouseDown(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+void ButtonRegion::OnMouseDown(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	m_buttonDown = true;
 }
-void ButtonRegion::OnMouseUp(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//if the button is down then it's a Click event
 	if(m_buttonDown){
@@ -73,14 +73,14 @@ void ButtonRegion::OnMouseUp(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEv
 }
 
 //detect for rollover and to disable a mouseDown when focus is lost
-void ButtonRegion::OnMouseEnter(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+void ButtonRegion::OnMouseEnter(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//switch to rollover texture
 	if(m_rollOverTexture.valid())
 	{this->ApplyTexture(m_rollOverTexture.get());}
 }
 
-void ButtonRegion::OnMouseLeave(hogboxHUD::HudRegion* sender, hogboxHUD::HudInputEvent& inputEvent)
+void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//switch back to base texture
 	if(m_baseTexture.valid())

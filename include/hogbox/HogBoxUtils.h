@@ -15,6 +15,7 @@
 //////////////////////////////////////////////////////////
 
 #include <hogbox/Export.h>
+#include <hogbox/HogBoxBase.h>
 
 #include <osg/Geode>
 #include <osg/MatrixTransform>
@@ -24,10 +25,11 @@
 #include <osg/Texture3D>
 #include <osg/Texture1D>
 
+#include <osgAnimation/BasicAnimationManager>
+#include <osgAnimation/AnimationManagerBase>
 
 #include <hogbox/FindStateSetVisitor.h>
 #include <hogbox/Noise.h>
-
 
 
 namespace hogbox {
@@ -142,5 +144,76 @@ namespace hogbox {
 		int _count;
 	};
 
+	//
+	//finds and returns the fist AnimationManagerBase in the subgraph
+	struct AnimationManagerFinder : public osg::NodeVisitor
+	{
+		osg::ref_ptr<osgAnimation::BasicAnimationManager> _am;
+		AnimationManagerFinder() : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) {}
+		void apply(osg::Node& node) {
+			if (_am.valid())
+				return;
+			if (node.getUpdateCallback()) {
+				osgAnimation::AnimationManagerBase* b = dynamic_cast<osgAnimation::AnimationManagerBase*>(node.getUpdateCallback());
+				if (b) {
+					_am = new osgAnimation::BasicAnimationManager(*b);
+					node.setUpdateCallback(_am.get());
+					return;
+				}
+			}
+			traverse(node);
+		}
+	};
+
+	//
+	//Applydefault nodeMask from a nodes name
+	//NORENDER = do not add the default MAIN_CAMERA_CULL mask
+	//PICKABLE = add PICK_MESH mask
+	//COLLIDABLE = add the COLLIDE_MESH mask
+	//GlOW = add GLOW_MESH mask, do not add the default MAIN_CAMERA_CULL mask
+	class ApplyDefaultNodeMaskVisitor : public osg::NodeVisitor
+	{
+	public:
+
+		ApplyDefaultNodeMaskVisitor()
+			: osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+		{
+		}
+	    
+		virtual void apply(osg::Node& node)
+		{
+			if(dynamic_cast<osg::Geode*>(&node))
+			{
+				bool render=true;
+				bool glow=false;
+				osg::Node::NodeMask mask = 0;
+
+				if(node.getName().rfind("NORENDER")!=std::string::npos)
+				{render=false;}
+				if(node.getName().rfind("GlOW")!=std::string::npos)
+				{glow=true;render=false;}
+				//add masks
+				if(render){
+					mask = mask | NodeMasks::MAIN_CAMERA_CULL;
+				}else if(glow){
+					//mask = mask | NodeMasks
+				}
+
+				if(node.getName().rfind("PICKABLE")!=std::string::npos)
+				{
+					mask = mask | NodeMasks::PICK_MESH;
+				}
+				if(node.getName().rfind("COLLIDABLE")!=std::string::npos)
+				{
+					mask = mask | NodeMasks::COLLIDE_MESH;
+				}
+
+				//set the nodes mask
+				node.setNodeMask(mask);
+			}
+
+			traverse(node);
+		}
+	};
 
 };//end hogbox namespace

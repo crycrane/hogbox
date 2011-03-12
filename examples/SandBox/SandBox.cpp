@@ -23,27 +23,30 @@
 #include <osgAnimation/BasicAnimationManager>
 #include <osgAnimation/AnimationManagerBase>
 
-//
-//finds and returns the fist AnimationManagerBase in the subgraph
-struct AnimationManagerFinder : public osg::NodeVisitor
+class App : public osg::Object
 {
-    osg::ref_ptr<osgAnimation::BasicAnimationManager> _am;
-    AnimationManagerFinder() : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) {}
-    void apply(osg::Node& node) {
-        if (_am.valid())
-            return;
-        if (node.getUpdateCallback()) {
-            osgAnimation::AnimationManagerBase* b = dynamic_cast<osgAnimation::AnimationManagerBase*>(node.getUpdateCallback());
-            if (b) {
-                _am = new osgAnimation::BasicAnimationManager(*b);
-				node.setUpdateCallback(_am.get());
-                return;
-            }
-        }
-        traverse(node);
-    }
-};
+public:
+	App() : osg::Object()
+	{
+	}
+	
+	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
+	App(const App& app,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY) 
+		: osg::Object(app, copyop)
+	{
+	}
 
+	META_Box(hogbox,App);
+
+	void OnClickButton(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent){
+		osg::notify(osg::WARN) << "Clicked Button" << std::endl;
+	}
+	void OnClickObject(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent){
+		osg::notify(osg::WARN) << "Clicked Object" << std::endl;
+	}
+protected:
+	virtual ~App(){}
+};
 
 int main( int argc, const char* argv[] )
 {
@@ -98,17 +101,14 @@ int main( int argc, const char* argv[] )
 	hogbox::HogBoxViewerPtr viewer = new hogbox::HogBoxViewer();
 	osg::MatrixTransform* root = new osg::MatrixTransform();
 	viewer->Init(root);
-	//viewer->SetSceneNode(root);
 
 	//load the main light
 	hogbox::HogBoxLightPtr light1 = manager->ReadNodeByIDTyped<hogbox::HogBoxLight>("MainLight");
-
 	//light1->ApplyLightToGraph(root);//(Don't like this)
 	//root->addChild(light1->GetLight());
 
 	//load our main object
 	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("Terrorist.Object");
-	//root->addChild(osgDB::readNodeFile("./Data/Models/Terrorist/terrorist.FBX"));
 	root->addChild(hogboxObject->GetRootNode());
 
 	hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
@@ -117,32 +117,38 @@ int main( int argc, const char* argv[] )
 //entityManager->
 
 	//play the animation
-	AnimationManagerFinder aniFinder;
+	hogbox::AnimationManagerFinder aniFinder;
 	root->accept(aniFinder);
 	osgAnimation::BasicAnimationManager* anim = aniFinder._am;
 	//root->setUpdateCallback(anim);
 	const osgAnimation::AnimationList& list = anim->getAnimationList();
     int v = 0;//getRandomValueinRange(list.size());
         
-    anim->playAnimation(list[v].get());
+   // anim->playAnimation(list[v].get());
 	//anim->playAnimation(list[v].get());
 
 
-	//load the webcam
-	//hogboxVision::WebCamStreamPtr webcam = manager->ReadNodeByIDTyped<hogboxVision::WebCamStream>("MainWebCam");
-
 	//add hud
 	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));
-	//root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
+	root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
 	
 	//add input handler for hud
 	hogboxHUD::HudInputHandler* input = new hogboxHUD::HudInputHandler(viewer->GetViewer(),osg::Vec2(800,600));
 	viewer->addEventHandler(input);
 
 	//add a region to the hud
+	osg::ref_ptr<App> _app = new App();
 	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("Button.SwapCamera");
+	region->AddOnButtonClickedCallbackReceiver(new hogboxHUD::HudEventObjectCallback<App>(region.get(),_app.get(),&App::OnClickButton)); 
 	hogboxHUD::HogBoxHud::Instance()->AddRegion(region);
 
+	//find the book pick mesh and attach a callback
+	osg::ref_ptr<hogboxHUD::CallbackEvent> _onObjectClickedEvent = new hogboxHUD::CallbackEvent(_app.get(), "OnObjectClicked");
+	_onObjectClickedEvent->AddCallbackReceiver(new hogboxHUD::HudEventObjectCallback<App>(NULL,_app.get(),&App::OnClickObject));
+	osg::Geode* bookPickMesh = hogboxObject->GetNodeByNameTyped<osg::Geode>("PickBookShelf", true);
+	bookPickMesh->setUserData(_onObjectClickedEvent.get());
+	
+	
 	//add a camera manipulator to control camera
 	osg::ref_ptr<osgGA::TrackballManipulator> cameraManipulator;
     cameraManipulator = new osgGA::TrackballManipulator; 

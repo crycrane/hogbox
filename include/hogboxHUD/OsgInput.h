@@ -52,12 +52,12 @@ public:
 	//
 	//normal mesh picked (i,e, model not part of the basic hud)
 	osg::Node* GetClickedObject(){
-		return m_clickObject.get();
+		return p_clickObject.get();
 	}
 	//
 	//reset the clicked object pointer
 	void ResetClickedObject(){
-		m_clickObject = NULL;
+		p_clickObject = NULL;
 	}
 
 
@@ -106,7 +106,7 @@ protected:
 
 	//store a pointer to the last node to be clicked
 	//i.e. might not be a hud region
-	osg::ref_ptr<osg::Node>  m_clickObject;
+	osg::ref_ptr<osg::Node>  p_clickObject;
 
 	//the list of unpickable nodes, disabled during picking
 	std::vector<UnPickableNode> m_vUnPickableNodes;

@@ -326,6 +326,7 @@ bool HogBoxViewer::CreateAppWindow()
 			m_viewer = NULL;
 		}
 
+		//create the osg viewer
 		m_viewer = new osgViewer::Viewer();
 		m_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 		
@@ -372,9 +373,9 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 
 		//set our default cull masks
-		m_viewer->getCamera()->setCullMask(0xffffffff);
-		m_viewer->getCamera()->setCullMaskLeft(0x00000001);
-		m_viewer->getCamera()->setCullMaskRight(0x00000002);
+		m_viewer->getCamera()->setCullMask(NodeMasks::MAIN_CAMERA_CULL);
+		m_viewer->getCamera()->setCullMaskLeft(NodeMasks::MAIN_CAMERA_LEFT_CULL);
+		m_viewer->getCamera()->setCullMaskRight(NodeMasks::MAIN_CAMERA_RIGHT_CULL);
 
 		// set up the use of stereo by default. (Is this the only way of doing this ?)
 		osg::DisplaySettings::instance()->setStereo(m_bStereoEnabled);

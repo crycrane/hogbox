@@ -48,14 +48,14 @@ namespace hogboxHUD {
 		//takes as arguments
 		//HudRegion the sender of the events
 		//HudInputEvent& the intput event that triggered this hudevent
-		typedef void (C::* HudEventCallbackFunc)(HudRegion*, HudInputEvent&);  //get value function definition
+		typedef void (C::* HudEventCallbackFunc)(osg::Object*, HudInputEvent&);  //get value function definition
 								
 		//
 		//Contructor requires
 		//T* the type sending the events
 		//C* the object wanting to be calledback when the event occurs
 		//HudEventCallbackFunc a member function of rObject that matches our callback template 
-		HudEventObjectCallback(HudRegion* sender, C *rObject, HudEventCallbackFunc ghandler = 0)
+		HudEventObjectCallback(osg::Object* sender, C *rObject, HudEventCallbackFunc ghandler = 0)
 			: HudEventCallback(),
 			p_sender(sender),
 			mp_object(rObject),
@@ -81,7 +81,7 @@ namespace hogboxHUD {
 		
 	protected:
 		
-		HudRegion* p_sender;
+		osg::Object* p_sender;
 
 		//function pointers to the callback function for this event
 		HudEventCallbackFunc f_callbackFunc;
@@ -99,7 +99,7 @@ namespace hogboxHUD {
 	class CallbackEvent : public osg::Referenced 
 	{
 	public:
-		CallbackEvent(HudRegion* sender, const std::string& eventName)
+		CallbackEvent(osg::Object* sender, const std::string& eventName)
 			: osg::Referenced(),
 			p_eventSender(sender),
 			m_eventName(eventName)
@@ -132,7 +132,7 @@ namespace hogboxHUD {
 	protected:
 		
 		//the object sending the event (e.g. hudregion, button)
-		HudRegion* p_eventSender;
+		osg::Object* p_eventSender;
 		
 		//event has a name which can be used by user as a simple reference (e.g OnMouseDown)
 		std::string m_eventName; 

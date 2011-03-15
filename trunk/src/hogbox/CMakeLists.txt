@@ -9,6 +9,9 @@ SET(HEADER_PATH ${hogbox_SOURCE_DIR}/include/${LIB_NAME})
 
 SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/AnimateValue.h
+	${HEADER_PATH}/AnimationPathControl.h
+	${HEADER_PATH}/AnimationPathEventCallback.h
+	${HEADER_PATH}/AnimationUtils.h
 	${HEADER_PATH}/Export.h
 	${HEADER_PATH}/Version.h
 	${HEADER_PATH}/HogBoxBase.h
@@ -29,6 +32,9 @@ SET(LIB_PUBLIC_HEADERS
 ADD_LIBRARY(${LIB_NAME}
     ${hogbox_USER_DEFINED_DYNAMIC_OR_STATIC}
     ${LIB_PUBLIC_HEADERS}
+    AnimationPathController.cpp
+    AnimationPathEventCallback.cpp
+	AnimationUtils.cpp
 	HogBoxHardwareRigTransform.cpp
 	HogBoxLight.cpp
 	HogBoxMaterial.cpp

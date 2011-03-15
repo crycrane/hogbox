@@ -145,27 +145,6 @@ namespace hogbox {
 	};
 
 	//
-	//finds and returns the fist AnimationManagerBase in the subgraph
-	struct AnimationManagerFinder : public osg::NodeVisitor
-	{
-		osg::ref_ptr<osgAnimation::BasicAnimationManager> _am;
-		AnimationManagerFinder() : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) {}
-		void apply(osg::Node& node) {
-			if (_am.valid())
-				return;
-			if (node.getUpdateCallback()) {
-				osgAnimation::AnimationManagerBase* b = dynamic_cast<osgAnimation::AnimationManagerBase*>(node.getUpdateCallback());
-				if (b) {
-					_am = new osgAnimation::BasicAnimationManager(*b);
-					node.setUpdateCallback(_am.get());
-					return;
-				}
-			}
-			traverse(node);
-		}
-	};
-
-	//
 	//Applydefault nodeMask from a nodes name
 	//NORENDER = do not add the default MAIN_CAMERA_CULL mask
 	//PICKABLE = add PICK_MESH mask

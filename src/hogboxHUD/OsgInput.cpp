@@ -179,7 +179,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 		OSG_INFO << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
 		
 		//did we pick a node
-        if (node && (node->getName().size() != 0) )
+        if (node)// && (node->getName().size() != 0) )
 		{
 			//successfully picked a node so store it then pass its name down to the basic hud system
 			p_clickObject = NULL;

@@ -5,6 +5,7 @@
 #include <hogbox/HogBoxObject.h>
 #include <hogbox/HogBoxLight.h>
 #include <hogbox/HogBoxUtils.h>
+#include <hogbox/AnimationUtils.h>
 
 #include <hogboxDB/HogBoxManager.h>
 #include <hogboxDB/HogBoxRegistry.h>
@@ -117,9 +118,9 @@ int main( int argc, const char* argv[] )
 //entityManager->
 
 	//play the animation
-	hogbox::AnimationManagerFinder aniFinder;
+	hogbox::AnimationManagerBaseToBasicAnimationManagerVisitor aniFinder;
 	root->accept(aniFinder);
-	osgAnimation::BasicAnimationManager* anim = aniFinder._am;
+	osgAnimation::BasicAnimationManager* anim = aniFinder._basicManager.get();
 	//root->setUpdateCallback(anim);
 	const osgAnimation::AnimationList& list = anim->getAnimationList();
     int v = 0;//getRandomValueinRange(list.size());

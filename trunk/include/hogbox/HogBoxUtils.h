@@ -173,22 +173,50 @@ namespace hogbox {
 				{glow=true;render=false;}
 				//add masks
 				if(render){
-					mask = mask | NodeMasks::MAIN_CAMERA_CULL;
+					mask = mask | MAIN_CAMERA_CULL;
 				}else if(glow){
 					//mask = mask | NodeMasks
 				}
 
 				if(node.getName().rfind("PICKABLE")!=std::string::npos)
 				{
-					mask = mask | NodeMasks::PICK_MESH;
+					mask = mask | PICK_MESH;
 				}
 				if(node.getName().rfind("COLLIDABLE")!=std::string::npos)
 				{
-					mask = mask | NodeMasks::COLLIDE_MESH;
+					mask = mask | COLLIDE_MESH;
 				}
 
 				//set the nodes mask
 				node.setNodeMask(mask);
+			}
+
+			traverse(node);
+		}
+	};
+
+	//
+	//Vistor to find any statesets and enable/disable backface culling
+	class ApplyBackFaceCullingVisitor : public osg::NodeVisitor
+	{
+	public:
+		bool _cullBackFaces;
+
+		ApplyBackFaceCullingVisitor(bool cullBackFaces=true)
+			: osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+			_cullBackFaces(cullBackFaces)
+		{
+		}
+	    
+		virtual void apply(osg::Node& node)
+		{
+			osg::StateSet* nodesState = node.getStateSet();
+			if(nodesState){
+				if(_cullBackFaces){
+					nodesState->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+				}else{
+					nodesState->setMode(GL_CULL_FACE, osg::StateAttribute::OFF);
+				}
 			}
 
 			traverse(node);

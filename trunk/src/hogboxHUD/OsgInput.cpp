@@ -176,7 +176,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
         node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
         parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
 
-		OSG_INFO << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
+		//OSG_INFO << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
 		
 		//did we pick a node
         if (node)// && (node->getName().size() != 0) )

@@ -132,6 +132,7 @@ public:
 
 	//set the texture used by default
 	void SetBaseTexture(osg::Texture* texture);
+	osg::Texture* GetBaseTexture(){return m_baseTexture.get();}
 	//set the texture used in mouse rollovers
 	void SetRolloverTexture(osg::Texture* texture);
 

@@ -15,7 +15,7 @@ HudInputHandler::HudInputHandler(osgViewer::Viewer* sceneView, osg::Vec2 hudDime
 
 HudInputHandler::~HudInputHandler()
 {
-
+	OSG_NOTICE << "    Deallocating HudInputHandler: Name '" << this->getName() << "'." << std::endl;
 }
 
 //
@@ -184,7 +184,11 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 			//successfully picked a node so store it then pass its name down to the basic hud system
 			p_clickObject = NULL;
 			//check if the node has user data
-			HudRegion* geodeRegion = dynamic_cast<HudRegion*> (node->getUserData());
+			HudRegionWrapper* regionWrapper = dynamic_cast<HudRegionWrapper*>(node->getUserData());
+			HudRegion* geodeRegion = NULL;
+			if(regionWrapper){
+				geodeRegion= regionWrapper->GetRegion();
+			}
 			SetFocusRegion(geodeRegion);
 			if(!geodeRegion){
 				p_clickObject = node;

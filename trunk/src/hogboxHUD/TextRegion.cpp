@@ -7,6 +7,7 @@ using namespace hogboxHUD;
 
 TextRegion::TextRegion(void) : HudRegion(),
 								 m_text(NULL),
+								 m_string(""),
 								m_fontHeight(18.0f),
 								m_fontName("fonts/arial.ttf"),
 								m_boarderPadding(5.0f),
@@ -64,6 +65,7 @@ TextRegion::TextRegion(const TextRegion& region,const osg::CopyOp& copyop)
 
 TextRegion::~TextRegion(void)
 {
+	OSG_NOTICE << "    Deallocating TextRegion: Name '" << this->getName() << "'." << std::endl;
 	m_text = NULL;
 }
 

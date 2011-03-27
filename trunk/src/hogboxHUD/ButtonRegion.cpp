@@ -34,6 +34,7 @@ ButtonRegion::ButtonRegion(const ButtonRegion& region,const osg::CopyOp& copyop)
 
 ButtonRegion::~ButtonRegion(void)
 {
+	OSG_NOTICE << "    Deallocating ButtonRegion: Name '" << this->getName() << "'." << std::endl;
 	m_mouseDownTexture = NULL;
 }
 

@@ -40,6 +40,7 @@ HogBoxNotifyHandler::HogBoxNotifyHandler(const std::string& outputFileName)
 
 HogBoxNotifyHandler::~HogBoxNotifyHandler()
 {
+	OSG_NOTICE << "    Deallocating HogBoxNotifyHandler Instance." << std::endl;
 	//write our html closing tags
 	if(m_outputFile.is_open())
 	{

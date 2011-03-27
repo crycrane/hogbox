@@ -47,6 +47,13 @@ namespace hogboxDB {
 		//read from the passed contents
 		inline virtual bool deserialize(osgDB::XmlNode*) 
 		{return false;}
+
+		//
+		//Release the attribute from the i.e. release any memory and remove
+		//attribute pointers from database
+		virtual bool releaseAttribute(){
+			return true;
+		}
 	
 	protected:
 		XmlAttribute(const XmlAttribute& copy) : osg::Referenced(copy){}

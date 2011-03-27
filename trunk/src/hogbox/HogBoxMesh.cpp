@@ -20,7 +20,6 @@ MeshMappingVisitor::MeshMappingVisitor(std::string name, hogbox::HogBoxMaterial*
 
 MeshMappingVisitor::~MeshMappingVisitor()
 {
-
 }
 
 void MeshMappingVisitor::apply(osg::Node& node)
@@ -181,5 +180,6 @@ MeshMapping::MeshMapping(const MeshMapping& mesh,const osg::CopyOp& copyop)
 }
 
 MeshMapping::~MeshMapping(){
+	OSG_NOTICE << "    Deallocating MeshMapping: Name '" << this->getName() << "'." << std::endl;
 	m_visitor = NULL;
 }

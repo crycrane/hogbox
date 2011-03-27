@@ -72,7 +72,7 @@ HogBoxLight::HogBoxLight(const HogBoxLight& light,const osg::CopyOp& copyop)
 
 HogBoxLight::~HogBoxLight(void)
 {
-
+	OSG_NOTICE << "    Deallocating HogBoxLight: Name '" << this->getName() << "'." << std::endl;
 }
 
 void HogBoxLight::ApplyLightToGraph(osg::Node* root)

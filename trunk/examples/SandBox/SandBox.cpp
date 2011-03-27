@@ -41,6 +41,11 @@ public:
 
 	void OnClickButton(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent){
 		osg::notify(osg::WARN) << "Clicked Button" << std::endl;
+		//cast sender to hudregion
+		hogboxHUD::HudRegion* hud = dynamic_cast<hogboxHUD::HudRegion*>(sender);
+		if(hud){
+			hud->RemoveChild(0,1);
+		}
 	}
 	void OnClickObject(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent){
 		osg::notify(osg::WARN) << "Clicked Object" << std::endl;
@@ -85,7 +90,7 @@ int main( int argc, const char* argv[] )
 #endif	
 	
 	osg::setNotifyHandler(new hogbox::HogBoxNotifyHandler("./Data/MessageLog.html"));
-	osg::setNotifyLevel(osg::INFO);
+	osg::setNotifyLevel(osg::NOTICE);
 
 	//AnimationSplitter spiltter("./splitConfig.xml");
 	//return 0;
@@ -142,6 +147,12 @@ int main( int argc, const char* argv[] )
 	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("Button.SwapCamera");
 	region->AddOnButtonClickedCallbackReceiver(new hogboxHUD::HudEventObjectCallback<App>(region.get(),_app.get(),&App::OnClickButton)); 
 	hogboxHUD::HogBoxHud::Instance()->AddRegion(region);
+
+	hogboxHUD::HudRegion* childRegion = new hogboxHUD::HudRegion(true);
+	childRegion->Create(osg::Vec2(0,0), osg::Vec2(40,40), "Quad");
+	region->AddChild(childRegion);
+	childRegion = NULL;
+
 
 	//find the book pick mesh and attach a callback
 	osg::ref_ptr<hogboxHUD::CallbackEvent> _onObjectClickedEvent = new hogboxHUD::CallbackEvent(_app.get(), "OnObjectClicked");

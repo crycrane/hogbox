@@ -50,7 +50,7 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
 	}
 
 	//allocate the document node
-	osgDB::XmlNode* doc = new osgDB::XmlNode;
+	osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
 	osgDB::XmlNode* root = 0;
 
 	//open the file with xmlinput
@@ -136,6 +136,28 @@ hogbox::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 	return NULL;
 }
 
+//
+//Release a node from the database by name
+//
+bool HogBoxManager::ReleaseNodeByID(const std::string& uniqueID)
+{
+	//find an xml node with the unique id
+	//see if we can find a node with the uniqueID requested
+	osgDB::XmlNode* uniqueIDNode = FindNodeByUniqueIDProperty(uniqueID);
+	if(!uniqueIDNode){return false;}
+
+	//the xml node name represents its classType
+	std::string requestedClass = uniqueIDNode->name;
+
+	//find the manager for handling that type of class
+	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Instance()->GetXmlClassManagerForClassType(requestedClass);
+	if(readManager)
+	{
+		//remove the unique id node from the manager
+		return readManager->ReleaseNodeByID(uniqueID);	
+	}
+	return false;
+}
 
 //
 //find a node in the database with the uniqueID property

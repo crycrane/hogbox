@@ -156,12 +156,27 @@ HudRegion::HudRegion(const HudRegion& region,const osg::CopyOp& copyop)
 
 HudRegion::~HudRegion(void)
 {
+	//release the callback events
+	m_onMouseDownEvent = NULL;
+	m_onMouseUpEvent = NULL;
+	m_onMouseMoveEvent = NULL;
+	m_onMouseDragEvent = NULL;
+	m_onDoubleClickEvent = NULL;
+	m_onMouseEnterEvent = NULL;
+	m_onMouseLeaveEvent = NULL;
+
+	OSG_NOTICE << "    Deallocating HudRegion: Name '" << this->getName() << "'." << std::endl;
 	for(unsigned int i=0; i<m_p_children.size(); i++)
 	{
 		m_childMount->removeChild(m_p_children[i]->GetRegion());
 		m_p_children[i]=NULL;
 	}
+	m_childMount = NULL;
 	m_p_children.clear();
+	if(m_region.valid()){
+		ClearHudGeodes(m_region.get());
+		m_region = NULL;
+	}
 	m_root = NULL;
 	m_translate = NULL;
 	m_rotate = NULL;
@@ -361,6 +376,23 @@ bool HudRegion::IsChild(const std::string& uniqueID)
 }
 
 //
+//remove child
+//
+void HudRegion::RemoveChild(HudRegion* region)
+{
+	
+}
+
+void HudRegion::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
+{
+	if(pos >= m_p_children.size()){return;}
+	HudRegionList::iterator first = m_p_children.begin();
+	HudRegion* region = (*first+pos);
+	m_childMount->removeChild(region->GetRegion());
+	m_p_children.erase(first+pos);
+}
+
+//
 // Pass the event on to all the children regions of this region
 // example, a diloag region passes to it button to animate the button
 // returns true if used by one of the children
@@ -480,7 +512,7 @@ void HudRegion::setName(const std::string& name)
 {
 	m_region->setName(name); 
 	osg::Object::setName(name);
-	MakeHudGeodes(m_region.get(), this);
+	MakeHudGeodes(m_region.get(), new HudRegionWrapper(this));
 }
 
 //positioning
@@ -907,14 +939,14 @@ void HudRegion::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
 
 
 //helper func to rename geodes and attach region as user data
-void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegion* region)
+void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegionWrapper* region)
 {
 	//find geomtry in geodes
 	if(dynamic_cast<osg::Geode*> (node))
 	{
 		//loop all geometry nodes
 		osg::Geode* geode = static_cast<osg::Geode*> (node);
-		geode->setName(region->getName()) ;
+		geode->setName(region->GetRegion()->getName()) ;
 		geode->setUserData(region);
 	}
 	
@@ -924,5 +956,24 @@ void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegion* region)
 		osg::Group* group = static_cast<osg::Group*> (node);
 		for(unsigned int i=0; i < group->getNumChildren(); i++)
 		{	hogboxHUD::MakeHudGeodes(group->getChild(i), region);}
+	}
+}
+
+void hogboxHUD::ClearHudGeodes(osg::Node* node)
+{
+	//find geomtry in geodes
+	if(dynamic_cast<osg::Geode*> (node))
+	{
+		//loop all geometry nodes
+		osg::Geode* geode = static_cast<osg::Geode*> (node);;
+		geode->setUserData(NULL);
+	}
+	
+	// Traverse any group node
+	if(dynamic_cast<osg::Group*> (node))
+	{
+		osg::Group* group = static_cast<osg::Group*> (node);
+		for(unsigned int i=0; i < group->getNumChildren(); i++)
+		{	hogboxHUD::ClearHudGeodes(group->getChild(i));}
 	}
 }

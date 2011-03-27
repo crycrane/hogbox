@@ -54,6 +54,7 @@ AnimationPathControl::AnimationPathControl(void)
 
 AnimationPathControl::~AnimationPathControl(void)
 {
+	OSG_NOTICE << "    Deallocating AnimationPathControl: Name '" << this->getName() << "'." << std::endl;
 	//the group of all entities that are in the markers space
 	m_animatedNode = NULL;
 

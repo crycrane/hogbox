@@ -13,6 +13,12 @@ XmlClassWrapper::XmlClassWrapper(osgDB::XmlNode* node, const std::string& classT
 XmlClassWrapper::~XmlClassWrapper(void)
 {
 	OSG_NOTICE << "Deallocating XmlClassWrapper: Type '" << this->GetClassType() << "', UniqueID '" << this->GetUniqueID() << "'." << std::endl;
+	//iterate our attributes and release also
+	XmlAttributeMap::iterator itr = m_xmlAttributes.begin();
+	for( ; itr != m_xmlAttributes.end(); itr++)
+	{	
+		(*itr).second->releaseAttribute();
+	}
 	p_wrappedObject=NULL;
 }
 

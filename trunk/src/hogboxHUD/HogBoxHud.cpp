@@ -27,6 +27,7 @@ HogBoxHud::HogBoxHud(void) : m_camera(NULL),
 
 HogBoxHud::~HogBoxHud(void)
 {
+	OSG_NOTICE << "    Deallocating HogBoxHud Instance." << std::endl;
 	m_regionGroup = NULL; 
 
 	//delete all attached regions, each region is then responsible for 

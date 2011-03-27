@@ -26,11 +26,13 @@ typedef unsigned int InheritanceMask;
 
 class HudRegion;
 typedef osg::ref_ptr<HudRegion> HudRegionPtr;
+class HudRegionWrapper;
 //forward declare our update callback
 class HudRegionUpdateCallback;
 
 //helper func to rename geodes and attach region as user data
-extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* graph, HudRegion* region);
+extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* node, HudRegionWrapper* region);
+extern HOGBOXHUD_EXPORT void ClearHudGeodes(osg::Node* node);
 
 	
 //
@@ -73,6 +75,15 @@ public:
 	//to the hud
 	void SetParent(HudRegion* parent){m_p_parent=parent;}
 	HudRegion* GetParent(){return m_p_parent;}
+
+	//remove child
+	void RemoveChild(HudRegion* region);
+	void RemoveChild(unsigned int pos, unsigned int numChildrenToRemove=1);
+
+	//get number of children
+	unsigned int GetNumChildren(){
+		return m_p_children.size();
+	}
 
 	//Events
 	
@@ -419,6 +430,35 @@ protected:
 	osg::ref_ptr<CallbackEvent> m_onKeyUpEvent;
 };
 	
+//
+//Wrapper to store a normal pointer to a hudregion
+//within an osg referenced object.
+class HudRegionWrapper : public osg::Referenced
+{
+public:
+	HudRegionWrapper(HudRegion* region)
+		: osg::Referenced(),
+		p_region(region)
+	{
+	}
+
+	HudRegion* GetRegion(){
+		return p_region;
+	}
+	void SetRegion(HudRegion* region){
+		p_region=region;
+	}
+
+protected:
+
+	virtual ~HudRegionWrapper(){
+		p_region=NULL;
+	}
+
+protected:
+	HudRegion* p_region;
+};
+
 //
 //HudRegionUpdateCallback
 //our default update callback which will ensure animations etc are updated

@@ -105,6 +105,7 @@ HogBoxMaterial::HogBoxMaterial(const HogBoxMaterial& material,const osg::CopyOp&
 
 HogBoxMaterial::~HogBoxMaterial(void)
 {
+	OSG_NOTICE << "    Deallocating HogBoxMaterial: Name '" << this->getName() << "'." << std::endl;
 	for(unsigned int i = 0; i<m_uniforms.size(); i++)
 	{
 		m_stateset->removeUniform(m_uniforms[i]);

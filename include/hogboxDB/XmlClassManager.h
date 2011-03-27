@@ -54,6 +54,10 @@ public:
 	//Find the node if it's already been loaded
 	hogbox::ObjectPtr GetNodeObjectByID(const std::string& uniqueID);
 
+	//
+	//Release the node object if it has already been loaded
+	bool ReleaseNodeByID(const std::string& uniqueID);
+	
 protected:
 
 	virtual ~XmlClassManager(void);

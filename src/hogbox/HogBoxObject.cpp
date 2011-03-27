@@ -61,6 +61,7 @@ HogBoxObject::HogBoxObject(const HogBoxObject& object,const osg::CopyOp& copyop)
 
 HogBoxObject::~HogBoxObject(void)
 {
+	OSG_NOTICE << "    Deallocating HogBoxObject: Name '" << this->getName() << "'." << std::endl;
 	//transformation members
 	//m_p_worldTrans = NULL; // the final world transform matrix for the model
 

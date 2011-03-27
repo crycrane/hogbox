@@ -91,11 +91,12 @@ XmlClassManager* HogBoxRegistry::GetXmlClassManagerForClassType(const std::strin
 	for(unsigned int i=0; i<m_xmlNodeManagers.size(); i++)
 	{
 		//check the wrapper contains a valid manager prototype
-		if(m_xmlNodeManagers[i]->GetPrototype())
-		{
-			//does the classmanager accept the class type 
-			if(m_xmlNodeManagers[i]->GetPrototype()->AcceptsClassType(classType))
-			{return m_xmlNodeManagers[i]->GetPrototype();}
+		if(m_xmlNodeManagers[i].valid()){
+			if(m_xmlNodeManagers[i]->GetPrototype()){
+				//does the classmanager accept the class type 
+				if(m_xmlNodeManagers[i]->GetPrototype()->AcceptsClassType(classType))
+				{return m_xmlNodeManagers[i]->GetPrototype();}
+			}
 		}
 	}
 

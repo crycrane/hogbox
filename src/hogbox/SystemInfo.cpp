@@ -74,6 +74,7 @@ SystemInfo::SystemInfo(GatherLevel level)
 
 SystemInfo::~SystemInfo(void)
 {
+	OSG_NOTICE << "    Deallocating SystemInfo Instance."<< std::endl;
 	m_renderSupportInfo = NULL;
 }
 

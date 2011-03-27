@@ -82,6 +82,10 @@ public:
 		return NULL;
 	}
 
+	//
+	//Release a node from the database by name
+	bool ReleaseNodeByID(const std::string& uniqueID);
+
 
 protected:
 	

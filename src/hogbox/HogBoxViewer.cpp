@@ -71,7 +71,7 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 
 HogBoxViewer::~HogBoxViewer(void)
 {
-	//CMsgLog::Inst()->WriteToLog("HogBoxViewer: Destructor");
+	OSG_NOTICE << "    Deallocating HogBoxViewer: Name '" << this->getName() << "'." << std::endl;
 
 	m_p_scene = NULL;
 
@@ -81,13 +81,13 @@ HogBoxViewer::~HogBoxViewer(void)
 	{m_p_appEventHandlers[i] = NULL;}
 	m_p_appEventHandlers.clear();
 
+	m_viewer = NULL;
+
 	//handle to the context window for manipulaing fullscreen etc
 	m_graphicsWindow = NULL;
-	
+
 	//single context to attach to the viewers camera
 	m_graphicsContext = NULL;
-
-	m_viewer = NULL;
 }
 
 //

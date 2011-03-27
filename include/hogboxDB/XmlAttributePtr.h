@@ -71,6 +71,18 @@ namespace hogboxDB {
 			}
 		}
 
+		//
+		//release the pointers object from the database
+		virtual bool releaseAttribute(){
+			//get the name of the object pointed to
+			T* pointerObject = this->get();
+			if(pointerObject){
+				std::string pointerObjectName = pointerObject->getName();
+				return hogboxDB::HogBoxManager::Instance()->ReleaseNodeByID(pointerObjectName);
+			}
+			return false;
+		}
+
 		//write to nodes contents
 		virtual bool serialize(osgDB::XmlNode* out) {
 			//std::stringstream ss;
@@ -185,6 +197,25 @@ namespace hogboxDB {
 			{
 				osg::notify(osg::WARN) << "XML ERROR: No set method provided for XmlClassPointerList Attribute. The pointer list will not be set." << std::endl;
 			}
+		}
+
+		//
+		//release the pointers object from the database
+		virtual bool releaseAttribute(){
+			bool result = true;
+			//get the name of the object pointed to
+			L pointerObjectList = this->get();
+			if(pointerObjectList.size() > 0){
+				L::iterator itr = pointerObjectList.begin();
+				for( ; itr != pointerObjectList.end(); itr++){
+					T* listObject = (*itr);
+					std::string listObjectName = listObject->getName();
+					if(!hogboxDB::HogBoxManager::Instance()->ReleaseNodeByID(listObjectName)){
+						result=false;
+					}
+				}
+			}
+			return result;
 		}
 
 		//write to nodes contents

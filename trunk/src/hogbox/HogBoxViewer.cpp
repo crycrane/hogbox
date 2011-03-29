@@ -343,7 +343,7 @@ bool HogBoxViewer::CreateAppWindow()
 		double width = m_glSystemInfo->getScreenHeight(m_screenID);
 		osg::Vec2 screenRes = osg::Vec2(width,height);
 
-		m_viewer->getCamera()->setProjectionMatrixAsPerspective( m_vfov, width/height, 1.0f,10000.0f);
+		m_viewer->getCamera()->setProjectionMatrixAsPerspective( m_vfov, width/height, 1.0f,1000.0f);
 
 		//attach the graphics context to the viewers camera
 		m_viewer->getCamera()->setGraphicsContext(m_graphicsContext.get());

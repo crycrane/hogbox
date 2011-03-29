@@ -51,6 +51,10 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 
     // set the projection matrix
     m_camera->setProjectionMatrix(osg::Matrix::ortho2D(0,m_screenSize.x(),0,m_screenSize.y()));
+	
+	//osg::Matrix viewMat = m_camera->getViewMatrix();
+	//viewMat = viewMat * osg::Matrix::rotate(osg::DegreesToRadians(90.0f), osg::Vec3(0,0,1));
+	//m_camera->setViewMatrix(viewMat);
 
     // set the view matrix    
     m_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
@@ -136,4 +140,18 @@ bool HogBoxHud::GetHudVisibility()
 		return true;
 	}
 	return false;
+}
+
+//
+//Rotate and translate the root hud region to run vertically up screen
+//
+void HogBoxHud::SetHudOrientation(HudOrientation ori)
+{
+	if(ori == HORIZONTAL_ORIENTATION){
+		m_hudRegion->SetRotation(0.0f);
+		m_hudRegion->SetPosition(osg::Vec2(0,0));
+	}else{
+		m_hudRegion->SetRotation(90.0f);
+		m_hudRegion->SetPosition(osg::Vec2(m_screenSize.x(), 0.0f));
+	}
 }

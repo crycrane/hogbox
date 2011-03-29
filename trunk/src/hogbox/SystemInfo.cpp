@@ -31,7 +31,7 @@ SystemInfo::SystemInfo(GatherLevel level)
 //Default info
 	m_maxTestedBuffers(2),
 	m_maxTestedStencilBits(0),
-	m_maxTestedDepthBits(8),
+	m_maxTestedDepthBits(16),
 	m_maxTestedMultiSamples(0),
 	//The system info values
 	_glVersionNumber(0.0f),

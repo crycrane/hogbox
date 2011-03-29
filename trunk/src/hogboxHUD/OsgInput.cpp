@@ -151,7 +151,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 	//pass intersector through scene find the intersections
     osgUtil::IntersectionVisitor iv(picker);
 	if(!hudPick){
-		iv.setTraversalMask(hogbox::NodeMasks::PICK_MESH);
+		iv.setTraversalMask(hogbox::PICK_MESH);
 	}
 	scene->accept(iv);
 

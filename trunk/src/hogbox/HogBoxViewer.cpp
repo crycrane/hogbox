@@ -64,7 +64,9 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 	_frameBufferImage(NULL),
 	m_bRenderOffscreen(false),
 //assume the worst for support
-	m_glSystemInfo(NULL)
+	m_glSystemInfo(NULL),
+//IOS specific
+	_autoRotateView(false)
 {
 	m_glSystemInfo = SystemInfo::Instance();
 }
@@ -236,7 +238,7 @@ bool HogBoxViewer::CreateAppWindow()
 			windata = new osgViewer::GraphicsWindowWin32::WindowData(m_hwnd);
 #else
 			#if (TARGET_OS_IPHONE)
-				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIWindow*)m_hwnd);
+				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIWindow*)m_hwnd, _autoRotateView);
 			#else
 				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)m_hwnd);
 			#endif
@@ -244,6 +246,12 @@ bool HogBoxViewer::CreateAppWindow()
 			graphicsTraits->inheritedWindowData = windata;
 			graphicsTraits->windowDecoration = false;
 			m_bUsingBoarder = false;
+		}else{
+			//IOS pass windata anyhow so we can set auto rotate
+			#if (TARGET_OS_IPHONE)
+				osg::ref_ptr<osg::Referenced> windata = new osgViewer::GraphicsWindowIOS::WindowData(NULL, _autoRotateView);
+				graphicsTraits->inheritedWindowData = windata;
+			#endif			
 		}
 
 
@@ -357,9 +365,10 @@ bool HogBoxViewer::CreateAppWindow()
 		{
 			m_resizeCallback = NULL;
 		}
-		m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
-		m_graphicsContext->setResizedCallback(m_resizeCallback);
-		
+		#ifndef TARGET_OS_IPHONE
+			m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+			m_graphicsContext->setResizedCallback(m_resizeCallback);
+		#endif
 		//force a resize to acount for the initial state
 		//m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
 	
@@ -373,9 +382,9 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 
 		//set our default cull masks
-		m_viewer->getCamera()->setCullMask(NodeMasks::MAIN_CAMERA_CULL);
-		m_viewer->getCamera()->setCullMaskLeft(NodeMasks::MAIN_CAMERA_LEFT_CULL);
-		m_viewer->getCamera()->setCullMaskRight(NodeMasks::MAIN_CAMERA_RIGHT_CULL);
+		m_viewer->getCamera()->setCullMask(MAIN_CAMERA_CULL);
+		m_viewer->getCamera()->setCullMaskLeft(MAIN_CAMERA_LEFT_CULL);
+		m_viewer->getCamera()->setCullMaskRight(MAIN_CAMERA_RIGHT_CULL);
 
 		// set up the use of stereo by default. (Is this the only way of doing this ?)
 		osg::DisplaySettings::instance()->setStereo(m_bStereoEnabled);
@@ -398,10 +407,12 @@ bool HogBoxViewer::CreateAppWindow()
 		}
 
 		//everything is inplace so realize our viewer (creating window etc)
-		m_viewer->realize();
+		#ifndef TARGET_OS_IPHONE
+			m_viewer->realize();
+			//force a resize to get a proper initial state
+			m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
+		#endif
 
-		//force a resize to get a proper initial state
-		m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
 	
 		//set request back to false
 		m_requestReset = false;
@@ -1012,4 +1023,14 @@ void HogBoxViewer::SetCameraFOV(const double& fov)
 const double& HogBoxViewer::GetCameraFOV()const
 {
 	return m_vfov;
+}
+
+void HogBoxViewer::SetAutoRotateView(const bool& autoRotate)
+{
+	_autoRotateView = autoRotate;
+}
+
+const bool& HogBoxViewer::GetAutoRotateView()const
+{
+	return _autoRotateView;
 }

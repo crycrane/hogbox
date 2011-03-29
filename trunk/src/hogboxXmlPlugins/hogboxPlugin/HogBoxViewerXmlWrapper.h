@@ -95,6 +95,10 @@ public:
 		m_xmlAttributes["StereoMode"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,int>(hogboxViewer,
 																	&hogbox::HogBoxViewer::GetStereoMode,
 																	&hogbox::HogBoxViewer::SetStereoMode);
+		
+		m_xmlAttributes["AutoRotateView"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,bool>(hogboxViewer,
+																	&hogbox::HogBoxViewer::GetAutoRotateView,
+																	&hogbox::HogBoxViewer::SetAutoRotateView);
 
 		//store the hogboxobject as the wrapped object
 		p_wrappedObject = hogboxViewer;

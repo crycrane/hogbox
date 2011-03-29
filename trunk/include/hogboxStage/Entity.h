@@ -64,7 +64,7 @@ public:
 	//Remove a component my type name, returns false if
 	//no component of that type exists
 	bool RemoveComponentOfType(std::string componentType){
-		ComponentMap::const_iterator itr = _components.find(componentType);
+		ComponentMap::iterator itr = _components.find(componentType);
 		if(itr!=_components.end()){
 			//(*itr).second = NULL;
 			_components.erase(itr);

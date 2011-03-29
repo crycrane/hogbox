@@ -31,7 +31,7 @@ class HudRegionWrapper;
 class HudRegionUpdateCallback;
 
 //helper func to rename geodes and attach region as user data
-extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* node, HudRegionWrapper* region);
+extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* node, osg::ref_ptr<HudRegionWrapper> region);
 extern HOGBOXHUD_EXPORT void ClearHudGeodes(osg::Node* node);
 
 	

@@ -944,7 +944,7 @@ void HudRegion::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
 
 
 //helper func to rename geodes and attach region as user data
-void hogboxHUD::MakeHudGeodes(osg::Node* node, HudRegionWrapper* region)
+void hogboxHUD::MakeHudGeodes(osg::Node* node, osg::ref_ptr<HudRegionWrapper> region)
 {
 	//find geomtry in geodes
 	if(dynamic_cast<osg::Geode*> (node))

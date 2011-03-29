@@ -19,6 +19,10 @@ class HOGBOXHUD_EXPORT HogBoxHud : public osg::Referenced //, public hogbox::Sin
 public:
 
 	//friend hogbox::Singleton<HogBoxHud>;
+	enum HudOrientation{
+		HORIZONTAL_ORIENTATION, //default
+		VERTICAL_ORIENTATION
+	};
 
 	static HogBoxHud* Instance(bool erase = false);
 
@@ -36,6 +40,9 @@ public:
 	//hide the hud
 	void SetHudVisibility(bool vis);
 	bool GetHudVisibility(); 
+	
+	//Rotate and translate the root hud region to run vertically up screen
+	void SetHudOrientation(HudOrientation ori);
 
 protected:
 	

@@ -1,6 +1,7 @@
 #include <hogboxHUD/HudRegion.h>
 
 #include <osg/BlendEquation>
+#include <osg/BlendFunc>
 #include <osg/TexMat>
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
@@ -107,8 +108,9 @@ HudRegion::HudRegion(bool isProcedural)
 	m_rotate->addChild(m_childMount.get());
 	
 	m_stateset = new osg::StateSet(); 
+	m_stateset->setDataVariance(osg::Object::DYNAMIC);
 #ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
-	m_stateset->setMode(GL_LIGHTING, osg::StateAttribute::OVERRIDE | osg::StateAttribute::OFF);
+	m_stateset->setMode(GL_LIGHTING, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
     //stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF);
 #else
 	osg::Program* program = new osg::Program; 
@@ -757,10 +759,13 @@ void HudRegion::EnableAlpha(const bool& enable)
 	if(enable)
 	{
 		osg::BlendEquation* blendEquation = new osg::BlendEquation(osg::BlendEquation::FUNC_ADD);
-		m_stateset->setAttributeAndModes(blendEquation,osg::StateAttribute::OVERRIDE|osg::StateAttribute::ON);
+		m_stateset->setAttributeAndModes(blendEquation, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+		osg::BlendFunc* blendFunc = new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
+		m_stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 		//tell to sort the mesh before displaying it
 		m_stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 		m_stateset->setMode(GL_BLEND, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
+		m_stateset->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 	}else{
 		m_stateset->setRenderingHint(osg::StateSet::OPAQUE_BIN);

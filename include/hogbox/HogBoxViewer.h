@@ -221,6 +221,11 @@ public:
 
 	void SetCameraFOV(const double& fov);
 	const double& GetCameraFOV()const ;
+	
+//IOS Specific
+	
+	void SetAutoRotateView(const bool& autoRotate);
+	const bool& GetAutoRotateView()const;
 
 
 protected:
@@ -341,7 +346,9 @@ protected:
 	//rendered image used when in offscreen render mode
 	osg::ref_ptr<osg::Image> _frameBufferImage;
 
-
+//IOS Specific
+	
+	bool _autoRotateView;
 
 };
 

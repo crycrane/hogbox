@@ -99,7 +99,7 @@ hogbox::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID
 //Release the node object if it has already been loaded
 bool XmlClassManager::ReleaseNodeByID(const std::string& uniqueID)
 {
-	for(XmlNodeToObjectMap::const_iterator itr=m_objectList.begin();
+	for(XmlNodeToObjectMap::iterator itr=m_objectList.begin();
 		itr != m_objectList.end();
 		itr++)
 	{

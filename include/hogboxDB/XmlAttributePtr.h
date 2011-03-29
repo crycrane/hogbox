@@ -174,6 +174,8 @@ namespace hogboxDB {
 		//templates for get set pinter list funcions
 		typedef L (C::* GetPtrListHandler)() const;
 		typedef void (C::* SetPtrListHandler)(const L&);
+		
+		//typedef L::iterator ListIter;
 								
 		CallbackXmlClassPointerList(C *object, 
 			GetPtrListHandler ghandler = 0,
@@ -206,7 +208,7 @@ namespace hogboxDB {
 			//get the name of the object pointed to
 			L pointerObjectList = this->get();
 			if(pointerObjectList.size() > 0){
-				L::iterator itr = pointerObjectList.begin();
+				typename L::iterator itr = pointerObjectList.begin();
 				for( ; itr != pointerObjectList.end(); itr++){
 					T* listObject = (*itr);
 					std::string listObjectName = listObject->getName();

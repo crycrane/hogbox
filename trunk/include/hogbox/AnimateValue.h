@@ -145,7 +145,7 @@ public:
 						//otherwise we reached the end so return 3
 						return 3;
 					}
-					return true;
+					return 1;
 				}else{
 					return 0;
 				}

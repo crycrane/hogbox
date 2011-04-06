@@ -140,6 +140,14 @@ public:
 	//visibility
 	const bool& IsVisible() const;
 	void SetVisible(const bool& visible);
+    
+    //pickable by hudinput
+    const bool& IsPickable() const;
+	void SetPickable(const bool& pickable);
+    
+    const std::string& GetAssetFolder()const{
+        return m_assetFolder;
+    }
 
 	//set the texture used by default
 	void SetBaseTexture(osg::Texture* texture);
@@ -148,7 +156,7 @@ public:
 	void SetRolloverTexture(osg::Texture* texture);
 
 	//Apply the texture to the channel 0/diffuse
-	void ApplyTexture(osg::Texture* tex);
+	virtual void ApplyTexture(osg::Texture* tex);
 	void ApplyBaseTexture();
 	void ApplyRollOverTexture();
 
@@ -305,6 +313,9 @@ protected:
 	//of m_region
 	virtual bool UnLoadAssests();
 
+    //
+    //compute and apply the current node mask for the region geode
+    void ApplyNodeMask();
 
 protected:
 
@@ -336,7 +347,7 @@ protected:
 	//region node attached to scale, contains the actual geometry
 	//or drawable representation of the region which should be 1x1
 	//m_scale will then make it our desired size
-	osg::ref_ptr<osg::Group> m_region; 
+	osg::ref_ptr<osg::Geode> m_region; 
 
 	//size in hud coords
 	osg::Vec2 m_size;
@@ -354,8 +365,11 @@ protected:
 	//transform features to inherit from parent
 	InheritanceMask m_transformInheritMask;
 
-	//visibility of the region
+	//visibility of the region, renderable mask
 	bool m_visible;
+    
+    //pickable mask applied
+    bool m_pickable;
 
 	//has the region changed since last time
 	bool m_hovering; //is it in a hover state

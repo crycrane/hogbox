@@ -222,5 +222,28 @@ namespace hogbox {
 			traverse(node);
 		}
 	};
+    
+    //
+    //Visitor to enable VBO on all drawables
+	class ApplyVBOVisitor : public osg::NodeVisitor
+	{
+	public:
+        
+		ApplyVBOVisitor()
+        : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+		{
+		}
+	    
+		virtual void apply(osg::Geode& geode)
+		{
+            for(unsigned int i=0; i<geode.getNumDrawables(); i++)
+            {
+                geode.getDrawable(i)->setUseDisplayList(false);
+                geode.getDrawable(i)->setUseVertexBufferObjects(true);
+            }
+            
+			traverse(geode);
+		}
+	};
 
 };//end hogbox namespace

@@ -107,7 +107,7 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 	int width = m_glSystemInfo->getScreenWidth(m_screenID);
     int height = m_glSystemInfo->getScreenHeight(m_screenID);
 	osg::Vec2 screenRes = osg::Vec2(width,height);
-    double distance = 0.5; //osg::DisplaySettings::instance()->getScreenDistance();
+    //double distance = 0.5; //osg::DisplaySettings::instance()->getScreenDistance();
    // m_vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
 
 	//set the scene to render
@@ -348,7 +348,7 @@ bool HogBoxViewer::CreateAppWindow()
 		//attach the graphics context to the viewers camera
 		m_viewer->getCamera()->setGraphicsContext(m_graphicsContext.get());
 		m_viewer->getCamera()->setViewport(0,0,m_winSize.x(),m_winSize.y());
-		//m_viewer->getCamera()->setClearMask(GL_DEPTH_BUFFER_BIT);
+		m_viewer->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		m_viewer->getCamera()->setClearColor(m_clearColor);
 		
 		//also bind our buffer image if rendering offscreen
@@ -678,12 +678,12 @@ const bool& HogBoxViewer::isFullScreen()const
 void HogBoxViewer::ClipWinToScreen(int screenID)
 {
 
-	float boarder = 20;
-	float xMax = m_winCorner.x() + m_winSize.x();
-	float xMin = m_winCorner.x();
+	//float boarder = 20;
+	//float xMax = m_winCorner.x() + m_winSize.x();
+	//float xMin = m_winCorner.x();
 	//if(xMin
 
-	float yMax = m_winCorner.y() + m_winSize.y();
+	//float yMax = m_winCorner.y() + m_winSize.y();
 	float yMin = m_winCorner.y();
 	printf("Win corner y %f\n", m_winCorner.y());
 	//if the win is off top of screen and we have a boarder

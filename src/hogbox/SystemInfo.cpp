@@ -1,5 +1,8 @@
 #include <hogbox/SystemInfo.h>
 
+#include <osgDB/XmlParser>
+#include <osgDB/FileUtils>
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -98,7 +101,7 @@ int SystemInfo::Init(bool printReport)
 	
 	switch (_gatherLevel) {
 		case CONFIG:
-			SetSystemInfoFromConfig("SystemInfo.xml");
+			SetSystemInfoFromConfig("./Data/systemInfo.xml");
 			break;
 		case FULL:
 			//create graphics context using the maximum value for each trait (i.e. samples, depth buffer bits etc)
@@ -124,6 +127,128 @@ int SystemInfo::Init(bool printReport)
 //Load system info from an xml config file, returns true if used
 bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
 {
+    //open our config and find the system info node
+	std::string layoutFile = osgDB::findDataFile( config );
+	if(layoutFile.empty())
+	{
+		osg::notify(osg::WARN) << "SystemInfo::SetSystemInfoFromConfig ERROR: Could not find systemInfo.xml file. " << std::endl;
+		return false;
+	}
+	
+	//allocate the document node
+	osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
+	osgDB::XmlNode* root = 0;
+	
+	//open the file with xmlinput
+	osgDB::XmlNode::Input input;
+	input.open(layoutFile);
+	input.readAllDataIntoBuffer();
+	
+	//read the file into out document
+	doc->read(input);
+	
+	//iterate over the document nodes and try and find a HogBoxDatabase node to
+	//use as a root
+	for(osgDB::XmlNode::Children::iterator itr = doc->children.begin();
+		itr != doc->children.end() && !root;
+		++itr)
+	{
+		if ((*itr)->name=="SystemInfoConfig") root = (*itr);
+	}
+	
+	if (root == NULL)
+	{
+		osg::notify(osg::WARN) << "SystemInfo::SetSystemInfoFromConfig ERROR: Failed to read xml file '" << layoutFile << "'," << std::endl
+		<< "                                         Layout XML file must contain a <SystemInfoConfig> node." << std::endl;
+		return false;
+	}
+    
+    if(root){
+     
+        for(osgDB::XmlNode::Children::iterator itr = root->children.begin();
+            itr != root->children.end();
+            ++itr)
+        {
+            //get child node pointer
+            osgDB::XmlNode* attNode = itr->get();
+            //check current is valid
+            if(attNode)
+            {
+                //get any attribute matching the nodes name
+                std::string attName = attNode->name;
+                
+                if(attName == "GLVersion"){
+
+                    _glVersionNumber = osg::asciiToFloat(attNode->contents.c_str());
+                    
+                }else if(attName == "GLSLVersion"){
+                    _glslVersionNumber=osg::asciiToFloat(attNode->contents.c_str());
+                    
+                }else if(attName == "QuadBuffered"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _quadBufferedStereoSupported=readValue;
+                    
+                }else if(attName == "MultiSampling"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _multiSamplingSupported=readValue;
+                    
+                }else if(attName == "MaxMultiSamples"){
+                    int readValue = atoi(attNode->contents.c_str());
+                    _maxMultiSamples=readValue;
+                    
+                }else if(attName == "StencilBuffered"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _bStencilBufferedSupported=readValue;
+                    
+                }else if(attName == "GLSLSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _glslLangSupported=readValue;
+                    
+                }else if(attName == "ShaderObjectsSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _shaderObjectSupported=readValue;
+                    
+                }else if(attName == "Shader4Supported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _gpuShader4Supported=readValue;
+                    
+                }else if(attName == "VertexShadersSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _vertexShadersSupported=readValue;
+                    
+                }else if(attName == "FragmentShadersSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _fragmentShadersSupported=readValue;
+                    
+                }else if(attName == "GeometryShadersSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _geometryShadersSupported=readValue;
+                    
+                }else if(attName == "NPOTSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _supportsNPOTTexture=readValue;
+                    
+                }else if(attName == "MaxTexture2DSize"){
+                    int readValue = atoi(attNode->contents.c_str());
+                    _maxTex2DSize=readValue;
+                    
+                }else if(attName == "TextureRectanglesSupported"){
+                    int readValue = atoi(attNode->contents.c_str());
+                    _texRectangleSupported=readValue;
+                    
+                }else if(attName == "MaxTextureUnits"){
+                    int readValue = atoi(attNode->contents.c_str());
+                    _maxTextureUnits=_totalTextureUnits=readValue;
+                    
+                }else if(attName == "FrameBufferObjectsSupported"){
+                    bool readValue = atoi(attNode->contents.c_str()) != 0;
+                    _frameBufferObjectSupported=readValue;
+                    
+                }
+            }
+        }
+    
+    }
 	return false;
 }
 

@@ -23,6 +23,8 @@ HudInputHandler::~HudInputHandler()
 //
 bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAdapter&)
 {
+    bool applyEvent = false;
+    
 	//handle the event type
     switch(ea.getEventType())
     {
@@ -36,6 +38,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			m_inputState->PressHeldKey(ea.getKey()); 
 
 			m_inputState->SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
         }
 
@@ -46,6 +49,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			m_inputState->ReleaseHeldKey(ea.getKey());
 			
 			m_inputState->SetEvent(ON_KEY_UP, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
 		}
 
@@ -55,6 +59,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,true); //hover check
 			
 			m_inputState->SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
 		}
 
@@ -63,6 +68,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			//pass drag to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
         } 
 
@@ -73,6 +79,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,false);//MDOWN
 			//pass mouse down to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
 		}
 	
@@ -83,6 +90,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,false);//MDOWN
 			//pass mouse up to our infoucs region
 			m_inputState->SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
         } 
 
@@ -93,26 +101,31 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 			pick(ea,false);//MDOWN
 			//pass double click to our infoucs region
 			m_inputState->SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
+            applyEvent = true;
 			break;
         } 
 
         default:break;
     }
 
-	if(p_focusRegion)
-	{
-		p_focusRegion->HandleInputEvent(*m_inputState.get());
-	}else{
-		if(p_clickObject){
-			osg::Referenced* userData = p_clickObject->getUserData();
-			CallbackEvent* callback = dynamic_cast<CallbackEvent*>(userData);
-			if(callback){
-				callback->TriggerEvent(*m_inputState.get());
-			}
-			//clear
-			p_clickObject=NULL;
-		}
-	}
+    if(applyEvent)
+    {        
+        if(p_focusRegion)
+        {
+            p_focusRegion->HandleInputEvent(*m_inputState.get());
+            
+        }else{
+            if(p_clickObject){
+                osg::Referenced* userData = p_clickObject->getUserData();
+                CallbackEvent* callback = dynamic_cast<CallbackEvent*>(userData);
+                if(callback){
+                    callback->TriggerEvent(*m_inputState.get());
+                }
+                //clear
+                p_clickObject=NULL;
+            }
+        }
+    }
 	return false;
 }
 
@@ -168,7 +181,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 	//picker hit somthing
     if (picker->containsIntersections())
     {
-		int numInterSects = picker->getIntersections().size();
+		//int numInterSects = picker->getIntersections().size();
 		osgUtil::LineSegmentIntersector::Intersection intersection = picker->getFirstIntersection();
 
 		//get first valid node

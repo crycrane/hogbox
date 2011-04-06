@@ -20,7 +20,7 @@ void SplitAni::ReSampleSubAni(int subID, int from, int to)
 	osg::AnimationPath::TimeControlPointMap timeMap = m_originalAni->getTimeControlPointMap();
 
 	//seconds per rame
-	int totalFrames = (int)timeMap.size();
+	//int totalFrames = (int)timeMap.size();
 	double secsPerFrame = (double)1.0f/m_fps;
 
 	//get start end frames as times
@@ -90,7 +90,7 @@ bool AnimationPathControl::Init(osg::Node* aniNode, int fps, std::string config)
 
 	//now create the sub helpers
 	//loop through each callback
-	for(unsigned int i=0; i<(int)m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
 	{
 		//get a pointer to the callbacks original path
 		osg::AnimationPath* originalPath = m_aniCallbacks[i]->getAnimationPath();
@@ -237,7 +237,7 @@ double AnimationPathControl::GetAnimationLength()
 void AnimationPathControl::SplitAnimations(int fpa)
 {
 	int totalFrames = this->GetMaxFrames();
-	double secsPerFrame = (double)1.0f/m_fps;
+	//double secsPerFrame = (double)1.0f/m_fps;
 	
 	//the number of frames we have used in the original animation
 	int offSet=0;

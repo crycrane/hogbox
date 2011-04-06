@@ -796,7 +796,7 @@ void HogBoxMaterial::ComposeShaderFromMaterialState(ShaderDetail detail, Lightin
 	
 	std::string diffuseName, normalName, reflectionName = "";
 	//create our mapping mask
-	int stateMask;
+	int stateMask = 0;
 	bool dif=false;
 	bool norm=false;
 	

@@ -379,7 +379,7 @@ void hogbox::MsgBox(const std::string title, const std::string message, int mode
 }
 
 #ifndef WIN32
-int MsgBoxYesNoOSX(const char* title, const char* message){}
+int MsgBoxYesNoOSX(const char* title, const char* message){return 0;}
 #endif
 
 //

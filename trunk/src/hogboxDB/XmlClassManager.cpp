@@ -95,6 +95,7 @@ hogbox::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID
 	return NULL;//not found
 }
 
+
 //
 //Release the node object if it has already been loaded
 bool XmlClassManager::ReleaseNodeByID(const std::string& uniqueID)
@@ -112,6 +113,7 @@ bool XmlClassManager::ReleaseNodeByID(const std::string& uniqueID)
 	}
 	return false;
 }
+
 
 void XmlClassManager::SupportsClassType(const std::string& className, const std::string& description)
 {

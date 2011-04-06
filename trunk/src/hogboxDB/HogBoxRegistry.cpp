@@ -12,22 +12,6 @@
 
 using namespace hogboxDB;
 
-//BUG@tom Since moving to CMake the Singleton class has been misbehaving. An app seems to
-//use a different instance of the registry then the plugins seem to register too.
-//Changing to the dreaded global instance below has fixed things but I need to try and correct this
-osg::ref_ptr<HogBoxRegistry> s_hogboxRegistryInstance = NULL;
-
-HogBoxRegistry* HogBoxRegistry::Instance(bool erase)
-{
-	if(s_hogboxRegistryInstance==NULL)
-	{s_hogboxRegistryInstance = new HogBoxRegistry();}		
-	if(erase)
-	{
-		s_hogboxRegistryInstance->destruct();
-		s_hogboxRegistryInstance = 0;
-	}
-    return s_hogboxRegistryInstance.get();
-}
 
 //
 //private constructor for singleton
@@ -56,6 +40,7 @@ HogBoxRegistry::HogBoxRegistry(void)
 
 HogBoxRegistry::~HogBoxRegistry(void)
 {
+    OSG_NOTICE << "Deallocating HogBoxRegistry:." << std::endl;
 	m_xmlNodeManagers.clear();
 	m_dlList.clear();
 }

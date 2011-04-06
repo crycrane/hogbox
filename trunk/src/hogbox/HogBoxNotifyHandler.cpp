@@ -1,4 +1,3 @@
-#pragma once
 
 #include <hogbox/HogBoxNotifyHandler.h>
 #include <sstream>

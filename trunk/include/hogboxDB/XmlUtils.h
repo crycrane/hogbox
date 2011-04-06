@@ -1,9 +1,55 @@
 #pragma once
 
 #include <osgDB/XmlParser>
+#include <osgDB/FileUtils>
 #include <osgDB/FileNameUtils>
 
 namespace hogboxDB {
+    
+    //
+    //Helper to open an xml file and then try to find and return the specified node
+    //if the node does not exist or the file doesn't open null is returned.
+    static osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName)
+    {
+        std::string foundFile = osgDB::findDataFile(fileName);
+        if (!foundFile.empty())
+        {
+            osg::notify(osg::WARN) << "hogboxDB: openXmlFileAndReturnNode: ERROR: Could Not Find File '" << fileName << "'." << std::endl;
+            return NULL;
+        }
+        
+        //allocate the document node
+        //osgDB::XmlNode* root = 0;
+        
+        //open the file with xmlinput
+        osgDB::XmlNode::Input input;
+        input.open(foundFile);
+        input.readAllDataIntoBuffer();
+        
+        if(!input){
+            osg::notify(osg::WARN) << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << foundFile << "'." << std::endl;
+            return NULL;
+        }
+        
+        //read the file into out document
+        osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
+        root->read(input);
+        
+        //iterate over the document nodes and try and find a HogBoxDatabase node to
+        //use as a root
+        for(osgDB::XmlNode::Children::iterator itr = root->children.begin();
+            itr != root->children.end() && !root;
+            ++itr)
+        {
+            if ((*itr)->name==rootNodeName){
+                osg::ref_ptr<osgDB::XmlNode> temp=(*itr);
+                return temp;
+            }
+        }
+        
+        return NULL;       
+        
+    }
 
 	//Methods for deserialising Xml node strings into various standard and
 	//osg datatypes, these include bool, int, float, Vec2, Vec3, Vec4. 

@@ -26,7 +26,7 @@ OPTION(OSG_BUILD_PLATFORM_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" 
 IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
   
   #you need to manually set the default sdk version here
-  SET (IPHONE_SDKVER "4.1")
+  SET (IPHONE_SDKVER "4.3")
   #the below is taken from ogre, it states the gcc stuff needs to happen before PROJECT() is called. I've no clue if we even need it
   # Force gcc <= 4.2 on iPhone
   include(CMakeForceCompiler)

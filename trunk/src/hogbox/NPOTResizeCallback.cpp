@@ -63,6 +63,7 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		//if its a texture2D we need to find the power of two size up
 		//and calc a texture matrix to scale coord to crop any boarder
 		osg::Texture2D* texture2D = dynamic_cast<osg::Texture2D*>(texture); 
+        if(!texture2D){return;}
 
 		osg::Image* _image = texture2D->getImage(0);
 		//if no image the we don't want to use this (i.e. we've been passed a render to texture texture)
@@ -97,11 +98,11 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		texture2D->setTextureSize(m_scaledWidth, m_scaledHeight);
 
 		//set to linear to disable mipmap generation
-		texture2D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
-		texture2D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+		texture2D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
+		texture2D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
 		//clamp as we wont be getting a full buffer in most cases so wrap will look odd
-		texture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP);
-		texture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP);
+		texture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+		texture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
 		
 
 		//calc the scaled coords as the original dimensions divided by the new scaled up dimensions

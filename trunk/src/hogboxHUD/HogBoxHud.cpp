@@ -47,8 +47,8 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 	//store our projection size
 	m_screenSize = screenSize;
 
-	m_camera = new osg::CameraNode;
-
+	m_camera = new osg::Camera;
+    m_camera->setCullMask(hogbox::MAIN_CAMERA_CULL);
     // set the projection matrix
     m_camera->setProjectionMatrix(osg::Matrix::ortho2D(0,m_screenSize.x(),0,m_screenSize.y()));
 	
@@ -64,7 +64,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
     m_camera->setClearMask(GL_DEPTH_BUFFER_BIT);
 
     // draw hud after main camera view.
-    m_camera->setRenderOrder(osg::CameraNode::POST_RENDER);
+    m_camera->setRenderOrder(osg::Camera::POST_RENDER);
 
 	//add the main group to which we attach the regions
 	m_regionGroup = new osg::Group();
@@ -151,7 +151,7 @@ void HogBoxHud::SetHudOrientation(HudOrientation ori)
 		m_hudRegion->SetRotation(0.0f);
 		m_hudRegion->SetPosition(osg::Vec2(0,0));
 	}else{
-		m_hudRegion->SetRotation(90.0f);
-		m_hudRegion->SetPosition(osg::Vec2(m_screenSize.x(), 0.0f));
+		m_hudRegion->SetRotation(-90.0f);
+		m_hudRegion->SetPosition(osg::Vec2(0.0f, m_screenSize.y()));
 	}
 }

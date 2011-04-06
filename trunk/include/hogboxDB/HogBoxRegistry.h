@@ -33,8 +33,20 @@ class HOGBOXDB_EXPORT HogBoxRegistry : public osg::Referenced //, public hogbox:
 public:
 
 	//friend hogbox::Singleton<HogBoxRegistry>;
+    
+    struct sEmpty
+    {
+        HogBoxRegistry* getIt()
+        {
+            static osg::ref_ptr<HogBoxRegistry> it = new HogBoxRegistry;
+            return it.get();
+        }
+    };
 
-    static HogBoxRegistry* Instance(bool erase = false);
+    static HogBoxRegistry* Instance(bool erase = false){
+        sEmpty empty;
+        return empty.getIt();
+    }
 
 	typedef std::vector< osg::ref_ptr<osgDB::DynamicLibrary> >		DynamicLibraryList;
 	typedef std::map< std::string, std::string>						ClassTypeAliasMap;

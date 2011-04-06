@@ -5,6 +5,7 @@
 #include <osg/TexMat>
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
+#include <hogbox/SystemInfo.h>
 #include <hogbox/HogBoxUtils.h>
 #include <hogbox/NPOTResizeCallback.h>
 
@@ -53,6 +54,7 @@ HudRegion::HudRegion(bool isProcedural)
 	//by default inherit all parent transforms
 	m_transformInheritMask(INHERIT_ALL_TRANSFORMS),
 	m_visible(true),
+    m_pickable(true),
 	m_depth(0.0f),
 	//animation
 	m_isRotating(false),
@@ -87,7 +89,7 @@ HudRegion::HudRegion(bool isProcedural)
 	m_translate = new osg::MatrixTransform();
 	m_rotate = new osg::MatrixTransform();
 	m_scale = new osg::MatrixTransform();
-	m_region = new osg::Group();
+	m_region = new osg::Geode();
 	m_childMount = new osg::MatrixTransform();
 	
 	//create and attach our default updatecallback
@@ -109,6 +111,10 @@ HudRegion::HudRegion(bool isProcedural)
 	
 	m_stateset = new osg::StateSet(); 
 	m_stateset->setDataVariance(osg::Object::DYNAMIC);
+#ifdef TARGET_OS_IPHONE
+    m_stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::ON);
+#endif
+    
 #ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 	m_stateset->setMode(GL_LIGHTING, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON);
     //stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF);
@@ -128,6 +134,8 @@ HudRegion::HudRegion(bool isProcedural)
 	SetColor(osg::Vec3(1.0f, 1.0f, 1.0f));
 	SetAlpha(1.0f);
 	EnableAlpha(false);
+    
+    ApplyNodeMask();
 
 	//no parent by default
 	m_p_parent=NULL;
@@ -292,7 +300,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseDrag event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE DRAG" << std::endl;
-			m_onMouseDragEvent->TriggerEvent(hudEvent);
+            m_onMouseDragEvent->TriggerEvent(hudEvent);
 			break;
         } 
 			
@@ -310,7 +318,27 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseUp event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE UP" << std::endl;
-			m_onMouseUpEvent->TriggerEvent(hudEvent);
+			//on mouse up check for multi touch and tap count to mimic double click behavior
+            osgGA::GUIEventAdapter* ea = hudEvent.GetInputState();
+            if(!ea){return 0;}
+            
+            if (ea->isMultiTouchEvent()) 
+            {
+                //get touch data
+                osgGA::GUIEventAdapter::TouchData* data = ea->getTouchData();
+                // OSG_FATAL << "MULTITOUCH COUNT: '" << data->getNumTouchPoints() << "'." << std::endl;
+                if(data->getNumTouchPoints() == 1){
+                    //check tap count
+                    if(data->get(0).tapCount == 2){
+                        //change the event type to a double click
+                        hudEvent.SetEventType(ON_DOUBLE_CLICK);
+                        osg::notify(osg::DEBUG_FP) << "		DOUBLE CLICK, FROM MULTI TOUCH" << std::endl;
+                        m_onDoubleClickEvent->TriggerEvent(hudEvent);
+                        break;
+                    }
+                }
+            }
+            m_onMouseUpEvent->TriggerEvent(hudEvent);
 			break;
         } 
 			
@@ -428,52 +456,60 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 	{return true;}
 
 	//try to load the file as an ive file
-	osg::Node* geometry = osgDB::readNodeFile(folderName+"/geom.osg");
-	if(geometry==NULL)
+	//osg::Node* geometry = NULL;
+    //if(folderName != "Quad"){osgDB::readNodeFile(folderName+"/geom.osg");}
+	//if(geometry==NULL)
 	{
 		//create an xy quad of size 1,1 in its place
 		osg::Geometry* geom = osg::createTexturedQuadGeometry(osg::Vec3(0.0f,0.0f,0.0f), 
 															osg::Vec3(1.0f,0.0f,0.0f),
 															osg::Vec3(0.0f, 1.0f, 0.0f));
 		geom->setColorArray(NULL);//don't use color array as we set color via gl material
-		osg::Geode* geode = new osg::Geode();
-		geode->addDrawable(geom);
-		m_region->addChild(geode);
+#ifdef TARGET_OS_IPHONE
+        geom->setUseDisplayList(false);
+        geom->setUseVertexBufferObjects(true);
+#endif
+		
+		m_region->addDrawable(geom);
+		//m_region = geode;
 
-	}else{
+	}//else{
 		//attach the geomtry to the region node
-		m_region->addChild(geometry);
-	}
+		//m_region->addChild(geometry);
+	//}
 
-	//now try to load a base texture
-	std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png");
-	if(baseTextureFile.empty()){baseTextureFile = osgDB::findDataFile( folderName+"/base.jpg");}
-	//if(osgDB::fileExists(baseTextureFile) )
-	{
-		m_baseTexture = hogbox::LoadTexture2D(baseTextureFile);
-		if(m_baseTexture.get())
-		{
-            m_baseTexture->setFilter(osg::Texture::MIN_FILTER,osg::Texture::LINEAR);
-            m_baseTexture->setFilter(osg::Texture::MAG_FILTER,osg::Texture::LINEAR);
-			m_baseTexture->setUseHardwareMipMapGeneration(false);
-			m_baseTexture->setResizeNonPowerOfTwoHint(false);
-			
-			//apply the base as default
-			this->ApplyTexture(m_baseTexture.get());
-		}
-	}
+    if(folderName != "Quad")
+    {
+        //now try to load a base texture
+        std::string baseTextureFile = osgDB::findDataFile( folderName+"/base.png");
+        if(baseTextureFile.empty()){baseTextureFile = osgDB::findDataFile( folderName+"/base.jpg");}
+        //if(osgDB::fileExists(baseTextureFile) )
+        {
+            m_baseTexture = hogbox::LoadTexture2D(baseTextureFile);
+            if(m_baseTexture.get())
+            {
+                m_baseTexture->setFilter(osg::Texture::MIN_FILTER,osg::Texture::NEAREST);
+                m_baseTexture->setFilter(osg::Texture::MAG_FILTER,osg::Texture::NEAREST);
+                m_baseTexture->setUseHardwareMipMapGeneration(false);
+                m_baseTexture->setResizeNonPowerOfTwoHint(false);
+                
+                //apply the base as default
+                this->ApplyTexture(m_baseTexture.get());
+            }
+        }
 
-	//rollover
-	std::string rollOverTextureFile = folderName+"/rollover.png";
-	if(rollOverTextureFile.empty()){rollOverTextureFile = folderName+"/rollover.png";}
-	if(osgDB::fileExists(rollOverTextureFile) )
-	{m_rollOverTexture = hogbox::LoadTexture2D(rollOverTextureFile);}
+        //rollover
+        std::string rollOverTextureFile = folderName+"/rollover.png";
+        if(rollOverTextureFile.empty()){rollOverTextureFile = folderName+"/rollover.png";}
+        if(osgDB::fileExists(rollOverTextureFile) )
+        {m_rollOverTexture = hogbox::LoadTexture2D(rollOverTextureFile);}
 
-	//if in micro memory mode set textures to unref image data
-	if(m_microMemoryMode){
-		if(m_baseTexture.get()){m_baseTexture->setUnRefImageDataAfterApply(true);}
-		if(m_rollOverTexture.get()){m_rollOverTexture->setUnRefImageDataAfterApply(true);}
-	}
+        //if in micro memory mode set textures to unref image data
+        if(m_microMemoryMode){
+            if(m_baseTexture.get()){m_baseTexture->setUnRefImageDataAfterApply(true);}
+            if(m_rollOverTexture.get()){m_rollOverTexture->setUnRefImageDataAfterApply(true);}
+        }
+    }
 
 	//make the region identifiable by the picker
 	//by setting the regions geometry names to the
@@ -494,7 +530,7 @@ bool HudRegion::UnLoadAssests()
 	if(!m_assestLoaded){return true;}
 
 	//remove children of m_region
-	m_region->removeChildren(0,m_region->getNumChildren());
+	m_region = NULL;
 
 	if(m_baseTexture.get()){m_stateset->removeAssociatedTextureModes(0,m_baseTexture.get());}
 	m_baseTexture = NULL;
@@ -630,12 +666,54 @@ void HudRegion::SetVisible(const bool& visible)
 	{
 		//load assests if micoMemory mode
 		if(m_microMemoryMode){this->LoadAssest(m_assetFolder);}
-		m_root->setNodeMask(0xFFFFFFFF);
+        SetPickable(true);
+		//m_root->setNodeMask(0xFFFFFFFF);
 	}else{
 		if(m_microMemoryMode){this->UnLoadAssests();}
-		m_root->setNodeMask(0x0);
+        SetPickable(false);
+		//m_root->setNodeMask(0x0);
 	}
-	m_visible=visible;
+    m_visible=visible;
+    ApplyNodeMask();
+    
+    //loop through all the children
+	for(unsigned int i=0; i<m_p_children.size(); i++)
+	{
+        m_p_children[i]->SetVisible(visible);
+	}
+}
+
+//pickable by hudinput
+const bool& HudRegion::IsPickable() const
+{
+    return m_pickable;
+}
+void HudRegion::SetPickable(const bool& pickable)
+{
+    m_pickable = pickable;
+    ApplyNodeMask();
+    //loop through all the children
+	for(unsigned int i=0; i<m_p_children.size(); i++)
+	{
+        m_p_children[i]->SetPickable(pickable);
+	}
+}
+
+//
+//compute and apply the current node mask for the region geode
+void HudRegion::ApplyNodeMask()
+{
+    unsigned int nodeMask = 0x0;
+    if(m_visible){
+        nodeMask |= hogbox::MAIN_CAMERA_CULL;
+    }
+    if(m_pickable){
+        nodeMask |= hogbox::PICK_MESH;
+    }
+    if(m_region.get())
+    {
+        m_region->setNodeMask(nodeMask);
+    }
 }
 
 //
@@ -676,10 +754,30 @@ void HudRegion::ApplyTexture(osg::Texture* tex)
 	
 	//NOTE@tom, below isn't needed on platforms supporting glu
 	//apply a non power of two rezie callback if required
-	osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, m_stateset.get());
-	//if the texture casts as a rect apply the tex rect scaling to texture coords
-	osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
-	if(tex2D){if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}}
+ 
+    if(!hogbox::SystemInfo::Instance()->npotTextureSupported())
+	{
+        osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, m_stateset.get());
+        //if the texture casts as a rect apply the tex rect scaling to texture coords
+        osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
+        if(tex2D){
+            if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}
+        }
+    }else{
+        
+        //clamp to edge required for IPhone NPOT support
+        tex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
+        tex->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
+        
+        //if 2d set filtering to nearest
+        osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
+        if(tex2D){
+            //set to linear to disable mipmap generation
+            tex2D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
+            tex2D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
+        }
+        
+    }
 }
 
 void HudRegion::ApplyBaseTexture()

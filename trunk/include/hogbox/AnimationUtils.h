@@ -163,8 +163,14 @@ namespace hogbox
 		virtual void onFoundManagerBase(osgAnimation::AnimationManagerBase* manager, osg::Node* sourceNode)
 		{
 			if(manager){
-				_hogboxManager = new hogbox::HogBoxAnimationManager(*manager);
-				if(sourceNode){sourceNode->setUpdateCallback(_hogboxManager.get());}
+                //check it's not already a hogbox animation manager
+                hogbox::HogBoxAnimationManager* asHogBoxManger = dynamic_cast<hogbox::HogBoxAnimationManager*>(manager);
+                if(asHogBoxManger){
+                    _hogboxManager=asHogBoxManger;
+                }else{
+                    _hogboxManager = new hogbox::HogBoxAnimationManager(*manager);
+                    if(sourceNode){sourceNode->setUpdateCallback(_hogboxManager.get());}         
+                }
 			}
 			FindAnimationManagerBaseVisitor::onFoundManagerBase(_hogboxManager.get(), sourceNode);
 		}

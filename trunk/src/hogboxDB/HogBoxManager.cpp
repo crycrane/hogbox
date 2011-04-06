@@ -137,6 +137,29 @@ hogbox::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 }
 
 //
+//Get node if it has already been loaded, won't load the node
+//
+osg::Object* HogBoxManager::GetNodeByID(const std::string& uniqueID)
+{
+	//find an xml node with the unique id
+	//see if we can find a node with the uniqueID requested
+	osgDB::XmlNode* uniqueIDNode = FindNodeByUniqueIDProperty(uniqueID);
+	if(!uniqueIDNode){return false;}
+    
+	//the xml node name represents its classType
+	std::string requestedClass = uniqueIDNode->name;
+    
+	//find the manager for handling that type of class
+	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Instance()->GetXmlClassManagerForClassType(requestedClass);
+	if(readManager)
+	{
+        hogbox::ObjectPtr obj = readManager->GetNodeObjectByID(uniqueID);
+        return obj.get();
+    }
+    return NULL;
+}
+
+//
 //Release a node from the database by name
 //
 bool HogBoxManager::ReleaseNodeByID(const std::string& uniqueID)

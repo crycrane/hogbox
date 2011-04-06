@@ -1,7 +1,7 @@
 #pragma once
 
 //#include <hogbox/Singleton.h>
-#include <osg/CameraNode>
+#include <osg/Camera>
 
 #include <hogboxHUD/HudRegion.h>
 
@@ -58,7 +58,7 @@ protected:
 protected:
 
 	//hud is rendered using a post render ortho camera
-	osg::ref_ptr<osg::CameraNode> m_camera;
+	osg::ref_ptr<osg::Camera> m_camera;
 	//region group attached to camera and has all regions attached to it
 	osg::ref_ptr<osg::Group> m_regionGroup;
 

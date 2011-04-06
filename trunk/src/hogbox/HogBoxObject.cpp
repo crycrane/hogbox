@@ -256,6 +256,11 @@ bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 	//apply the default node masks to our geom
 	ApplyDefaultNodeMaskVisitor applyNodeMasks;
 	node->accept(applyNodeMasks);
+    
+#ifdef TARGET_OS_IPHONE
+    ApplyVBOVisitor applyVBO;
+    node->accept(applyVBO);
+#endif
 
 	//pass all the meshmappings over the the new node
 	//applying the material and other parameters to any geodes

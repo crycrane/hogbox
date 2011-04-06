@@ -81,6 +81,10 @@ public:
 		}
 		return NULL;
 	}
+    
+    //
+    //Get node if it has already been loaded, won't load the node
+    osg::Object* GetNodeByID(const std::string& uniqueID);
 
 	//
 	//Release a node from the database by name

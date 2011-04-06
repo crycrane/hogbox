@@ -24,7 +24,7 @@ TextRegion::TextRegion(void) : HudRegion(),
 	m_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
 
 	m_text->setColor(m_textColor);
-	this->SetFontType(m_fontName);
+	//this->SetFontType(m_fontName);
 	this->SetFontHeight(m_fontHeight);
 	this->SetAlignment(m_alignmentMode);
 	this->UseDropShadow(m_usingDropShadow);
@@ -156,7 +156,6 @@ void TextRegion::SetText(const std::string& str)
 {
 	m_string = str;
 	m_text->setText(str);
-	OSG_FATAL << "Set Text to '" << str << "'." << std::endl;
 	osg::ref_ptr<HudInputEvent> dummyEvent;
 	m_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
 }

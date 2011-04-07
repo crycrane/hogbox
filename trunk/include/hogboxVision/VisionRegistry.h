@@ -30,8 +30,22 @@ public:
 
 	//friend hogbox::Singleton<VisionRegistry>;
 
-	static VisionRegistry* Instance(bool erase = false);
+	//static VisionRegistry* Instance(bool erase = false);
 
+    struct vrEmpty
+    {
+        VisionRegistry* getIt()
+        {
+            static osg::ref_ptr<VisionRegistry> it = new VisionRegistry;
+            return it.get();
+        }
+    };
+    
+    static VisionRegistry* Instance(bool erase = false){
+        vrEmpty empty;
+        return empty.getIt();
+    }    
+    
 	typedef std::vector< osg::ref_ptr<osgDB::DynamicLibrary> >		DynamicLibraryList;
 	typedef std::map< std::string, std::string>						ClassTypeAliasMap;
 

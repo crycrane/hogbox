@@ -48,25 +48,34 @@ FSVideoLayer::~FSVideoLayer()
 //
 // Build the gemo and contruct the orth projectipon matrices
 //
-osg::ref_ptr<osg::Projection> FSVideoLayer::buildLayer() 
+osg::ref_ptr<osg::CameraNode> FSVideoLayer::buildLayer() 
 {
 
 	float hWidth = m_width * 0.5f;
 	float hHeight = m_height * 0.5f;
 	
-	m_layerProjectionMatrix = new osg::Projection(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
-
-	m_layerModelViewMatrix = new osg::MatrixTransform();
-	m_layerModelViewMatrix->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-	m_layerProjectionMatrix->addChild(m_layerModelViewMatrix.get());
-
+	m_camera = new osg::CameraNode;
+	
+    // set the projection matrix
+    m_camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+	
+    // set the view matrix    
+    m_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    m_camera->setViewMatrix(osg::Matrix::identity());
+	
+    // only clear the depth buffer as this is post render
+    m_camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+	
+    // draw hud after main camera view.
+    m_camera->setRenderOrder(osg::CameraNode::PRE_RENDER);
+	
 	osg::Group* layerGroup = new osg::Group();
-	m_layerModelViewMatrix->addChild(layerGroup);
+	m_camera->addChild(layerGroup);
 
 	layerGroup->getOrCreateStateSet()->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 1.0f, 1.0f));
 	layerGroup->addChild(buildLayerGeometry().get());
 
-	return m_layerProjectionMatrix;
+	return m_camera;
 }
 
 //
@@ -134,8 +143,9 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 void FSVideoLayer::ApplyTransforms()
 {
 	float rads = osg::DegreesToRadians(m_rotDegrees);	
-	m_layerModelViewMatrix->setMatrix(osg::Matrix::rotate(rads, 0,0,1)); 
-	
+	//m_layerModelViewMatrix->setMatrix(osg::Matrix::rotate(rads, 0,0,1)); 
+	m_camera->setViewMatrix(osg::Matrix::rotate(rads, 0,0,1));
+    
 	//determin if we have changed the horizontal and vertical (left or right orientation)
 	bool isRotated = false;
 	if(m_orientation == 1 || m_orientation == 3)
@@ -154,7 +164,8 @@ void FSVideoLayer::ApplyTransforms()
 	hHeight = m_vFlip ? -hHeight : hHeight;
 	hWidth = m_hFlip ? -hWidth : hWidth;
 	
-	m_layerProjectionMatrix->setMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+     m_camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+	//m_layerProjectionMatrix->setMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
 	
 }
 

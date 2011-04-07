@@ -64,7 +64,7 @@ protected:
 	virtual ~FSVideoLayer();
 	
 	//build the actual drawable object and attach to the rendering system			
-	osg::ref_ptr<osg::Projection> buildLayer();
+	osg::ref_ptr<osg::CameraNode> buildLayer();
 	//build the actual geometry of the object
 	osg::ref_ptr<osg::Geode> buildLayerGeometry();
 	
@@ -87,8 +87,9 @@ protected:
 	osg::ref_ptr<osg::Geometry>			m_geometry;
 
 	//draw matrices for ortho projection
-	osg::ref_ptr<osg::MatrixTransform>	m_layerModelViewMatrix;
-	osg::ref_ptr<osg::Projection>		m_layerProjectionMatrix;
+	osg::ref_ptr<osg::CameraNode> m_camera;
+	//osg::ref_ptr<osg::MatrixTransform>	m_layerModelViewMatrix;
+	//osg::ref_ptr<osg::Projection>		m_layerProjectionMatrix;
 
 };
 

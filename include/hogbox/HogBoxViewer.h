@@ -11,7 +11,7 @@
 	#include <TargetConditionals.h>
 	#if (TARGET_OS_IPHONE)
 		#include <osgViewer/api/IOS/GraphicsWindowIOS> 
-		#define HWND UIWindow*
+		#define HWND UIView*
 		//USE_GRAPHICSWINDOW()
 	#else
 		#include <osgViewer/api/Carbon/GraphicsWindowCarbon> 
@@ -80,6 +80,15 @@ class HOGBOX_EXPORT HogBoxViewer : public osg::Object
 {
 
 public:
+    
+    enum DeviceOrientation{
+        PORTRAIT_ORIENTATION = 1<<0,
+        PORTRAIT_UPSIDEDOWN_ORIENTATION  = 1<<1,
+        LANDSCAPE_LEFT_ORIENTATION  = 1<<2,
+        LANDSCAPE_RIGHT_ORIENTATION  = 1<<3,
+        ALL_ORIENTATIONS = PORTRAIT_ORIENTATION  | PORTRAIT_UPSIDEDOWN_ORIENTATION  | LANDSCAPE_LEFT_ORIENTATION  | LANDSCAPE_RIGHT_ORIENTATION
+    };
+    typedef unsigned int DeviceOrientationFlags;
 
 	HogBoxViewer(HWND hwnd = NULL);
 
@@ -112,6 +121,8 @@ public:
 
 	bool isRequestingReset();
 	osg::ref_ptr<osgViewer::Viewer> GetViewer();
+    osg::ref_ptr<osg::GraphicsContext> GetContext();
+    
 
 	//set the scene node, resteting the viewer if requested
 	void SetSceneNode(osg::Node* scene, bool resetWindow = false);
@@ -224,8 +235,8 @@ public:
 	
 //IOS Specific
 	
-	void SetAutoRotateView(const bool& autoRotate);
-	const bool& GetAutoRotateView()const;
+	void SetDeviceOrientationFlags(const DeviceOrientationFlags& flags);
+	const DeviceOrientationFlags& GetDeviceOrientationFlags()const;
 
 
 protected:
@@ -348,7 +359,7 @@ protected:
 
 //IOS Specific
 	
-	bool _autoRotateView;
+	DeviceOrientationFlags _deviceOrientationFlags;
 
 };
 

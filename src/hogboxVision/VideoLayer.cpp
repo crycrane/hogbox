@@ -70,6 +70,8 @@ osg::ref_ptr<osg::CameraNode> FSVideoLayer::buildLayer()
     m_camera->setRenderOrder(osg::CameraNode::PRE_RENDER);
 	
 	osg::Group* layerGroup = new osg::Group();
+    //set the default draw mask
+    layerGroup->setNodeMask(hogbox::MAIN_CAMERA_CULL);
 	m_camera->addChild(layerGroup);
 
 	layerGroup->getOrCreateStateSet()->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 1.0f, 1.0f));

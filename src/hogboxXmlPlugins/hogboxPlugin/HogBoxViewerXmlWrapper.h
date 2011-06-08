@@ -96,9 +96,10 @@ public:
 																	&hogbox::HogBoxViewer::GetStereoMode,
 																	&hogbox::HogBoxViewer::SetStereoMode);
 		
-		m_xmlAttributes["AutoRotateView"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,bool>(hogboxViewer,
-																	&hogbox::HogBoxViewer::GetAutoRotateView,
-																	&hogbox::HogBoxViewer::SetAutoRotateView);
+		//m_xmlAttributes["AutoRotateView"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxViewer,bool>(hogboxViewer,
+		//															&hogbox::HogBoxViewer::GetAutoRotateView,
+		//															&hogbox::HogBoxViewer::SetAutoRotateView);
+        m_xmlAttributes["DeviceOrientations"] = new hogboxDB::TypedXmlAttributeList<std::vector<std::string>, std::string>(&_orientationStrings);
 
 		//store the hogboxobject as the wrapped object
 		p_wrappedObject = hogboxViewer;
@@ -112,6 +113,9 @@ public:
 		hogbox::HogBoxViewer* viewer = dynamic_cast<hogbox::HogBoxViewer*>(p_wrappedObject.get());
 		if(viewer)
 		{
+            //get the orientation flags from our string list
+            hogbox::HogBoxViewer::DeviceOrientationFlags flags = GetFlagsFromStringList(_orientationStrings);
+            viewer->SetDeviceOrientationFlags(flags);
 			return viewer->CreateAppWindow();
 		}
 
@@ -122,6 +126,34 @@ public:
 protected:
 
 	virtual ~HogBoxViewerXmlWrapper(void){}
+    
+    hogbox::HogBoxViewer::DeviceOrientationFlags GetFlagsFromStringList(std::vector<std::string> list)
+    {  
+        if(list.size() == 0){
+            return hogbox::HogBoxViewer::ALL_ORIENTATIONS;
+        }
+        hogbox::HogBoxViewer::DeviceOrientationFlags flags = 0;
+        for(unsigned int i=0; i<list.size(); i++)
+        {
+            if(list[i] == "PORTRAIT"){
+                flags |= hogbox::HogBoxViewer::PORTRAIT_ORIENTATION;
+            }else if(list[i] == "PORTRAIT_UPSIDEDOWN"){
+                flags |= hogbox::HogBoxViewer::PORTRAIT_UPSIDEDOWN_ORIENTATION;
+            }else if(list[i] == "LANDSCAPE_LEFT"){
+                flags |= hogbox::HogBoxViewer::LANDSCAPE_LEFT_ORIENTATION;
+            }else if(list[i] == "LANDSCAPE_RIGHT"){
+                flags |= hogbox::HogBoxViewer::LANDSCAPE_RIGHT_ORIENTATION;
+            }else if(list[i] == "ALL"){
+                flags |= hogbox::HogBoxViewer::ALL_ORIENTATIONS;
+            }
+        }
+        return flags;
+    }
+    
+protected:
+    
+    //local list of strings representing device orientation flags
+    std::vector<std::string> _orientationStrings;
 
 };
 

@@ -66,7 +66,7 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 //assume the worst for support
 	m_glSystemInfo(NULL),
 //IOS specific
-	_autoRotateView(false)
+	_deviceOrientationFlags(LANDSCAPE_RIGHT_ORIENTATION)
 {
 	m_glSystemInfo = SystemInfo::Instance();
 }
@@ -238,7 +238,7 @@ bool HogBoxViewer::CreateAppWindow()
 			windata = new osgViewer::GraphicsWindowWin32::WindowData(m_hwnd);
 #else
 			#if (TARGET_OS_IPHONE)
-				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIWindow*)m_hwnd, _autoRotateView);
+				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)m_hwnd, _deviceOrientationFlags);
 			#else
 				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)m_hwnd);
 			#endif
@@ -249,7 +249,7 @@ bool HogBoxViewer::CreateAppWindow()
 		}else{
 			//IOS pass windata anyhow so we can set auto rotate
 			#if (TARGET_OS_IPHONE)
-				osg::ref_ptr<osg::Referenced> windata = new osgViewer::GraphicsWindowIOS::WindowData(NULL, _autoRotateView);
+				osg::ref_ptr<osg::Referenced> windata = new osgViewer::GraphicsWindowIOS::WindowData(NULL, _deviceOrientationFlags);
 				graphicsTraits->inheritedWindowData = windata;
 			#endif			
 		}
@@ -445,10 +445,14 @@ bool HogBoxViewer::isRequestingReset()
 //
 osg::ref_ptr<osgViewer::Viewer> HogBoxViewer::GetViewer()
 {
-	if(m_viewer.valid())
-	{return m_viewer.get();}
+    return m_viewer;
+}
 
-	return NULL;
+//
+//Return the context created by CreateAppWindow
+osg::ref_ptr<osg::GraphicsContext> HogBoxViewer::GetContext()
+{
+    return m_graphicsContext;
 }
 
 //
@@ -1025,12 +1029,12 @@ const double& HogBoxViewer::GetCameraFOV()const
 	return m_vfov;
 }
 
-void HogBoxViewer::SetAutoRotateView(const bool& autoRotate)
+void HogBoxViewer::SetDeviceOrientationFlags(const DeviceOrientationFlags& flags)
 {
-	_autoRotateView = autoRotate;
+	_deviceOrientationFlags = flags;
 }
 
-const bool& HogBoxViewer::GetAutoRotateView()const
+const HogBoxViewer::DeviceOrientationFlags& HogBoxViewer::GetDeviceOrientationFlags()const
 {
-	return _autoRotateView;
+	return _deviceOrientationFlags;
 }

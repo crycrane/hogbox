@@ -65,15 +65,15 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			//read bool value
 			input >> result;
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: moving to next word in string stream = '" << input.str() << "'" << std::endl
-										 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
-			return false;
-		}
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: moving to next word in string stream = '" << input.str() << "'" << std::endl
+		//								 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//	return false;
+		//}
 		return true;
 	}
 
@@ -85,16 +85,16 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			//read bool value
 			input >> result;
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: Passing string, from input string = '" << input.str() << "'" << std::endl
-										 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: Passing string, from input string = '" << input.str() << "'" << std::endl
+		//								 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
 
-			return false;
-		}
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, bool& result, bool errorOnEndStream = false)
@@ -102,16 +102,16 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			//read bool value
 			input >> result;
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: Passing bool, from input string = '" << input.str() << "'" << std::endl
-										 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "getNextStringStreamWord: EXCEPTION: Passing bool, from input string = '" << input.str() << "'" << std::endl
+		//								 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
 
-			return false;
-		}
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, int& result, bool errorOnEndStream = false)
@@ -119,16 +119,16 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask = std::stringstream::eofbit | std::stringstream::failbit | std::stringstream::badbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			//read int value
 			input >> result;
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing int, from input string = '" << input.str() << "'" << std::endl
-										 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing int, from input string = '" << input.str() << "'" << std::endl
+		//								 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
 
-			return false;
-		}
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, unsigned int& result, bool errorOnEndStream = false)
@@ -136,15 +136,15 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask = std::stringstream::eofbit | std::stringstream::failbit | std::stringstream::badbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			//read int value
 			input >> result;
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing unsigned int, from input string = '" << input.str() << "'" << std::endl
-										 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
-			return false;
-		}
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing unsigned int, from input string = '" << input.str() << "'" << std::endl
+		//								 << "The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, float& result, bool errorOnEndStream = false)
@@ -152,18 +152,18 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
 		input.exceptions ( exceptionMask );
-		try {
-			std::string word;
+		//try {
+            std::string word;
 			//read word string
-			input >> word;
+            input >> word;
 			//convert to float with osg helper
 			result = osg::asciiToFloat(word.c_str());
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing float from input string input = '" << input.str() << "'."  << std::endl
-										 << "                               The following exception message was thrown '" << e.what() << "'." << std::endl;
-			return false;
-		}
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing float from input string input = '" << input.str() << "'."  << std::endl
+		//								 << "                               The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, double& result, bool errorOnEndStream = false)
@@ -171,18 +171,18 @@ namespace hogboxDB {
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
 		input.exceptions ( exceptionMask );
-		try {
+		//try {
 			std::string word;
 			//read word string
 			input >> word;
 			//convert to float with osg helper
 			result = osg::asciiToDouble(word.c_str());
-		}
-		catch (std::stringstream::failure e) {
-			osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing double from input string input = '" << input.str() << "'."  << std::endl
-										 << "                               The following exception message was thrown '" << e.what() << "'." << std::endl;
-			return false;
-		}
+		//}
+		//catch (std::stringstream::failure e) {
+		//	osg::notify(osg::DEBUG_INFO) << "stringStreamToType: EXCEPTION: Passing double from input string input = '" << input.str() << "'."  << std::endl
+		//								 << "                               The following exception message was thrown '" << e.what() << "'." << std::endl;
+		//	return false;
+		//}
 		return true;
 	}
 	static const bool stringStreamToType(std::stringstream& input, osg::Vec2& result, bool errorOnEndStream = false)

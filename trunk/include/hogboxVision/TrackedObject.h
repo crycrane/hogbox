@@ -61,7 +61,7 @@ public:
 	//base update, called by a tracker
 	//isDetected, indicates if the object was detected by the tracker calling update
 	//pose, the pose matrix returned by the tracker if any
-	bool UpdateMarker(bool isDetected, osg::Matrix pose);
+	virtual bool UpdateMarker(bool isDetected, osg::Matrix pose);
 
 protected:
 

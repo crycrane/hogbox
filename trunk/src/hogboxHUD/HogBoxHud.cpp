@@ -143,6 +143,15 @@ bool HogBoxHud::GetHudVisibility()
 }
 
 //
+//Set hud projection size
+void HogBoxHud::SetHudProjectionSize(osg::Vec2 size)
+{
+    m_screenSize = size;
+    // set the projection matrix
+    m_camera->setProjectionMatrix(osg::Matrix::ortho2D(0,size.x(),0,size.y()));
+}
+
+//
 //Rotate and translate the root hud region to run vertically up screen
 //
 void HogBoxHud::SetHudOrientation(HudOrientation ori)

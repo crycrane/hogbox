@@ -5,18 +5,19 @@
 
 using namespace hogboxHUD;
 
-TextRegion::TextRegion(void) : HudRegion(),
-								 m_text(NULL),
-								 m_string(""),
-								m_fontHeight(18.0f),
-								m_fontName("fonts/arial.ttf"),
-								m_boarderPadding(5.0f),
-								m_alignmentMode(CENTER_ALIGN),
-								m_textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
-								m_usingDropShadow(false),
-								m_dropShadowColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
-								//callback events
-								m_onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
+TextRegion::TextRegion(void) 
+    : HudRegion(),
+    m_text(NULL),
+    m_string(""),
+    m_fontHeight(18.0f),
+    m_fontName("Fonts/arial.ttf"),
+    m_boarderPadding(5.0f),
+    m_alignmentMode(CENTER_ALIGN),
+    m_textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
+    m_usingDropShadow(false),
+    m_dropShadowColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
+    //callback events
+    m_onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
 
 {
 	//create the text label to add to the button
@@ -24,7 +25,7 @@ TextRegion::TextRegion(void) : HudRegion(),
 	m_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
 
 	m_text->setColor(m_textColor);
-	//this->SetFontType(m_fontName);
+	this->SetFontType(m_fontName);
 	this->SetFontHeight(m_fontHeight);
 	this->SetAlignment(m_alignmentMode);
 	this->UseDropShadow(m_usingDropShadow);
@@ -175,7 +176,7 @@ const std::string& TextRegion::GetText()const
 void TextRegion::SetFontHeight(const float& fontHeight)
 {
 	m_fontHeight = fontHeight;
-	m_text->setCharacterSize(fontHeight, 1.0f);
+	m_text->setCharacterSize(m_fontHeight, 1.0f);
 }
 
 //

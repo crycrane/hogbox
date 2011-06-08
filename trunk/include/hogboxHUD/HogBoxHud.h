@@ -41,6 +41,11 @@ public:
 	void SetHudVisibility(bool vis);
 	bool GetHudVisibility(); 
 	
+    //
+    //Set hud projection size
+    void SetHudProjectionSize(osg::Vec2 size);
+    
+    //
 	//Rotate and translate the root hud region to run vertically up screen
 	void SetHudOrientation(HudOrientation ori);
 

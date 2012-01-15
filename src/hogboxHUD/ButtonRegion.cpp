@@ -6,11 +6,12 @@
 
 using namespace hogboxHUD;
 
-ButtonRegion::ButtonRegion(void) : TextRegion(),
-									m_buttonDown(false),
-									m_mouseDownTexture(NULL),
-									//callback events
-									m_onButtonClickedEvent(new CallbackEvent(this, "OnButtonClicked"))
+ButtonRegion::ButtonRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
+    : TextRegion(plane, origin, isProcedural),
+    _buttonDown(false),
+    _mouseDownTexture(NULL),
+    //callback events
+    _onButtonClickedEvent(new CallbackEvent(this, "OnButtonClicked"))
 {
 
 	//register for the base mouse down and mouse up events to detect ButtonClicked
@@ -34,8 +35,9 @@ ButtonRegion::ButtonRegion(const ButtonRegion& region,const osg::CopyOp& copyop)
 
 ButtonRegion::~ButtonRegion(void)
 {
-	OSG_NOTICE << "    Deallocating ButtonRegion: Name '" << this->getName() << "'." << std::endl;
-	m_mouseDownTexture = NULL;
+	//OSG_NOTICE << "    Deallocating ButtonRegion: Name '" << this->getName() << "'." << std::endl;
+	_onButtonClickedEvent = NULL;
+    _mouseDownTexture = NULL;
 }
 
 //
@@ -59,36 +61,36 @@ int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 //
 void ButtonRegion::OnMouseDown(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
-	m_buttonDown = true;
+	_buttonDown = true;
 }
 void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//if the button is down then it's a Click event
-	if(m_buttonDown){
+	if(_buttonDown){
 		//trigger the onButtonClicked Event 
-		m_onButtonClickedEvent->TriggerEvent(inputEvent);
+		_onButtonClickedEvent->TriggerEvent(inputEvent);
 	}
 	
 	//reset buttonDown state
-	m_buttonDown = false;
+	_buttonDown = false;
 }
 
 //detect for rollover and to disable a mouseDown when focus is lost
 void ButtonRegion::OnMouseEnter(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//switch to rollover texture
-	if(m_rollOverTexture.valid())
-	{this->ApplyTexture(m_rollOverTexture.get());}
+	if(_rollOverTexture.valid())
+	{this->ApplyTexture(_rollOverTexture.get());}
 }
 
 void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	//switch back to base texture
-	if(m_baseTexture.valid())
-	{this->ApplyTexture(m_baseTexture.get());}
+	if(_baseTexture.valid())
+	{this->ApplyTexture(_baseTexture.get());}
 	
 	//reset buttonDown state
-	m_buttonDown = false;
+	_buttonDown = false;
 }
 
 //
@@ -103,7 +105,7 @@ bool ButtonRegion::LoadAssest(const std::string& folderName)
 	//try to load the mouseDown texture
 	std::string mouseDownTextureFile = folderName+"/mouseDown.png";
 	if(osgDB::fileExists(mouseDownTextureFile) )
-	{m_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
+	{_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
 
 	return ret;
 }
@@ -112,7 +114,7 @@ bool ButtonRegion::LoadAssest(const std::string& folderName)
 //Funcs to register event callbacks
 void ButtonRegion::AddOnButtonClickedCallbackReceiver(HudEventCallback* callback)
 {
-	m_onButtonClickedEvent->AddCallbackReceiver(callback);
+	_onButtonClickedEvent->AddCallbackReceiver(callback);
 }
 
 

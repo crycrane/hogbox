@@ -1,38 +1,49 @@
+/* Written by Thomas Hogarth, (C) 2011
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+ */
+
 #pragma once
 
 #include <hogboxVision/Export.h>
 
 #include <osg/Geode>
-#include <osg/Node>
-#include <osg/Group>
-#include <osg/MatrixTransform>
 #include <osg/Geometry>
-#include <osg/Drawable>
-#include <osg/BoundingBox>
-#include <osg/Projection>
-#include <osg/Image>
+#include <osg/Camera>
 #include <osg/Texture2D>
 #include <osg/TextureRectangle>
 
-#include <hogbox/HogBoxMaterial.h>
-#include <hogboxVision/VideoStream.h>
 
 namespace hogboxVision {
 
 //
-//Drawable video layer, renders to the entire viewport
-//can be rotated and flipped to avoid image flipping
+//Draws an ortho2d quad over the entire screen
 //
-class HOGBOXVIS_EXPORT FSVideoLayer : public osg::Group
+class HOGBOXVIS_EXPORT Ortho2DLayer : public osg::Group
 {
-public:        
+public:    
+    
+    //layer has render mode of prerender, post render or nested
+    enum RenderStage{
+        ORTHO_BACKGROUND,
+        ORTHO_NESTED,
+        ORTHO_OVERLAY
+    };
+    
 	//contruct passing the video stream to render on the layer
-	FSVideoLayer(int width = 640, int height = 480);
+	Ortho2DLayer(int width = 640, int height = 480, RenderStage stage = ORTHO_BACKGROUND);
 	
 	//osg inherits
-	FSVideoLayer(const FSVideoLayer&,const osg::CopyOp& = osg::CopyOp::SHALLOW_COPY);
-	META_Node(hogboxVision,FSVideoLayer)
-
+	Ortho2DLayer(const Ortho2DLayer&,const osg::CopyOp& = osg::CopyOp::SHALLOW_COPY);
+	META_Node(hogboxVision,Ortho2DLayer)
 
 	//set the model view matrix z rotation
 	void SetRotation(const float& rotDegrees);
@@ -43,28 +54,29 @@ public:
 	void SetVerticalFlip(const bool& bVFlip);
 	void SetHorizontalFlip(const bool& bHFlip);	
 	
-	//get the screen space width
-	inline float getWidth() const {
-		return m_width;
+	//get the layer width
+	inline float GetWidth() const {
+		return _width;
 	}	
-	//get the screen space height
-	inline float getHeight() const {
-		return m_height;
+	//get the layer height
+	inline float GetHeight() const {
+		return _height;
 	}
 	
 
-	//for osg drawpixels update
-	void setViewPortSize(osg::Vec2 viewPortSize);
+    //
+    //helper to apply a texture to a particular channel of the geodes stateset
+    void ApplyTexture(osg::Texture2D* tex, int channel=0);
 	
 
 	
 protected: 
 	
-	//referanced
-	virtual ~FSVideoLayer();
+	//
+	virtual ~Ortho2DLayer();
 	
 	//build the actual drawable object and attach to the rendering system			
-	osg::ref_ptr<osg::CameraNode> buildLayer();
+	osg::ref_ptr<osg::Camera> buildLayer();
 	//build the actual geometry of the object
 	osg::ref_ptr<osg::Geode> buildLayerGeometry();
 	
@@ -73,24 +85,29 @@ protected:
 	
 protected:
 	
+    RenderStage _renderStage;
+    
 	//dimensions of layer, should match the ortho projection dimensions
-	float m_width;
-	float m_height;
+	float _width;
+	float _height;
 	
-	float m_rotDegrees;
-	int m_orientation;
-	bool m_hFlip;
-	bool m_vFlip;
+	float _rotDegrees;
+	int _orientation;
+	bool _hFlip;
+	bool _vFlip;
 
 	//actual verts etc
-	osg::ref_ptr<osg::Geode>			m_layerGeode;
-	osg::ref_ptr<osg::Geometry>			m_geometry;
+	osg::ref_ptr<osg::Geode> _layerGeode;
+	osg::ref_ptr<osg::Geometry> _geometry;
 
+    //camera for pre or post ortho projection
+    osg::ref_ptr<osg::Camera> _camera;
+    
 	//draw matrices for ortho projection
-	osg::ref_ptr<osg::CameraNode> m_camera;
-	//osg::ref_ptr<osg::MatrixTransform>	m_layerModelViewMatrix;
-	//osg::ref_ptr<osg::Projection>		m_layerProjectionMatrix;
+	
 
 };
+    
+typedef osg::ref_ptr<Ortho2DLayer> Ortho2DLayerPtr;
 
 };

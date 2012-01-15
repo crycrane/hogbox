@@ -2,72 +2,151 @@
 
 #include <osgDB/FileUtils>
 #include <osgDB/FileNameUtils>
+//#include "OsgModelCache.h"
+#include <osgDB/ReadFile>
 
 using namespace hogboxHUD;
 
-TextRegion::TextRegion(void) 
-    : HudRegion(),
-    m_text(NULL),
-    m_string(""),
-    m_fontHeight(18.0f),
-    m_fontName("Fonts/arial.ttf"),
-    m_boarderPadding(5.0f),
-    m_alignmentMode(CENTER_ALIGN),
-    m_textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
-    m_usingDropShadow(false),
-    m_dropShadowColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
+#ifndef WIN32
+#define SHADER_COMPAT \
+"#ifndef GL_ES\n" \
+"#if (__VERSION__ <= 110)\n" \
+"#define lowp\n" \
+"#define mediump\n" \
+"#define highp\n" \
+"#endif\n" \
+"#endif\n" 
+#else
+#define SHADER_COMPAT ""
+#endif
+
+static const char* textVertSource = { 
+	SHADER_COMPAT 
+	"attribute vec4 osg_Vertex;\n"
+	"attribute vec4 osg_MultiTexCoord0;\n"
+    "attribute vec4 osg_Color;\n"
+	"uniform mat4 osg_ModelViewProjectionMatrix;\n"
+	"varying mediump vec2 texCoord0;\n"
+    "varying mediump vec4 color;\n"
+	"void main(void) {\n" 
+	"  gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;\n" 
+	"  texCoord0 = osg_MultiTexCoord0.xy;\n"
+    "  color = osg_Color;\n"
+	"}\n" 
+}; 
+
+static const char* textFragSource = { 
+	SHADER_COMPAT 
+	"uniform sampler2D glyphTexture;\n"
+    "//uniform mediump vec4 osg_Color;\n"
+	"varying mediump vec2 texCoord0;\n"
+    "varying mediump vec4 color;\n"
+	"void main(void) {\n" 
+	"  gl_FragColor.rgb = color.rgb;\n"
+    "  gl_FragColor.a = texture2D(glyphTexture, texCoord0).a * color.a;\n" 
+	"}\n" 
+};
+
+
+TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
+    : HudRegion(plane, origin, isProcedural),
+    _text(NULL),
+    _string(""),
+    _fontHeight(18.0f),
+    _fontName("Fonts/arial.ttf"),
+    _boarderPadding(5.0f),
+    _alignmentMode(CENTER_ALIGN),
+    _textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
+    _backdropType(NO_BACKDROP),
+    _backdropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
     //callback events
-    m_onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
+    _onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
 
 {
 	//create the text label to add to the button
-	m_text = new osgText::Text;
-	m_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
-
-	m_text->setColor(m_textColor);
-	this->SetFontType(m_fontName);
-	this->SetFontHeight(m_fontHeight);
-	this->SetAlignment(m_alignmentMode);
-	this->UseDropShadow(m_usingDropShadow);
-	this->SetDropShadowColor(m_dropShadowColor);
-
+	_text = new osgText::Text;
+	//m_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
+    
 	//add the text to a geode for drawing
-	osg::Geode* geode = new osg::Geode();
-	geode->addDrawable(m_text);
-
-	//add the textgeode to a transform to raise it above the background
-	osg::MatrixTransform* frontLayer = new osg::MatrixTransform();
-	frontLayer->setMatrix(osg::Matrix::translate(osg::Vec3(0,0,0.1)));
-	frontLayer->addChild(geode);
-
+	osg::Geode* textGeode = new osg::Geode();
+    osg::StateSet* stateset = textGeode->getOrCreateStateSet();
+	stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);
+    
+#ifndef OSG_GL_FIXED_FUNCTION_AVAILABLE
+	osg::Program* program = new osg::Program; 
+	program->setName("textShader"); 
+	program->addShader(new osg::Shader(osg::Shader::VERTEX, textVertSource)); 
+	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, textFragSource)); 
+	stateset->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 	
+    
+    stateset->addUniform(new osg::Uniform("glyphTexture", 0));
+#endif
+    
+	textGeode->setStateSet(stateset);
+    textGeode->addDrawable(_text.get());
+    
+    _textScale = new osg::MatrixTransform();
+    _textScale->addChild(textGeode);
+    
+	//use transform to orientate the text into correct plane and forward of the backdrop
+	osg::MatrixTransform* oriText = new osg::MatrixTransform();
+    
+    //flip plane
+    float temp = 0.0f;
+    osg::Vec3 offset = osg::Vec3(0,0,0.1);
+    osg::Matrix oriMatrix;
+    switch(_plane){
+        case PLANE_XY:
+            oriMatrix = osg::Matrix::translate(offset);
+            break;
+        case PLANE_XZ:
+            //flip x and z
+            temp = offset.y();
+            offset.y() = offset.z();
+            offset.z() = temp;
+            oriMatrix = osg::Matrix::translate(offset) * osg::Matrix::rotate(osg::DegreesToRadians(90.0f), osg::Vec3(1,0,0));
+            break;
+        default:break;
+    }
+    
+	oriText->setMatrix(oriMatrix);
+	oriText->addChild(_textScale.get());
 	//attach the text to translate for now 
-	m_translate->addChild(frontLayer);
+	_rotate->addChild(oriText);
+    
+    _text->setColor(_textColor);
+	this->SetFontType(_fontName);
+	this->SetFontHeight(_fontHeight);
+	this->SetAlignment(_alignmentMode);
+	this->SetBackDropType(_backdropType);
+	this->SetBackDropColor(_backdropColor);
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 TextRegion::TextRegion(const TextRegion& region,const osg::CopyOp& copyop)
-	: HudRegion(region, copyop),
-	//m_text(copyop(region.m_text.get())),
-	m_fontHeight(region.m_fontHeight),
-	m_fontName(region.m_fontName),
-	m_boarderPadding(region.m_boarderPadding),
-	m_alignmentMode(region.m_alignmentMode),
-	m_textColor(region.m_textColor),
-	m_usingDropShadow(region.m_usingDropShadow),
-	m_dropShadowColor(region.m_dropShadowColor)
+    : HudRegion(region, copyop),
+    //_text(copyop(region._text.get())),
+    _fontHeight(region._fontHeight),
+    _fontName(region._fontName),
+    _boarderPadding(region._boarderPadding),
+    _alignmentMode(region._alignmentMode),
+    _textColor(region._textColor),
+    _backdropType(region._backdropType),
+    _backdropColor(region._backdropColor)
 {
-	//this->SetTextColor(m_textColor);
-	this->SetFontType(m_fontName);
-	this->SetFontHeight(m_fontHeight);
-	this->SetAlignment(m_alignmentMode);
-	this->UseDropShadow(m_usingDropShadow);
-	this->SetDropShadowColor(m_dropShadowColor);
+	//this->SetTextColor(_textColor);
+	this->SetFontType(_fontName);
+	this->SetFontHeight(_fontHeight);
+	this->SetAlignment(_alignmentMode);
+	this->SetBackDropType(_backdropType);
+	this->SetBackDropColor(_backdropColor);
 }
 
 TextRegion::~TextRegion(void)
 {
-	OSG_NOTICE << "    Deallocating TextRegion: Name '" << this->getName() << "'." << std::endl;
-	m_text = NULL;
+	//OSG_NOTICE << "    Deallocating TextRegion: Name '" << this->getName() << "'." << std::endl;
+	_onTextChangedEvent = NULL;
+    _text = NULL;
 }
 
 
@@ -79,12 +158,16 @@ TextRegion::~TextRegion(void)
 //
 bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight)
 {
+    //set ref height for scaling in setsize
+    _scaleHeightRef = size.y();
+    
 	//load the base assets and apply names and sizes, do this
 	//after creating and adding the text so that the text geode 
 	//name will also be changed
 	bool ret = HudRegion::Create(corner,size,fileName);
-
+    
 	SetText(label);
+    SetFontHeight(fontHeight);
 	
 	return ret;
 }
@@ -97,7 +180,7 @@ bool TextRegion::LoadAssest(const std::string& folderName)
 {
 	//call base first
 	bool ret = HudRegion::LoadAssest(folderName);
-
+    
 	//get the directory contents
 	osgDB::DirectoryContents dirCont;
 	dirCont = osgDB::getDirectoryContents(folderName);
@@ -125,40 +208,29 @@ void TextRegion::SetPosition(const osg::Vec2& corner)
 void TextRegion::SetSize(const osg::Vec2& size)
 {
 	HudRegion::SetSize(size);
-
+    
 	//set the texts max sizes to the new size
-	m_text->setMaximumHeight(size.y());
-	m_text->setMaximumWidth(size.x());
-
+	_text->setMaximumHeight(size.y());
+	_text->setMaximumWidth(size.x());
+    
+    float scaler = 1.0f / _scaleHeightRef;
+    float sizeScale = size.y()*scaler;
+    
+    _textScale->setMatrix(osg::Matrix::scale(osg::Vec3(sizeScale,sizeScale,sizeScale)));
+    
 	//set new centered position
-	this->SetAlignment(m_alignmentMode);
+	this->SetAlignment(_alignmentMode);
 }
-
-//
-//overload set alpha so we can also adust text color alpha
-//
-void TextRegion::SetAlpha(const float& alpha)
-{
-	m_textColor.a() = alpha;
-	if(!m_alphaEnabled)
-	{
-		m_textColor.a() = 1.0f;
-	}
-	
-	m_text->setColor(m_textColor);
-	HudRegion::SetAlpha(alpha);
-}
-
 
 //
 // Set the text for this region
 //
 void TextRegion::SetText(const std::string& str)
 {
-	m_string = str;
-	m_text->setText(str);
+	_string = str;
+	_text->setText(str);
 	osg::ref_ptr<HudInputEvent> dummyEvent;
-	m_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
+	_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
 }
 
 //
@@ -166,7 +238,7 @@ void TextRegion::SetText(const std::string& str)
 //
 const std::string& TextRegion::GetText()const
 {
-	return m_string;
+	return _string;
 }
 
 
@@ -175,8 +247,8 @@ const std::string& TextRegion::GetText()const
 //
 void TextRegion::SetFontHeight(const float& fontHeight)
 {
-	m_fontHeight = fontHeight;
-	m_text->setCharacterSize(m_fontHeight, 1.0f);
+	_fontHeight = fontHeight;
+	_text->setCharacterSize(_fontHeight, 1.0f);
 }
 
 //
@@ -184,7 +256,15 @@ void TextRegion::SetFontHeight(const float& fontHeight)
 //
 const float& TextRegion::GetFontHeight()const
 {
-	return m_fontHeight;
+	return _fontHeight;
+}
+
+//
+//set the fonts glyph res in pixels
+//
+void TextRegion::SetFontResolution(const osg::Vec2& fontRes)
+{
+    _text->setFontResolution((int)fontRes.x(), (int)fontRes.y());
 }
 
 //
@@ -192,8 +272,24 @@ const float& TextRegion::GetFontHeight()const
 //
 void TextRegion::SetFontType(const std::string& fontFile)
 {
-	m_fontName = fontFile;
-	m_text->setFont(fontFile);
+	_fontName = osgDB::findDataFile(fontFile);
+    //osgText::Font* font = OsgModelCache::Inst()->getOrLoadFont(fontFile).get();
+    
+    osg::ref_ptr<osgDB::ReaderWriter::Options> localOptions;
+    localOptions = new osgDB::ReaderWriter::Options;
+    localOptions->setObjectCacheHint(osgDB::ReaderWriter::Options::CACHE_OBJECTS);
+    osg::ref_ptr<osg::Object> obj = NULL;
+    obj = osgDB::readObjectFile(_fontName,localOptions);
+    
+    if(obj.get()){
+        osgText::Font* font = dynamic_cast<osgText::Font*>(obj.get());
+        if(font){
+            OSG_FATAL << "ReadFont from archive '" << fontFile << "'." << std::endl;
+            _text->setFont(font);
+        }else{
+            _text->setFont(_fontName);
+        }
+    }
 }
 
 //
@@ -202,7 +298,7 @@ void TextRegion::SetFontType(const std::string& fontFile)
 //
 const std::string& TextRegion::GetFontType()const
 {
-	return m_fontName;
+	return _fontName;
 }
 
 //
@@ -212,12 +308,12 @@ const std::string& TextRegion::GetFontType()const
 //
 const float& TextRegion::GetBoarderPadding()const
 {
-	return m_boarderPadding;
+	return _boarderPadding;
 }
 
 void TextRegion::SetBoarderPadding(const float& padding)
 {
-	m_boarderPadding = padding;
+	_boarderPadding = padding;
 }
 
 //
@@ -225,31 +321,108 @@ void TextRegion::SetBoarderPadding(const float& padding)
 //
 void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 {
-	m_alignmentMode = alignment;
-
+	_alignmentMode = alignment;
+    
+    osg::Vec3 offset = osg::Vec3(0.0f,0.0f,0.0f);
+    float temp = 0.0f;
 	switch(alignment)
 	{
 		case CENTER_ALIGN:
 		{
-			m_text->setAlignment(osgText::Text::CENTER_CENTER ); 
-			m_text->setPosition(osg::Vec3(m_size.x()*0.5f, m_size.y()*0.5f, 0.0f));
+            offset = osg::Vec3(_size.x()*0.5f, _size.y()*0.5f, 0.0f);
+            switch(_origin){
+                case ORI_BOTTOM_LEFT:
+                    break;
+                case ORI_TOP_LEFT:
+                    offset.y() *= -1.0f;
+                    break;
+                case ORI_CENTER:
+                    offset = osg::Vec3(0.0f,0.0f,0.0f);
+                    break;
+                default:break;
+            }
+            //flip plane
+            switch(_plane){
+                case PLANE_XY:
+                    break;
+                case PLANE_XZ:
+                    //flip x and z
+                    temp = offset.y();
+                    offset.y() = offset.z();
+                    offset.z() = temp;
+                    break;
+                default:break;
+            }
+            
+			_text->setAlignment(osgText::Text::CENTER_CENTER ); 
+			_text->setPosition(offset);
 			break;
 		}
 		case RIGHT_ALIGN:
 		{
-			m_text->setAlignment(osgText::Text::RIGHT_CENTER); 
-			m_text->setPosition(osg::Vec3(m_size.x()-m_boarderPadding, m_size.y()*0.5f, 0));
+            offset = osg::Vec3(_size.x()-_boarderPadding, _size.y()*0.5f, 0);
+            switch(_origin){
+                case ORI_BOTTOM_LEFT:
+                    break;
+                case ORI_TOP_LEFT:
+                    offset.y() *= -1.0f;
+                    break;
+                case ORI_CENTER:
+                    offset += osg::Vec3((_size.x()*0.5f)-_boarderPadding,0.0f,0.0f);
+                    break;
+                default:break;
+            }
+            //flip plane
+            switch(_plane){
+                case PLANE_XY:
+                    break;
+                case PLANE_XZ:
+                    //flip x and z
+                    temp = offset.y();
+                    offset.y() = offset.z();
+                    offset.z() = temp;
+                    break;
+                default:break;
+            }
+            
+			_text->setAlignment(osgText::Text::RIGHT_CENTER); 
+			_text->setPosition(offset);
 			break;
 		}
 		case LEFT_ALIGN:
 		{
-			m_text->setAlignment(osgText::Text::LEFT_CENTER); 
-			m_text->setPosition(osg::Vec3(m_boarderPadding, m_size.y()*0.5f, 0));
+            offset = osg::Vec3(_boarderPadding, _size.y()*0.5f, 0);
+            switch(_origin){
+                case ORI_BOTTOM_LEFT:
+                    break;
+                case ORI_TOP_LEFT:
+                    offset.y() *= -1.0f;
+                    break;
+                case ORI_CENTER:
+                    offset += osg::Vec3((-_size.x()*0.5f)+_boarderPadding,0.0f,0.0f);
+                    break;
+                default:break;
+            }
+            //flip plane
+            switch(_plane){
+                case PLANE_XY:
+                    break;
+                case PLANE_XZ:
+                    //flip x and z
+                    temp = offset.y();
+                    offset.y() = offset.z();
+                    offset.z() = temp;
+                    break;
+                default:break;
+            }
+            
+			_text->setAlignment(osgText::Text::LEFT_CENTER); 
+			_text->setPosition(offset);
 			break;
 		}
 		default:
 		{
-			m_text->setAlignment(osgText::Text::CENTER_CENTER ); 
+			_text->setAlignment(osgText::Text::CENTER_CENTER ); 
 			break;
 		}
 	}
@@ -258,9 +431,27 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 //
 //Return the text alignment mode
 //
-const TEXT_ALIGN& TextRegion::GetAlignment()const
+const TextRegion::TEXT_ALIGN& TextRegion::GetAlignment()const
 {
-	return m_alignmentMode;
+	return _alignmentMode;
+}
+
+//
+//overload set alpha so we can also adust text color alpha
+//
+void TextRegion::SetAlpha(const float& alpha)
+{
+	_textColor.a() = alpha;
+    _backdropColor.a() = alpha*0.5f;
+	if(!_alphaEnabled)
+	{
+		_textColor.a() = 1.0f;
+        _backdropColor.a() = 1.0f;
+	}
+	
+    _text->setBackdropColor(_backdropColor);
+	_text->setColor(_textColor);
+	HudRegion::SetAlpha(alpha);
 }
 
 //
@@ -268,10 +459,12 @@ const TEXT_ALIGN& TextRegion::GetAlignment()const
 //
 void TextRegion::SetTextColor(const osg::Vec4& color)
 {
-	m_textColor.r() = color.x();
-	m_textColor.g() = color.y();
-	m_textColor.b() = color.z();
-	m_text->setColor(m_textColor);
+	_textColor.r() = color.x();
+	_textColor.g() = color.y();
+	_textColor.b() = color.z();
+    _textColor.a() = _alpha;
+	_text->setColor(_textColor);
+    this->SetColor(osg::Vec3(color.x(),color.y(),color.z()));
 }
 
 //
@@ -279,43 +472,49 @@ void TextRegion::SetTextColor(const osg::Vec4& color)
 //
 const osg::Vec4& TextRegion::GetTextColor()const
 {
-	return m_text->getColor();
+	return _text->getColor();
 }
 
 //
 //set the drop shadow color
 //
-void TextRegion::SetDropShadowColor(const osg::Vec4 &color)
+void TextRegion::SetBackDropColor(const osg::Vec4 &color)
 {
-	m_dropShadowColor = color;
-	m_text->setBackdropColor(color);
+	_backdropColor.r() = color.r();
+	_backdropColor.g() = color.g();
+	_backdropColor.b() = color.b();
+	_backdropColor.a() = _alpha*0.5f;
+	_text->setBackdropColor(_backdropColor);
 }
 
 //
 //return color of drop show
 //
-const osg::Vec4& TextRegion::GetDropShadowColor()const
+const osg::Vec4& TextRegion::GetBackDropColor()const
 {
-	return m_dropShadowColor;
+	return _backdropColor;
 }
 
 
-void TextRegion::UseDropShadow(const bool& useShadow)
+void TextRegion::SetBackDropType(const BACKDROP_TYPE& type)
 {
-	m_usingDropShadow = useShadow;
-
-	if(useShadow)
+	_backdropType = type;
+    
+	if(_backdropType == DROP_SHADOW)
 	{
-		m_text->setBackdropType(osgText::Text::DROP_SHADOW_BOTTOM_LEFT);
-		m_text->setBackdropImplementation(osgText::Text::DEPTH_RANGE );
-	}else{
-		m_text->setBackdropType(osgText::Text::NONE);
+		_text->setBackdropType(osgText::Text::DROP_SHADOW_BOTTOM_LEFT);
+		_text->setBackdropImplementation(osgText::Text::DELAYED_DEPTH_WRITES );
+	}else if(_backdropType == STROKE){
+        _text->setBackdropType(osgText::Text::OUTLINE);
+		_text->setBackdropImplementation(osgText::Text::DELAYED_DEPTH_WRITES );
+    }else{ 
+        _text->setBackdropType(osgText::Text::NONE);
 	}
 }
 
-const bool& TextRegion::isUsingDropShadow() const
+const TextRegion::BACKDROP_TYPE& TextRegion::GetBackDropType() const
 {
-	return m_usingDropShadow;
+	return _backdropType;
 }
 
 
@@ -328,5 +527,5 @@ int TextRegion::HandleInputEvent(HudInputEvent& hudEvent)
 //Funcs to register event callbacks
 void TextRegion::AddOnTextChangedCallbackReceiver(HudEventCallback* callback)
 {
-	m_onTextChangedEvent->AddCallbackReceiver(callback);
+	_onTextChangedEvent->AddCallbackReceiver(callback);
 }

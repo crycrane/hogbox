@@ -1,46 +1,32 @@
 #include <hogboxVision/VideoLayer.h>
 
-
-#include <osg/Texture>
-#include <osg/Texture2D>
-#include <osg/TextureRectangle>
-#include <osg/ShapeDrawable>
-#include <osg/Geometry>
+#include <hogbox/HogBoxBase.h>
 #include <osg/Depth>
-#include <osg/Geometry>
-#include <osg/BlendFunc>
-#include <osg/Notify>
-#include <osg/Image>
-#include <osg/TexMat>
-
-#include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogboxVision;
 
-// FSVideoLayer
-
-FSVideoLayer::FSVideoLayer(int width, int height) 
+Ortho2DLayer::Ortho2DLayer(int width, int height, RenderStage stage) 
 	: osg::Group(),
-	m_width(width), 
-	m_height(height),
-	m_rotDegrees(0.0f),
-	m_orientation(0),
-	m_hFlip(false),
-	m_vFlip(false)
+    _renderStage(stage),
+	_width(width), 
+	_height(height),
+	_rotDegrees(0.0f),
+	_orientation(0),
+	_hFlip(false),
+	_vFlip(false)
 {
 	// build the layer as a child of this group
 	this->addChild(buildLayer().get());
 }
 
 
-FSVideoLayer::FSVideoLayer(const FSVideoLayer& FSVideoLayer,
-	const osg::CopyOp& copyop)
+Ortho2DLayer::Ortho2DLayer(const Ortho2DLayer& layer, const osg::CopyOp& copyop)
 {
 
 }
 
 
-FSVideoLayer::~FSVideoLayer()
+Ortho2DLayer::~Ortho2DLayer()
 {	
 
 }
@@ -48,60 +34,69 @@ FSVideoLayer::~FSVideoLayer()
 //
 // Build the gemo and contruct the orth projectipon matrices
 //
-osg::ref_ptr<osg::CameraNode> FSVideoLayer::buildLayer() 
+osg::ref_ptr<osg::Camera> Ortho2DLayer::buildLayer() 
 {
 
-	float hWidth = m_width * 0.5f;
-	float hHeight = m_height * 0.5f;
+	float hWidth = _width * 0.5f;
+	float hHeight = _height * 0.5f;
 	
-	m_camera = new osg::CameraNode;
+	_camera = new osg::Camera();
 	
+    _camera->setClearColor(osg::Vec4(1,0,0,1));
+    
     // set the projection matrix
-    m_camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+    _camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
 	
     // set the view matrix    
-    m_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
-    m_camera->setViewMatrix(osg::Matrix::identity());
+    _camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
+    _camera->setViewMatrix(osg::Matrix::identity());
 	
-    // only clear the depth buffer as this is post render
-    m_camera->setClearMask(GL_DEPTH_BUFFER_BIT);
+    // only clear the depth buffer 
+    _camera->setClearMask(0);//GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
     // draw hud after main camera view.
-    m_camera->setRenderOrder(osg::CameraNode::PRE_RENDER);
+    if(_renderStage == ORTHO_BACKGROUND){
+        _camera->setRenderOrder(osg::Camera::PRE_RENDER);
+    }else if(_renderStage == ORTHO_NESTED){
+        _camera->setRenderOrder(osg::Camera::NESTED_RENDER);
+    }else if(_renderStage == ORTHO_OVERLAY){
+        _camera->setRenderOrder(osg::Camera::POST_RENDER);
+    }
 	
 	osg::Group* layerGroup = new osg::Group();
+
     //set the default draw mask
     layerGroup->setNodeMask(hogbox::MAIN_CAMERA_CULL);
-	m_camera->addChild(layerGroup);
+	_camera->addChild(layerGroup);
+    
 
-	layerGroup->getOrCreateStateSet()->setAttribute(new osg::Depth(osg::Depth::ALWAYS, 1.0f, 1.0f));
 	layerGroup->addChild(buildLayerGeometry().get());
 
-	return m_camera;
+	return _camera;
 }
 
 //
-//Build quad with 0,0 at center to make fliping easier
+//Build quad with 0,0 at center
 //
-osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry() 
+osg::ref_ptr<osg::Geode> Ortho2DLayer::buildLayerGeometry() 
 {
 	float minU = 0.0f;
 	float maxU = 1.0f;//m_width;//1.0f
-	float minV = 1.0f;
-	float maxV = 0.0f;//m_height;//1.0f;
+	float minV = 0.0f;
+	float maxV = 1.0f;//m_height;//1.0f;
 
-	m_layerGeode = new osg::Geode();
+	_layerGeode = new osg::Geode();
 
-	m_geometry = new osg::Geometry();
+	_geometry = new osg::Geometry();
 	
 	osg::Vec3Array* coords = new osg::Vec3Array();
-	m_geometry->setVertexArray(coords);
+	_geometry->setVertexArray(coords);
 
 	osg::Vec2Array* tcoords = new osg::Vec2Array();
-	m_geometry->setTexCoordArray(0, tcoords);
+	_geometry->setTexCoordArray(0, tcoords);
 
-	float hWidth = m_width * 0.5f;
-	float hHeight = m_height * 0.5f;
+	float hWidth = _width * 0.5f;
+	float hHeight = _height * 0.5f;
 
 	coords->push_back(osg::Vec3(-hWidth, -hHeight, 0.0f));
 	coords->push_back(osg::Vec3(hWidth, -hHeight, 0.0f));
@@ -119,42 +114,42 @@ osg::ref_ptr<osg::Geode> FSVideoLayer::buildLayerGeometry()
 	tcoords->push_back(osg::Vec2(minU, maxV));
 	
 
-	m_geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
+	_geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 4));
 
     osg::ref_ptr<osg::Vec4Array> quad_colors = new osg::Vec4Array;
     quad_colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-    m_geometry->setColorArray(quad_colors.get());
-    m_geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+    _geometry->setColorArray(quad_colors.get());
+    _geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
 	
-	//disable depth	
-	this->getOrCreateStateSet()->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-	//disable culling for flipping
-	this->getOrCreateStateSet()->setMode(GL_CULL_FACE,osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+    // diable depth read and write and culling for fastest render   
+    this->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
+    this->getOrCreateStateSet()->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF);
+    osg::Depth* depth = new osg::Depth();
+    depth->setWriteMask(false);
+    this->getOrCreateStateSet()->setAttributeAndModes(depth);
 
-	//
-	//this->setStateSet(m_material->GetStateSet());
 	
-	m_layerGeode->addDrawable(m_geometry.get());
+	_layerGeode->addDrawable(_geometry.get());
 
-	return m_layerGeode;
+	return _layerGeode;
 
 }
 
 //apply all the orientation and transform information
-void FSVideoLayer::ApplyTransforms()
+void Ortho2DLayer::ApplyTransforms()
 {
-	float rads = osg::DegreesToRadians(m_rotDegrees);	
-	//m_layerModelViewMatrix->setMatrix(osg::Matrix::rotate(rads, 0,0,1)); 
-	m_camera->setViewMatrix(osg::Matrix::rotate(rads, 0,0,1));
-    
+	float rads = osg::DegreesToRadians(_rotDegrees);	
+
+	_camera->setViewMatrix(osg::Matrix::rotate(rads, 0,0,1));
+
 	//determin if we have changed the horizontal and vertical (left or right orientation)
 	bool isRotated = false;
-	if(m_orientation == 1 || m_orientation == 3)
+	if(_orientation == 1 || _orientation == 3)
 	{isRotated = true;}
 	
-	float hWidth = m_width * 0.5f;
-	float hHeight = m_height * 0.5f;
+	float hWidth = _width * 0.5f;
+	float hHeight = _height * 0.5f;
 	
 	if(isRotated)
 	{
@@ -163,17 +158,16 @@ void FSVideoLayer::ApplyTransforms()
 		hHeight = temp;
 	}
 	
-	hHeight = m_vFlip ? -hHeight : hHeight;
-	hWidth = m_hFlip ? -hWidth : hWidth;
+	hHeight = _vFlip ? -hHeight : hHeight;
+	hWidth = _hFlip ? -hWidth : hWidth;
 	
-     m_camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
-	//m_layerProjectionMatrix->setMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
+     _camera->setProjectionMatrix(osg::Matrix::ortho2D(-hWidth, hWidth, -hHeight, hHeight));
 	
 }
 
-void FSVideoLayer::SetRotation(const float& rotDegrees)
+void Ortho2DLayer::SetRotation(const float& rotDegrees)
 {
-	m_rotDegrees = rotDegrees;
+	_rotDegrees = rotDegrees;
 	ApplyTransforms();
 }
 
@@ -181,10 +175,10 @@ void FSVideoLayer::SetRotation(const float& rotDegrees)
 //set the orientation/up side, will set the rotation to increments of 90
 //plus also alter the ortho projection ratio. 0 is up, 1 is right, 2 is down
 //
-void FSVideoLayer::SetOrientation(const int& orientation)
+void Ortho2DLayer::SetOrientation(const int& orientation)
 {
-	m_orientation = orientation;
-	switch (m_orientation) {
+	_orientation = orientation;
+	switch (_orientation) {
 		case 0://top
 			SetRotation(0.0f);
 			break;
@@ -202,16 +196,24 @@ void FSVideoLayer::SetOrientation(const int& orientation)
 	}
 }
 
-void FSVideoLayer::SetVerticalFlip(const bool& bVFlip)
+void Ortho2DLayer::SetVerticalFlip(const bool& bVFlip)
 {
-	m_vFlip = bVFlip;
+	_vFlip = bVFlip;
 	ApplyTransforms();	
 }
 
-void FSVideoLayer::SetHorizontalFlip(const bool& bHFlip)
+void Ortho2DLayer::SetHorizontalFlip(const bool& bHFlip)
 {
-	m_hFlip = bHFlip;
+	_hFlip = bHFlip;
 	ApplyTransforms();
+}
+
+//
+//helper to apply a texture to a particular channel of the geodes stateset
+//
+void Ortho2DLayer::ApplyTexture(osg::Texture2D* tex, int channel)
+{
+    this->getOrCreateStateSet()->setTextureAttributeAndModes(channel, tex, osg::StateAttribute::ON);
 }
 
 

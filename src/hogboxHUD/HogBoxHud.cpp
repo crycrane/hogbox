@@ -19,17 +19,19 @@ HogBoxHud* HogBoxHud::Instance(bool erase)
     return s_hogboxHUDInstance.get();
 }
 
-HogBoxHud::HogBoxHud(void) : m_camera(NULL),
-						m_regionGroup(NULL)
+HogBoxHud::HogBoxHud(void) 
+: osg::Referenced(), 
+m_camera(NULL),
+m_regionGroup(NULL)
 {
-
+    
 }
 
 HogBoxHud::~HogBoxHud(void)
 {
 	OSG_NOTICE << "    Deallocating HogBoxHud Instance." << std::endl;
 	m_regionGroup = NULL; 
-
+    
 	//delete all attached regions, each region is then responsible for 
 	//deleting it own children
 	for(unsigned int i=0; i<m_regions.size(); i++)
@@ -46,7 +48,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 {
 	//store our projection size
 	m_screenSize = screenSize;
-
+    
 	m_camera = new osg::Camera;
     m_camera->setCullMask(hogbox::MAIN_CAMERA_CULL);
     // set the projection matrix
@@ -55,32 +57,32 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 	//osg::Matrix viewMat = m_camera->getViewMatrix();
 	//viewMat = viewMat * osg::Matrix::rotate(osg::DegreesToRadians(90.0f), osg::Vec3(0,0,1));
 	//m_camera->setViewMatrix(viewMat);
-
+    
     // set the view matrix    
     m_camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     m_camera->setViewMatrix(osg::Matrix::identity());
-
+    
     // only clear the depth buffer as this is post render
     m_camera->setClearMask(GL_DEPTH_BUFFER_BIT);
-
+    
     // draw hud after main camera view.
     m_camera->setRenderOrder(osg::Camera::POST_RENDER);
-
+    
 	//add the main group to which we attach the regions
 	m_regionGroup = new osg::Group();
-
+    
     //add the new page to the hud camera
 	m_camera->addChild( m_regionGroup.get());
 	
 	//create and add our root region
-	m_hudRegion = new HudRegion(true);
+	m_hudRegion = new HudRegion(hogboxHUD::HudRegion::PLANE_XY, hogboxHUD::HudRegion::ORI_BOTTOM_LEFT, true);
 	m_hudRegion->Create(osg::Vec2(0.0f,0.0f), m_screenSize, "");
 	//set the root region layer far back so we have plenty of positive layers infront
 	m_hudRegion->SetLayer(-1.0f);
 	
 	//attach our root region to the hud graph
 	m_regionGroup->addChild(m_hudRegion->GetRegion());
-
+    
 	return m_camera.get();
 }
 
@@ -90,7 +92,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 bool HogBoxHud::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	bool ret=false;
-
+    
 	//loop all attached
 	for(unsigned int i=0; i<m_regions.size(); i++)
 	{
@@ -108,11 +110,30 @@ bool HogBoxHud::AddRegion(HudRegion* region)
 	//check it is not null
 	if(!region)
 	{return false;}
-
+    
 	m_regions.push_back(region);
 	m_hudRegion->AddChild(region);
-
+    
 	return true;
+}
+
+bool HogBoxHud::RemoveRegion(HudRegion* region)
+{
+    if(!region){return false;}
+    int deleteIndex = -1;
+    //get index
+    for(unsigned int i=0; i<m_regions.size(); i++){
+        if(m_regions[i]->getName() == region->getName()){
+            deleteIndex = i;
+            break;
+        }
+    }
+    if(deleteIndex != -1){
+        m_hudRegion->RemoveChild(m_regions[deleteIndex].get());
+        m_regions.erase(m_regions.begin()+deleteIndex);
+        return true;
+    }
+    return false;
 }
 
 //

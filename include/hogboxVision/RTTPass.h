@@ -1,6 +1,18 @@
-#pragma once
+/* Written by Thomas Hogarth, (C) 2011
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+ */
 
-//HogBoxVision, Developed by T.Hogarth, HogBox
+
+#pragma once
 
 #include <hogbox/HogBoxBase.h>
 
@@ -17,7 +29,7 @@
 
 //Bugs
 //Think there is a bug at the minute which cuases every other pass to be upside down
-//probably caused by the MagicSymbol version of FSVideoQuad
+//probably caused by the Ortho2DLayer
 
 namespace hogboxVision {
 
@@ -58,13 +70,18 @@ public:
 	struct RTTArgs {
 
 		RTTArgs()
-			: outWidth(256),
+			: clearColor(osg::Vec4(0.0f,0.0f,0.0f,0.0f)), 
+            outWidth(256),
 			outHeight(256),
 			requiredOutCount(1),
 			requiredInCount(0),
 			startChannel(0),
-			rttScene(NULL)
+			rttScene(NULL),
+            shaderFileIsSource(false),
+            depthRender(false)
 		{}
+        
+        osg::Vec4 clearColor;
 		
 		int outWidth; //output texture width
 		int outHeight; //output texture height
@@ -86,6 +103,12 @@ public:
 		std::string fragmentShaderFile;
 		//the vertex shader used (can be  empty)
 		std::string vertexShaderFile;
+        
+        //flag this to pass actual shader source in the strings above rather then loading them from disk
+        bool shaderFileIsSource;
+        
+        //should we render a depth texture for output 0
+        bool depthRender;
 	};
 
 	//
@@ -151,20 +174,25 @@ protected:
 	//
 	//load fragment shader, create program
 	//attach to the stateset
-	void setFragmentShader(const std::string& filename);
+	void setFragmentShader(const std::string& filename, bool shaderFileIsSource);
 
 	//
 	//load vertex shader, create program
 	//attach to the stateset
-	void setVertexShader(const std::string& filename);
+	void setVertexShader(const std::string& filename, bool shaderFileIsSource);
 
 protected:
 //Members
-
+    
+    osg::Vec4 _clearColor;
+    
 	//scenegraph nodes to setup our fullscreen prerender pass
     osg::ref_ptr<osg::Group> _rootGroup;
     osg::ref_ptr<osg::Camera> _camera;
-	osg::ref_ptr<FSVideoLayer> _videoQuad;
+	osg::ref_ptr<Ortho2DLayer> _videoQuad;
+    
+    //if its a model render flag this to render a depth texture
+    bool _depthRender;
 	
 	//list of input textures needed for the pass
 	unsigned int _requiredInputTextures;

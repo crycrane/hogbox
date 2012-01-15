@@ -66,7 +66,7 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 //assume the worst for support
 	m_glSystemInfo(NULL),
 //IOS specific
-	_deviceOrientationFlags(LANDSCAPE_RIGHT_ORIENTATION)
+	_deviceOrientationFlags(IGNORE_ORIENTATION)
 {
 	m_glSystemInfo = SystemInfo::Instance();
 }
@@ -113,9 +113,17 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 	//set the scene to render
 	m_p_scene = scene;
 
+    //is app in fullscreen mode
+	m_bIsFullScreen = fullScreen;
+    
 	//window size in pixels
 	m_winSize = winSize;
-	//window corner in pixels ( Windows bottom left is 0,0)
+    
+    if(m_bIsFullScreen){
+        m_winSize = screenRes;
+    }
+    
+    //window corner in pixels ( Windows bottom left is 0,0)
 	if(winCr.x()==-1)//pass neg to center
 	{
 		//set the default window to center
@@ -127,10 +135,7 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 	}else{
 		m_winCorner = winCr;
 	}
-
-	//is app in fullscreen mode
-	m_bIsFullScreen = fullScreen;
-
+    
 	//are we using stereo
 	m_bStereoEnabled = useStereo;
 
@@ -922,6 +927,18 @@ void HogBoxViewer::SetAASamples(const int& samples)
 const int& HogBoxViewer::GetAASamples()const
 {
 	return m_aaSamples;
+}
+
+//
+//Return viewers camera
+//
+osg::Camera* HogBoxViewer::GetCamera()
+{
+   	if(m_viewer.valid())
+	{
+		return m_viewer->getCamera();
+	} 
+    return false;
 }
 
 //

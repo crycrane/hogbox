@@ -1,3 +1,16 @@
+/* Written by Thomas Hogarth, (C) 2011
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+ */
+
 #pragma once
 
 #include <hogboxHUD/TextRegion.h>
@@ -11,7 +24,7 @@ namespace hogboxHUD {
 class HOGBOXHUD_EXPORT ButtonRegion : public TextRegion
 {
 public:
-	ButtonRegion(void);
+	ButtonRegion(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	ButtonRegion(const ButtonRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
@@ -55,13 +68,13 @@ protected:
 
 	//is the button currently held down (received mouseDown Event)
 	//if mouse up occurs while m_butonDown is true a ButtonClick Event is triggered
-	bool m_buttonDown;
+	bool _buttonDown;
 
 	//mouse down/pressed texture
-	osg::ref_ptr<osg::Texture> m_mouseDownTexture;
+	osg::ref_ptr<osg::Texture> _mouseDownTexture;
 	
 	//sent once a mouse down followed by a mouse up event is received by this region
-	osg::ref_ptr<CallbackEvent> m_onButtonClickedEvent;
+	osg::ref_ptr<CallbackEvent> _onButtonClickedEvent;
 };
 
 typedef osg::ref_ptr<ButtonRegion> ButtonRegionPtr;

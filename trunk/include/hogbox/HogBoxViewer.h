@@ -1,3 +1,16 @@
+/* Written by Thomas Hogarth, (C) 2011
+ *
+ * This library is open source and may be redistributed and/or modified under  
+ * the terms of the OpenSceneGraph Public License (OSGPL) version 0.0 or 
+ * (at your option) any later version.  The full license is in LICENSE file
+ * included with this distribution, and on the openscenegraph.org website.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * OpenSceneGraph Public License for more details.
+ */
+
 #pragma once
 
 #include <hogbox/Export.h>
@@ -82,6 +95,7 @@ class HOGBOX_EXPORT HogBoxViewer : public osg::Object
 public:
     
     enum DeviceOrientation{
+        IGNORE_ORIENTATION = 0,
         PORTRAIT_ORIENTATION = 1<<0,
         PORTRAIT_UPSIDEDOWN_ORIENTATION  = 1<<1,
         LANDSCAPE_LEFT_ORIENTATION  = 1<<2,
@@ -120,6 +134,8 @@ public:
 	bool CreateAppWindow();
 
 	bool isRequestingReset();
+    
+    //get common viewer stuff (perhaps this should even just inherit from osgViewer?)
 	osg::ref_ptr<osgViewer::Viewer> GetViewer();
     osg::ref_ptr<osg::GraphicsContext> GetContext();
     
@@ -211,6 +227,8 @@ public:
 
 //view/camera
 
+    osg::Camera* GetCamera();
+    
 	void SetProjectionMatrix(osg::Projection* projection); 
 
 	void SetCameraViewMatrix(const osg::Matrix& viewMatrix);

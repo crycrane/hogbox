@@ -9,20 +9,56 @@
 
 using namespace hogboxVision;
 
+#ifndef WIN32
+#define SHADER_COMPAT \
+"#ifndef GL_ES\n" \
+"#if (__VERSION__ <= 110)\n" \
+"#define lowp\n" \ 
+"#define mediump\n" \
+"#define highp\n" \
+"#endif\n" \
+"#endif\n" 
+#else
+#define SHADER_COMPAT ""
+#endif
+
+static const char* depthPassVertSource = { 
+	SHADER_COMPAT 
+    "uniform mat4 osg_ModelViewProjectionMatrix;\n"
+    "attribute vec4 osg_Vertex;\n"
+    
+    "void main(void)\n"
+    "{\n"
+    "    gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;\n"
+    "}\n"  
+}; 
+
+static const char* depthPassFragSource = { 
+	SHADER_COMPAT 
+    "void main(void)\n"
+    "{\n"	
+    "    gl_FragColor.rgba = gl_FragCoord.zzzz;\n"
+    "}\n"
+};
+
+
+
+
 RTTPass::RTTPass() 
 	: osg::Object(),
+    _depthRender(false),
 	_outputWidth(0),
 	_outputHeight(0),
 	_requiredInputTextures(0),
 	_outputTextureCount(0),
 	_channelIndex(0)
 {
-	osg::notify(osg::WARN) << "RTTPass: Constructor" << std::endl;
+	OSG_NOTICE << "RTTPass: Constructor" << std::endl;
 }
 
 RTTPass::~RTTPass()
 {
-	osg::notify(osg::WARN) << "RTTPass: Destructor" << std::endl;
+	OSG_NOTICE << "    Deallocating RTTPass: Name '" << this->getName() << "'." << std::endl;
 
 	_uniformList.clear();
 	_stateSet = NULL;
@@ -46,6 +82,8 @@ RTTPass::RTTPass(const RTTPass& pass,const osg::CopyOp& copyop)
 //
 bool RTTPass::Init(RTTArgs args)
 {
+    _clearColor = args.clearColor;
+    _depthRender = args.depthRender;
 	_outputWidth = args.outWidth;
 	_outputHeight = args.outHeight;
 	_requiredInputTextures = args.requiredInCount;
@@ -66,7 +104,7 @@ bool RTTPass::Init(RTTArgs args)
 	//if we have input textures create our screen alighned quad to render them full viewport
 	if(_requiredInputTextures > 0)
 	{
-		_videoQuad = new FSVideoLayer(_outputWidth, _outputHeight);
+		_videoQuad = new Ortho2DLayer(_outputWidth, _outputHeight, Ortho2DLayer::ORTHO_NESTED);
 		_camera->addChild(_videoQuad.get());
 		//ensure camera only creates a color buffer for fullscreen rtt and doesn't perform any clears
 		_camera->setImplicitBufferAttachmentMask(osg::DisplaySettings::IMPLICIT_COLOR_BUFFER_ATTACHMENT);
@@ -89,6 +127,15 @@ bool RTTPass::Init(RTTArgs args)
 
 		//attach the scene to the camera
 		_camera->addChild(args.rttScene);
+        
+        if(_depthRender){
+            //if we are doing a depth render we also want to override the shaders to render depth tp color
+            osg::Program* program = new osg::Program; 
+            program->setName("depthToColorShader"); 
+            program->addShader(new osg::Shader(osg::Shader::VERTEX, depthPassVertSource)); 
+            program->addShader(new osg::Shader(osg::Shader::FRAGMENT, depthPassFragSource)); 
+            _camera->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        }
 	}
 
 	//attach the camera to the root
@@ -97,9 +144,9 @@ bool RTTPass::Init(RTTArgs args)
 
 	//apply shaders if passed in
 	if(!args.vertexShaderFile.empty())
-	{this->setVertexShader(args.vertexShaderFile);}
+	{this->setVertexShader(args.vertexShaderFile, args.shaderFileIsSource);}
 	if(!args.fragmentShaderFile.empty())
-	{this->setFragmentShader(args.fragmentShaderFile);}
+	{this->setFragmentShader(args.fragmentShaderFile, args.shaderFileIsSource);}
 
 	return true;
 }
@@ -108,7 +155,7 @@ bool RTTPass::Init(RTTArgs args)
 void RTTPass::setupCamera()
 {
     // clearing
-    _camera->setClearColor(osg::Vec4(0.0f,0.0f,0.0f,0.0f));
+    _camera->setClearColor(_clearColor);
     _camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // projection and view
@@ -119,6 +166,8 @@ void RTTPass::setupCamera()
     _camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     _camera->setViewMatrix(osg::Matrix::identity());
 
+    _camera->setComputeNearFarMode(osg::Camera::DO_NOT_COMPUTE_NEAR_FAR);
+    
     // viewport
     _camera->setViewport(0, 0, _outputWidth, _outputHeight);
 
@@ -130,9 +179,14 @@ void RTTPass::setupCamera()
 	FRAME_BUFFER,
 	SEPERATE_WINDOW */
 	
-    // attach the 4 textures
+    // attach the output textures
     for (unsigned int i=0; i<_outTextures.size(); i++) {
-		_camera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0+i), _outTextures[i].get());
+        //for now if we are using depthRender attach it to output 0
+        if(_depthRender && i==0){
+            _camera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0), _outTextures[i].get());
+        }else{
+            _camera->attach(osg::Camera::BufferComponent(osg::Camera::COLOR_BUFFER0+i), _outTextures[i].get());
+        }
     }
 }
 
@@ -154,19 +208,33 @@ void RTTPass::createOutputTextures()
 		_outTextures[i]->setName(samplerName.str());
 		
 		_outTextures[i]->setTextureSize(_outputWidth, _outputHeight);
-		_outTextures[i]->setInternalFormat(GL_RGBA);
-		//_outTextures[i]->setInternalFormat(GL_RGBA32F_ARB);
-	    _outTextures[i]->setSourceFormat(GL_RGBA);
+        //for now if we are using depthRender attach it to output 0
+        if(_depthRender && i==0){
+            //_outTextures[i]->setInternalFormat(GL_LUMINANCE);
+            _outTextures[i]->setInternalFormat(GL_RGBA);
+            //_outTextures[i]->setInternalFormat(GL_RGBA32F_ARB);
+            //_outTextures[i]->setSourceFormat(GL_RGBA);
+        }else{
+            _outTextures[i]->setInternalFormat(GL_RGBA);
+            //_outTextures[i]->setInternalFormat(GL_RGBA32F_ARB);
+            _outTextures[i]->setSourceFormat(GL_RGBA);            
+        }
 		_outTextures[i]->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::NEAREST);
 		_outTextures[i]->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::NEAREST);
 		_outTextures[i]->setResizeNonPowerOfTwoHint(false);
     }
 }
 
-void RTTPass::setFragmentShader(const std::string& filename)
+void RTTPass::setFragmentShader(const std::string& filename, bool shaderFileIsSource)
 {
-    osg::ref_ptr<osg::Shader> fshader = new osg::Shader( osg::Shader::FRAGMENT ); 
-    fshader->loadShaderSourceFromFile(osgDB::findDataFile(filename));
+    osg::ref_ptr<osg::Shader> fshader = NULL;
+    
+    if(shaderFileIsSource){
+        fshader = new osg::Shader( osg::Shader::FRAGMENT, filename.c_str()); 
+    }else{
+        fshader = new osg::Shader( osg::Shader::FRAGMENT ); 
+        fshader->loadShaderSourceFromFile(osgDB::findDataFile(filename));
+    }
 
 	//ensure our program has been created
 	if(!_shaderProgram)
@@ -185,10 +253,15 @@ void RTTPass::setFragmentShader(const std::string& filename)
 //load vertex shader, create program
 //attach to the stateset
 //
-void RTTPass::setVertexShader(const std::string& filename)
+void RTTPass::setVertexShader(const std::string& filename, bool shaderFileIsSource)
 {
-	osg::ref_ptr<osg::Shader> vshader = new osg::Shader( osg::Shader::VERTEX ); 
-    vshader->loadShaderSourceFromFile(osgDB::findDataFile(filename));
+	osg::ref_ptr<osg::Shader> vshader = NULL;
+    if(shaderFileIsSource){
+        vshader = new osg::Shader( osg::Shader::VERTEX, filename.c_str()); 
+    }else{
+        vshader = new osg::Shader( osg::Shader::VERTEX ); 
+        vshader->loadShaderSourceFromFile(osgDB::findDataFile(filename));
+    }
 
 	//ensure our program has been created
 	if(!_shaderProgram)

@@ -66,7 +66,8 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 //assume the worst for support
 	m_glSystemInfo(NULL),
 //IOS specific
-	_deviceOrientationFlags(IGNORE_ORIENTATION)
+	_deviceOrientationFlags(IGNORE_ORIENTATION),
+    _contentScale(1.0f)
 {
 	m_glSystemInfo = SystemInfo::Instance();
 }
@@ -232,6 +233,8 @@ bool HogBoxViewer::CreateAppWindow()
 		graphicsTraits->windowName = m_windowName;
 		graphicsTraits->vsync = m_vSync;
 
+        OSG_FATAL << "HogBoxViewer Content Scale " << _contentScale << std::endl;
+        
 		//attach to any handle if avaliable
 		if(m_hwnd != NULL)
 		{
@@ -243,7 +246,7 @@ bool HogBoxViewer::CreateAppWindow()
 			windata = new osgViewer::GraphicsWindowWin32::WindowData(m_hwnd);
 #else
 			#if (TARGET_OS_IPHONE)
-				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)m_hwnd, _deviceOrientationFlags);
+				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)m_hwnd, _deviceOrientationFlags, _contentScale);
 			#else
 				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)m_hwnd);
 			#endif
@@ -254,7 +257,7 @@ bool HogBoxViewer::CreateAppWindow()
 		}else{
 			//IOS pass windata anyhow so we can set auto rotate
 			#if (TARGET_OS_IPHONE)
-				osg::ref_ptr<osg::Referenced> windata = new osgViewer::GraphicsWindowIOS::WindowData(NULL, _deviceOrientationFlags);
+				osg::ref_ptr<osg::Referenced> windata = new osgViewer::GraphicsWindowIOS::WindowData(NULL, _deviceOrientationFlags, _contentScale);
 				graphicsTraits->inheritedWindowData = windata;
 			#endif			
 		}
@@ -1054,4 +1057,14 @@ void HogBoxViewer::SetDeviceOrientationFlags(const DeviceOrientationFlags& flags
 const HogBoxViewer::DeviceOrientationFlags& HogBoxViewer::GetDeviceOrientationFlags()const
 {
 	return _deviceOrientationFlags;
+}
+
+void HogBoxViewer::SetContentScaleFactor(const float& scale)
+{
+    _contentScale = scale;
+}
+
+const float& HogBoxViewer::GetContentScaleFactor()const
+{
+    return _contentScale;
 }

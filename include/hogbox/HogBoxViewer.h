@@ -256,6 +256,8 @@ public:
 	void SetDeviceOrientationFlags(const DeviceOrientationFlags& flags);
 	const DeviceOrientationFlags& GetDeviceOrientationFlags()const;
 
+    void SetContentScaleFactor(const float& scale);
+    const float& GetContentScaleFactor()const;
 
 protected:
 
@@ -378,6 +380,7 @@ protected:
 //IOS Specific
 	
 	DeviceOrientationFlags _deviceOrientationFlags;
+    float _contentScale;
 
 };
 

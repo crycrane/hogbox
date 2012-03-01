@@ -13,19 +13,6 @@
 
 #pragma once
 
-//////////////////////////////////////////////////////////
-// Author:	Thomas Hogarth								//
-// Date:	12/09/2007									//
-//														//
-// Class:												//
-// Osg object helper class								//
-//														//
-// Description:											//
-// Wraps up the functionality of loading and			//
-// transforming and manipulating a geometry object in	//
-// osg													//
-//														//
-//////////////////////////////////////////////////////////
 
 #include <hogbox/Export.h>
 #include <hogbox/HogBoxBase.h>
@@ -54,6 +41,10 @@ namespace hogbox {
 	//find a node in the graph node with name
 	extern HOGBOX_EXPORT osg::Node*	 FindNodeByName(osg::Node* node, const std::string name);
 
+    //
+    //Camera helpers
+    extern HOGBOX_EXPORT osg::Matrix ComputeLookAtMatrixForNodeBounds(osg::Node* scene, float distance = 3.0f, osg::Vec3 axis = osg::Y_AXIS, osg::Vec3 upAxis = osg::Z_AXIS);
+    
 	//
 	//Image Helpers
 

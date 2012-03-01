@@ -59,7 +59,7 @@ public:
 	//Returns true is the stream is setup correctly and ready to stream/play
 	virtual bool CreateStream(const std::string& config, bool hflip = false, bool vflip = false, bool deinter = false);
 
-	bool isValid(){return m_isValid;}
+	bool isValid(){return _isValid;}
 
 	//
 	//Play stream from current position only if not already playing
@@ -93,18 +93,18 @@ public:
 	
 	//
 	//Request a stream to be fliped vertically
-	virtual void SetVerticalFlip(bool flip){m_vFlip = flip;}
-	bool GetVerticalFlip(){return m_vFlip;}
+	virtual void SetVerticalFlip(bool flip){_vFlip = flip;}
+	bool GetVerticalFlip(){return _vFlip;}
 
 	//
 	//Request a stream to be flipped horizontally
-	virtual void SetHorizontalFlip(bool flip){m_hFlip=flip;}
-	bool GetHorizontalFlip(){return m_hFlip;}
+	virtual void SetHorizontalFlip(bool flip){_hFlip=flip;}
+	bool GetHorizontalFlip(){return _hFlip;}
 
 	//
 	//Request a stream have deinterlacing applied, i.e. remo
-	virtual void SetDeinterlace(bool deInter){m_isInter=deInter;}
-	bool GetDeinterlace(){return m_isInter;}
+	virtual void SetDeinterlace(bool deInter){_isInter=deInter;}
+	bool GetDeinterlace(){return _isInter;}
 
 	//
 	//Hack for callback when the video reaches its end (yuck)
@@ -145,19 +145,19 @@ protected:
 protected:
 
 	//is the stream ready to play
-	bool m_isValid;
+	bool _isValid;
 
 	//frame rate of video in frames per second
-	double m_frameRate;
+	double _frameRate;
 
 	//width and height of the stream are stored in the s() and t() of the osg::Image
 
 	//request deinterlacing
-	bool m_isInter;
+	bool _isInter;
 	//flip the stream vertically
-	bool m_vFlip;
+	bool _vFlip;
 	//flip the stream horizontally
-	bool m_hFlip;
+	bool _hFlip;
 
 };
 

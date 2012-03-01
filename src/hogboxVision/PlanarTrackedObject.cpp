@@ -4,11 +4,11 @@ using namespace hogboxVision;
 
 PlanarTrackedObject::PlanarTrackedObject(TrackedDimensions dimensions) 
 	: TrackedObject(dimensions),
-	m_direction(-1),
-	m_width(80.0f)
+	_direction(-1),
+	_width(80.0f)
 {
 	//assign the 4 corners
-	m_corners.assign(4, osg::Vec2());
+	_corners.assign(4, osg::Vec2());
 }
 
 PlanarTrackedObject::~PlanarTrackedObject()

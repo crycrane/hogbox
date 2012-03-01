@@ -37,7 +37,7 @@ public:
 
 	//friend hogbox::Singleton<HogBoxManager>;
 
-    static HogBoxManager* Instance(bool erase = false);
+    static HogBoxManager* Inst(bool erase = false);
 
 	//
 	//Reads in a new HogBoxDataBase xml file, files root
@@ -53,7 +53,7 @@ public:
 	//the xml nodes uniqueID property to find it in the database.
 	//The nodes name/head is used as a classType to find an approprite
 	//XmlClassManager to handle construction of the object.
-	hogbox::ObjectPtr ReadNodeByID(const std::string& uniqueID);
+	osg::ObjectPtr ReadNodeByID(const std::string& uniqueID);
 
 	//
 	//Use the nodes name as a classtype, then query the hogbox registry
@@ -61,7 +61,7 @@ public:
 	//is found that states it can read the classtype then the node is passed to
 	//the XmlNodeManagers GetOrLoadNode function returning the result
 	//If n oXmlNodeManager is found then NULL is returned
-	hogbox::ObjectPtr ReadNode(osgDB::XmlNode* inNode);
+	osg::ObjectPtr ReadNode(osgDB::XmlNode* inNode);
 
 	//
 	//Same as call to ReadNodeByID, but also performs
@@ -87,7 +87,7 @@ public:
 	osg::ref_ptr<T> ReadNodeTyped(osgDB::XmlNode* uniqueIDNode)
 	{
 		//read the node with XmlClassManager type returned by the registry 
-		hogbox::ObjectPtr readResult = this->ReadNode(uniqueIDNode); //readWrapper->GetPrototype()->GetOrLoadNode(uniqueIDNode);
+		osg::ObjectPtr readResult = this->ReadNode(uniqueIDNode); //readWrapper->GetPrototype()->GetOrLoadNode(uniqueIDNode);
 		if(readResult)
 		{
 			osg::ref_ptr<T> castToTemplate = dynamic_cast<T*>(readResult.get());
@@ -111,7 +111,7 @@ protected:
 	virtual ~HogBoxManager(void);
 
 	virtual void destruct(){
-		m_databaseNode = NULL;
+		_databaseNode = NULL;
 	}
 
 
@@ -121,7 +121,7 @@ protected:
 
 protected:
 
-	osg::ref_ptr<osgDB::XmlNode> m_databaseNode;
+	osg::ref_ptr<osgDB::XmlNode> _databaseNode;
 	
 
 };

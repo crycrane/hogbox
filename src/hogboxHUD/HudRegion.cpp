@@ -9,7 +9,7 @@
 #include <osgDB/FileUtils>
 //#include <hogbox/SystemInfo.h>
 #include <hogbox/HogBoxUtils.h>
-//#include "OsgModelCache.h"
+#include <hogbox/AssetManager.h>
 //#include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogboxHUD;
@@ -18,11 +18,11 @@ using namespace hogboxHUD;
 #define SHADER_COMPAT \
 "#ifndef GL_ES\n" \
 "#if (__VERSION__ <= 110)\n" \
-"#define lowp\n" \ 
+"#define lowp\n" \
 "#define mediump\n" \
 "#define highp\n" \
 "#endif\n" \
-"#endif\n" 
+"#endif\n"
 #else
 #define SHADER_COMPAT ""
 #endif
@@ -70,33 +70,33 @@ static const char* coloredFragSource = {
 
 HudRegion::HudRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
     : osg::Object(),
+    _isProcedural(isProcedural),
     _plane(plane),
     _rotatePlane(PLANE_XY),
     _origin(origin),
-    _isProcedural(isProcedural),
-    _corner(osg::Vec2(0.0f,0.0f)),
+    _assestLoaded(false),
     _size(osg::Vec2(1.0f, 1.0f)),
+    _corner(osg::Vec2(0.0f,0.0f)),
     _rotation(0.0f),
+    _depth(0.0f),
     //by default inherit all parent transforms
     _transformInheritMask(INHERIT_ALL_TRANSFORMS),
     _visible(true),
     _pickable(true),
-    _depth(0.0f),
+    _microMemoryMode(false),
     //animation
-    _isRotating(false),
-    _isTranslating(false),
-    _isSizing(false),
-    _isColoring(false),
-    _isFading(false),
     _animateRotate(new hogbox::AnimateFloat()),
-    _animateSize(new hogbox::AnimateVec2()),
+    _isRotating(false),
     _animatePosition(new hogbox::AnimateVec2()),
+    _isTranslating(false),
+    _animateSize(new hogbox::AnimateVec2()),
+    _isSizing(false),
     _animateColor(new hogbox::AnimateVec3()),
+    _isColoring(false),
     _animateAlpha(new hogbox::AnimateFloat()),
+    _isFading(false),
     _prevTick(0.0f),
     _animationDisabled(false),
-    _microMemoryMode(false),
-    _assestLoaded(false),
     //Create our callbacks
     //mouse events
     _onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
@@ -194,15 +194,15 @@ HudRegion::HudRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural)
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 HudRegion::HudRegion(const HudRegion& region,const osg::CopyOp& copyop)
-: osg::Object(region, copyop),
-_corner(region._corner),
-_size(region._size),
-_rotation(region._rotation),
-_visible(region._visible),
-_depth(region._depth),
-_color(region._color),
-_alpha(region._alpha),
-_alphaEnabled(region._alphaEnabled)
+    : osg::Object(region, copyop),
+    _size(region._size),
+    _corner(region._corner),
+    _rotation(region._rotation),
+    _depth(region._depth),
+    _visible(region._visible),
+    _color(region._color),
+    _alpha(region._alpha),
+    _alphaEnabled(region._alphaEnabled)
 {
 }
 
@@ -582,7 +582,7 @@ bool HudRegion::LoadAssest(const std::string& folderName)
         //now try to load a base texture
         std::string baseTextureFile = folderName+".png";
         {
-            _baseTexture = NULL;//OsgModelCache::Inst()->getOrLoadTex2D(baseTextureFile);
+            _baseTexture = hogbox::AssetManager::Inst()->GetOrLoadTex2D(baseTextureFile);
             if(_baseTexture.get())
             {
                 //apply the base as default
@@ -1004,6 +1004,9 @@ const osg::Vec3& HudRegion::GetColor() const
 void HudRegion::SetAlpha(const float& alpha)
 {
 	_alpha = alpha;
+    
+    //call set color to update the coloruniform with the new alpha
+    this->SetColor(_color);
     
 	//set the materials alpha
 	_material->setAlpha(osg::Material::FRONT_AND_BACK, _alpha);

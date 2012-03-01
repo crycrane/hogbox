@@ -45,9 +45,9 @@ public:
     osg::Node* Create(osg::Vec2 screenSize);
     
     bool HandleInputEvent(HudInputEvent& hudEvent);
-    osg::Node* GetHudNode(){return dynamic_cast<osg::Node*> (m_camera.get());}
+    osg::Node* GetHudNode(){return dynamic_cast<osg::Node*> (_camera.get());}
     
-    osg::Group* GetRootGroup(){return m_regionGroup.get();}
+    osg::Group* GetRootGroup(){return _regionGroup.get();}
     
     //add a region to our hud
     bool AddRegion(HudRegion* region);
@@ -71,27 +71,27 @@ protected:
     virtual ~HogBoxHud(void);
     
     virtual void destruct(){
-        m_regions.clear();
-        m_regionGroup=NULL;
-        m_camera=NULL;
+        _regions.clear();
+        _regionGroup=NULL;
+        _camera=NULL;
     }
     
 protected:
     
     //hud is rendered using a post render ortho camera
-    osg::ref_ptr<osg::Camera> m_camera;
+    osg::ref_ptr<osg::Camera> _camera;
     //region group attached to camera and has all regions attached to it
-    osg::ref_ptr<osg::Group> m_regionGroup;
+    osg::ref_ptr<osg::Group> _regionGroup;
     
     //the root region to which all regions are attached. This is
-    //attach to the m_regionGroup
-    osg::ref_ptr<HudRegion> m_hudRegion;
+    //attach to the _regionGroup
+    osg::ref_ptr<HudRegion> _hudRegion;
     
     //list of regions attached to this hud
-    HudRegion::HudRegionList m_regions;
+    HudRegion::HudRegionList _regions;
     
     //store current screnn/projection size
-    osg::Vec2 m_screenSize;
+    osg::Vec2 _screenSize;
 };
     
 };

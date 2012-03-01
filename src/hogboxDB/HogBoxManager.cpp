@@ -8,7 +8,7 @@ using namespace hogboxDB;
 //Changing to the dreaded global instance below has fixed things but I need to try and correct this
 osg::ref_ptr<HogBoxManager> s_hogboxManagerInstance = NULL;
 
-HogBoxManager* HogBoxManager::Instance(bool erase)
+HogBoxManager* HogBoxManager::Inst(bool erase)
 {
 	if(s_hogboxManagerInstance==NULL)
 	{s_hogboxManagerInstance = new HogBoxManager();}		
@@ -22,13 +22,13 @@ HogBoxManager* HogBoxManager::Instance(bool erase)
 
 HogBoxManager::HogBoxManager(void)
 	: osg::Referenced(),
-	m_databaseNode(NULL)
+	_databaseNode(NULL)
 {
 }
 
 HogBoxManager::~HogBoxManager(void)
 {
-	m_databaseNode = NULL;
+	_databaseNode = NULL;
 }
 
 //
@@ -40,45 +40,48 @@ HogBoxManager::~HogBoxManager(void)
 //
 bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
 {
-	//check the file exists
-	if(!osgDB::fileExists(fileName))
-	{
-		osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
-							   << "                                        The file does not exists." << std::endl;
-		//IPHONE_PORT@tom osgDB::fileExists needs fixing on iphone by the look of things
-		//return false;
-	}
-
-	//allocate the document node
-	osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
-	osgDB::XmlNode* root = 0;
-
-	//open the file with xmlinput
-	osgDB::XmlNode::Input input;
-	input.open(fileName);
-	input.readAllDataIntoBuffer();
-
-	//read the file into out document
-	doc->read(input);
-
-	//iterate over the document nodes and try and find a HogBoxDatabase node to
-	//use as a root
-	for(osgDB::XmlNode::Children::iterator itr = doc->children.begin();
-		itr != doc->children.end() && !root;
-		++itr)
-	{
-		if ((*itr)->name=="HogBoxDatabase") root = (*itr);
-	}
-
-	if (root == NULL)
-	{
-		osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
-							   << "                                        Hogbox XML Database files must contain a <HogBoxDatabase> node." << std::endl;
-		return false;
-	}
-
-	m_databaseNode = root;
-	return true;
+	/*_databaseNode = hogboxDB::openXmlFileAndReturnNode(fileName, "HogBoxDatabase");
+	return _databaseNode.valid();;*/
+    
+    //check the file exists
+    if(!osgDB::fileExists(fileName))
+    {
+        osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
+        << "                                        The file does not exists." << std::endl;
+        //IPHONE_PORT@tom osgDB::fileExists needs fixing on iphone by the look of things
+        //return false;
+    }
+    
+    //allocate the document node
+    osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
+    osgDB::XmlNode* root = 0;
+    
+    //open the file with xmlinput
+    osgDB::XmlNode::Input input;
+    input.open(fileName);
+    input.readAllDataIntoBuffer();
+    
+    //read the file into out document
+    doc->read(input);
+    
+    //iterate over the document nodes and try and find a HogBoxDatabase node to
+    //use as a root
+    for(osgDB::XmlNode::Children::iterator itr = doc->children.begin();
+        itr != doc->children.end() && !root;
+        ++itr)
+    {
+        if ((*itr)->name=="HogBoxDatabase") root = (*itr);
+    }
+    
+    if (root == NULL)
+    {
+        osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
+        << "                                        Hogbox XML Database files must contain a <HogBoxDatabase> node." << std::endl;
+        return false;
+    }
+    
+    _databaseNode = root;
+    return true;
 }
 
 
@@ -87,7 +90,7 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
 //the xml nodes uniqueID property to find it in the database.
 //The nodes name/head is used as a classType to find an approprite
 //XmlClassManager to handle construction of the object.
-hogbox::ObjectPtr HogBoxManager::ReadNodeByID(const std::string& uniqueID)
+osg::ObjectPtr HogBoxManager::ReadNodeByID(const std::string& uniqueID)
 {
 	//see if we can find a node with the uniqueID requested
 	osgDB::XmlNode* uniqueIDNode = FindNodeByUniqueIDProperty(uniqueID);
@@ -104,7 +107,7 @@ hogbox::ObjectPtr HogBoxManager::ReadNodeByID(const std::string& uniqueID)
 //the XmlNodeManagers GetOrLoadNode function returning the result
 //If n oXmlNodeManager is found then NULL is returned
 //
-hogbox::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
+osg::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 {
 	if(!inNode){return NULL;}
 	
@@ -124,11 +127,11 @@ hogbox::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 	//use the requested class name to query the hogbox registry for an xmlnodemanager that is
 	//cabale of loading the class type
 
-	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Instance()->GetXmlClassManagerForClassType(requestedClass);
+	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Inst()->GetXmlClassManagerForClassType(requestedClass);
 	if(readManager)
 	{
 		//read the node with XmlClassManager type returned by the registry 
-		hogbox::ObjectPtr readResult = readManager->GetOrLoadNode(inNode);
+		osg::ObjectPtr readResult = readManager->GetOrLoadNode(inNode);
 		return readResult;
 	}
 	
@@ -144,16 +147,16 @@ osg::Object* HogBoxManager::GetNodeByID(const std::string& uniqueID)
 	//find an xml node with the unique id
 	//see if we can find a node with the uniqueID requested
 	osgDB::XmlNode* uniqueIDNode = FindNodeByUniqueIDProperty(uniqueID);
-	if(!uniqueIDNode){return false;}
+	if(!uniqueIDNode){return NULL;}
     
 	//the xml node name represents its classType
 	std::string requestedClass = uniqueIDNode->name;
     
 	//find the manager for handling that type of class
-	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Instance()->GetXmlClassManagerForClassType(requestedClass);
+	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Inst()->GetXmlClassManagerForClassType(requestedClass);
 	if(readManager)
 	{
-        hogbox::ObjectPtr obj = readManager->GetNodeObjectByID(uniqueID);
+        osg::ObjectPtr obj = readManager->GetNodeObjectByID(uniqueID);
         return obj.get();
     }
     return NULL;
@@ -173,7 +176,7 @@ bool HogBoxManager::ReleaseNodeByID(const std::string& uniqueID)
 	std::string requestedClass = uniqueIDNode->name;
 
 	//find the manager for handling that type of class
-	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Instance()->GetXmlClassManagerForClassType(requestedClass);
+	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Inst()->GetXmlClassManagerForClassType(requestedClass);
 	if(readManager)
 	{
 		//remove the unique id node from the manager
@@ -188,8 +191,12 @@ bool HogBoxManager::ReleaseNodeByID(const std::string& uniqueID)
 osgDB::XmlNode* HogBoxManager::FindNodeByUniqueIDProperty(const std::string& uniqueID, osgDB::XmlNode* xmlNode)
 {
 	if(xmlNode==NULL){
-		if(!m_databaseNode){this->ReadDataBaseFile("Data/hogboxDB.xml");}
-		xmlNode = m_databaseNode;
+		if(!_databaseNode){this->ReadDataBaseFile("Data/hogboxDB.xml");}
+		xmlNode = _databaseNode;
+        if(xmlNode==NULL){
+            OSG_FATAL << "HogBoxManager::FindNodeByUniqueIDProperty: ERROR: No database fileloaded." << std::endl;
+            return NULL;
+        }
 	}
 
 	//iterate through children of the node

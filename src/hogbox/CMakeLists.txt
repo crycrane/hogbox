@@ -12,6 +12,7 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/AnimationPathControl.h
 	${HEADER_PATH}/AnimationPathEventCallback.h
 	${HEADER_PATH}/AnimationUtils.h
+    ${HEADER_PATH}/AssetManager.h
 	${HEADER_PATH}/Export.h
 	${HEADER_PATH}/Version.h
 	${HEADER_PATH}/HogBoxBase.h
@@ -35,6 +36,7 @@ ADD_LIBRARY(${LIB_NAME}
     AnimationPathController.cpp
     AnimationPathEventCallback.cpp
 	AnimationUtils.cpp
+    AssetManager.cpp
 	HogBoxHardwareRigTransform.cpp
 	HogBoxLight.cpp
 	HogBoxMaterial.cpp

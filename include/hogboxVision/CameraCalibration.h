@@ -31,7 +31,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	CameraCalibration(const CameraCalibration& calib,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision,CameraCalibration);
+	META_Object(hogboxVision,CameraCalibration);
 
 	virtual void ChangeSize(int width, int height);
 
@@ -46,10 +46,10 @@ protected:
 protected:
 
 	//common variables
-	int m_cameraWidth; 
-	int m_cameraHeight;
+	int _cameraWidth; 
+	int _cameraHeight;
 
-	double m_focalLength;
+	double _focalLength;
 
 	//matrix, distortion (what format?)
 };

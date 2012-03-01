@@ -106,11 +106,11 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	MeshMapping(const MeshMapping& mesh,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogbox,MeshMapping);
+	META_Object(hogbox,MeshMapping);
 
 public:
 
-	osg::ref_ptr<MeshMappingVisitor> m_visitor;
+	osg::ref_ptr<MeshMappingVisitor> _visitor;
 
 protected:
 	virtual ~MeshMapping();

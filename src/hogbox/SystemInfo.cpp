@@ -7,6 +7,12 @@
 #include <sstream>
 #include <string>
 
+#ifdef TARGET_OS_IPHONE
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#import <UIKit/UIScreen.h>
+#endif
+
 
 using namespace hogbox;
 
@@ -15,7 +21,7 @@ using namespace hogbox;
 //Changing to the dreaded global instance below has fixed things but I need to try and correct this
 osg::ref_ptr<SystemInfo> s_hogboxSystemInfoInstance = NULL;
 
-SystemInfo* SystemInfo::Instance(GatherLevel level, bool erase)
+SystemInfo* SystemInfo::Inst(GatherLevel level, bool erase)
 {
 	if(s_hogboxSystemInfoInstance==NULL)
 	{s_hogboxSystemInfoInstance = new SystemInfo(level);}		
@@ -31,21 +37,17 @@ SystemInfo::SystemInfo(GatherLevel level)
 	: osg::Referenced(),
 	_gatherLevel(level),
 	_osName(""),
-//Default info
-	m_maxTestedBuffers(2),
-	m_maxTestedStencilBits(0),
-	m_maxTestedDepthBits(16),
-	m_maxTestedMultiSamples(0),
-	//The system info values
-	_glVersionNumber(0.0f),
-	_glslVersionNumber(0.0f),
-	_rendererName(""),
-	_vendorName(""),
-	//buffers
-	_quadBufferedStereoSupported(false),
-	_multiSamplingSupported(false),
-	_maxMultiSamples(0),
-	_bStencilBufferedSupported(false),
+    //gl version numbers
+    _glVersionNumber(0.0f),
+    _glslVersionNumber(0.0f),	
+    _rendererName(""),
+    _vendorName(""),
+    _manualScreenSize(osg::Vec2(-1,-1)),
+    //buffers
+    _quadBufferedStereoSupported(false),
+    _multiSamplingSupported(false),
+    _maxMultiSamples(0),
+    _bStencilBufferedSupported(false),
 	//shaders
 	_glslLangSupported(false),
 	_shaderObjectSupported(false),
@@ -65,11 +67,16 @@ SystemInfo::SystemInfo(GatherLevel level)
 	_maxTextureCoordUnits(2),
 	//framebufers / render to texture stuff 
 	_frameBufferObjectSupported(false),
+    //Default buffers
+    _maxTestedBuffers(2),
+    _maxTestedStencilBits(0),
+    _maxTestedDepthBits(16),
+    _maxTestedMultiSamples(0),
+    //list of Systeminfolevels
+    _renderSupportInfo(NULL),
 	_totalDedicatedGLMemory(0),
 	_avaliableGLMemory(0),
-	_avliableDedicatedGLMemory(0),
-	//list of Systeminfolevels
-	m_renderSupportInfo(NULL)
+	_avliableDedicatedGLMemory(0)
 {
 	//call init to get info
 	this->Init(true);
@@ -78,7 +85,7 @@ SystemInfo::SystemInfo(GatherLevel level)
 SystemInfo::~SystemInfo(void)
 {
 	OSG_NOTICE << "    Deallocating SystemInfo Instance."<< std::endl;
-	m_renderSupportInfo = NULL;
+	_renderSupportInfo = NULL;
 }
 
 //
@@ -258,8 +265,8 @@ bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
 //
 bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> graphicsContext)
 {
-	//if the m_renderSupportInfo isn't valid, then a gather needs to be performed
-	if(!m_renderSupportInfo.get())
+	//if the _renderSupportInfo isn't valid, then a gather needs to be performed
+	if(!_renderSupportInfo.get())
 	{
 		//no external context supplied, create one using our defaults
 		if(!graphicsContext.get())
@@ -278,11 +285,11 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 		viewer->getCamera()->setViewport(0,0,128,128);
 		
 		//create our gl info gathering callback
-		m_renderSupportInfo = new GLSupportCallback();
-		if(!m_renderSupportInfo){return false;}
+		_renderSupportInfo = new GLSupportCallback();
+		if(!_renderSupportInfo){return false;}
 		
 		//atach our info gathering frame callback to the viewer camera
-		viewer->getCamera()->setFinalDrawCallback(m_renderSupportInfo.get());
+		viewer->getCamera()->setFinalDrawCallback(_renderSupportInfo.get());
 		viewer->getCamera()->setClearColor(osg::Vec4( 1.0, 1.0, 1.0f, 1.0));
 		
 		//launch the window and render a frame so our callback can get at the graphics context
@@ -293,64 +300,64 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 		viewer->frame();
 		
 		//now create the memory info callback and attach as final draw
-		m_glMemoryInfo = new GPUMemoryCallback();
-		if(m_glMemoryInfo.get())
+		_glMemoryInfo = new GPUMemoryCallback();
+		if(_glMemoryInfo.get())
 		{
-			viewer->getCamera()->setFinalDrawCallback(m_glMemoryInfo.get());
+			viewer->getCamera()->setFinalDrawCallback(_glMemoryInfo.get());
 			//fire another frame to fill GPUMemoryInfo
 			viewer->frame();
 		}
 	}
 	
-	//now set locals from m_renderSupportInfo
-	_glVersionNumber = m_renderSupportInfo->getGLVersionNumber();
-	_glslVersionNumber = m_renderSupportInfo->getGLSLVersionNumber();
+	//now set locals from _renderSupportInfo
+	_glVersionNumber = _renderSupportInfo->getGLVersionNumber();
+	_glslVersionNumber = _renderSupportInfo->getGLSLVersionNumber();
 	
-	_rendererName = m_renderSupportInfo->getRendererName();
-	_vendorName = m_renderSupportInfo->getVendorName();
+	_rendererName = _renderSupportInfo->getRendererName();
+	_vendorName = _renderSupportInfo->getVendorName();
 	
 	//buffers
 	
-	_quadBufferedStereoSupported = m_renderSupportInfo->quadBufferedStereoSupported();
+	_quadBufferedStereoSupported = _renderSupportInfo->quadBufferedStereoSupported();
 	
-	_multiSamplingSupported = m_renderSupportInfo->multiSamplingSupported();
-	_maxMultiSamples = m_renderSupportInfo->maxMultiSamplesSupported();
+	_multiSamplingSupported = _renderSupportInfo->multiSamplingSupported();
+	_maxMultiSamples = _renderSupportInfo->maxMultiSamplesSupported();
 	
-	_bStencilBufferedSupported = m_renderSupportInfo->stencilBufferSupported();
+	_bStencilBufferedSupported = _renderSupportInfo->stencilBufferSupported();
 	
 	//shaders
 	
-	_glslLangSupported = m_renderSupportInfo->glslLangSupported();
-	_shaderObjectSupported = m_renderSupportInfo->shaderObjectSupported();
-	_gpuShader4Supported = m_renderSupportInfo->gpuShader4Supported();
-	_vertexShadersSupported = m_renderSupportInfo->vertexShadersSupported();
-	_fragmentShadersSupported = m_renderSupportInfo->fragmentShadersSupported();
-	_geometryShadersSupported = m_renderSupportInfo->geometryShadersSupported();
+	_glslLangSupported = _renderSupportInfo->glslLangSupported();
+	_shaderObjectSupported = _renderSupportInfo->shaderObjectSupported();
+	_gpuShader4Supported = _renderSupportInfo->gpuShader4Supported();
+	_vertexShadersSupported = _renderSupportInfo->vertexShadersSupported();
+	_fragmentShadersSupported = _renderSupportInfo->fragmentShadersSupported();
+	_geometryShadersSupported = _renderSupportInfo->geometryShadersSupported();
 	
 	//texturing
 	
-	_supportsNPOTTexture = m_renderSupportInfo->npotTextureSupported();
-	_maxTex2DSize = m_renderSupportInfo->maxTex2DSize();
-	_texRectangleSupported = m_renderSupportInfo->textureRectangleSupported();
+	_supportsNPOTTexture = _renderSupportInfo->npotTextureSupported();
+	_maxTex2DSize = _renderSupportInfo->maxTex2DSize();
+	_texRectangleSupported = _renderSupportInfo->textureRectangleSupported();
 	
-	_maxTextureUnits = m_renderSupportInfo->maxTextureUnits();
-	_maxVertexTextureUnits = m_renderSupportInfo->maxVertexTextureUnits();
-	_maxFragmentTextureUnits = m_renderSupportInfo->maxFragmentTextureUnits();
-	_maxGeometryTextureUnits = m_renderSupportInfo->maxGeometryTextureUnits();
-	_totalTextureUnits = m_renderSupportInfo->totalTextureUnitsAvaliable();
+	_maxTextureUnits = _renderSupportInfo->maxTextureUnits();
+	_maxVertexTextureUnits = _renderSupportInfo->maxVertexTextureUnits();
+	_maxFragmentTextureUnits = _renderSupportInfo->maxFragmentTextureUnits();
+	_maxGeometryTextureUnits = _renderSupportInfo->maxGeometryTextureUnits();
+	_totalTextureUnits = _renderSupportInfo->totalTextureUnitsAvaliable();
 	
-	_maxTextureCoordUnits = m_renderSupportInfo->maxTextureCoordUnits();
+	_maxTextureCoordUnits = _renderSupportInfo->maxTextureCoordUnits();
 	
 	//framebufers / render to texture stuff 
 	
-	_frameBufferObjectSupported = m_renderSupportInfo->frameBufferObjectSupported();
+	_frameBufferObjectSupported = _renderSupportInfo->frameBufferObjectSupported();
 	
 	//GL Memory
-	if(m_glMemoryInfo.get())
+	if(_glMemoryInfo.get())
 	{
-		_totalDedicatedGLMemory = m_glMemoryInfo->totalDedicatedVideoMemory();
-		_avaliableGLMemory = m_glMemoryInfo->avaliableMemory();
-		_avliableDedicatedGLMemory = m_glMemoryInfo->avaliableDedicatedVideoMemory();
+		_totalDedicatedGLMemory = _glMemoryInfo->totalDedicatedVideoMemory();
+		_avaliableGLMemory = _glMemoryInfo->avaliableMemory();
+		_avliableDedicatedGLMemory = _glMemoryInfo->avaliableDedicatedVideoMemory();
 	}
 	
 	return true;
@@ -369,14 +376,14 @@ osg::ref_ptr<osg::GraphicsContext> SystemInfo::CreateGLContext(osg::Vec2 size)
 	graphicsTraits->y =	 0;
 	graphicsTraits->width = size.x();
 	graphicsTraits->height = size.y();
-	graphicsTraits->doubleBuffer = m_maxTestedBuffers >= 2 ? true : false;
+	graphicsTraits->doubleBuffer = _maxTestedBuffers >= 2 ? true : false;
 	graphicsTraits->sharedContext = 0;
 	graphicsTraits->windowDecoration = false;
 	graphicsTraits->windowName = "";
-	graphicsTraits->stencil = m_maxTestedStencilBits;
-	graphicsTraits->depth = m_maxTestedDepthBits;
-	graphicsTraits->samples = m_maxTestedMultiSamples;
-	graphicsTraits->quadBufferStereo = m_maxTestedBuffers >= 4 ? true : false;
+	graphicsTraits->stencil = _maxTestedStencilBits;
+	graphicsTraits->depth = _maxTestedDepthBits;
+	graphicsTraits->samples = _maxTestedMultiSamples;
+	graphicsTraits->quadBufferStereo = _maxTestedBuffers >= 4 ? true : false;
 
 	//create context
 	osg::ref_ptr<osg::GraphicsContext> graphicsContext = osg::GraphicsContext::createGraphicsContext(graphicsTraits.get());
@@ -402,6 +409,9 @@ const unsigned int SystemInfo::getNumberOfScreens()
 
 const int SystemInfo::getScreenWidth(unsigned int screenID)
 {
+    if(_manualScreenSize.x() != -1){
+        return _manualScreenSize.x();
+    }
 	//get basic params
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
@@ -418,6 +428,9 @@ const int SystemInfo::getScreenWidth(unsigned int screenID)
 
 const int SystemInfo::getScreenHeight(unsigned int screenID)
 {
+    if(_manualScreenSize.y() != -1){
+        return _manualScreenSize.y();
+    }
 	//get basic params
     osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
     if (!wsi)
@@ -475,6 +488,53 @@ const double SystemInfo::getScreenAspectRatio(unsigned int screenID)
 {
 	osg::Vec2 res = this->getScreenResolution(screenID);
 	return res.x()/res.y();
+}
+
+//get the screens density/res group, used for loading different assets on different displays
+SystemInfo::ScreenDensity SystemInfo::getScreenDensity()
+{
+#ifdef TARGET_OS_IPHONE
+    if([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
+    {
+        if([[UIScreen mainScreen] scale] > 2){
+            return HIGH_DENSITY;
+        }else if([[UIScreen mainScreen] scale] == 2){
+            return MEDIUM_DENSITY;
+        }else if([[UIScreen mainScreen] scale] == 1){
+            return LOW_DENSITY;
+        }
+    }else{
+        return LOW_DENSITY;
+    }
+#else
+    
+    
+    osg::Vec2 screenSize = this->getScreenResolution();
+    
+    //check res has been set
+    if(screenSize.x() <= 0 || screenSize.y() <= 0){
+        OSG_FATAL << "OsgModelCache::GetScreenType: WARN: Screen res has not been set, defaulting to LOW_RES." << std::endl;
+        return LOW_DENSITY;
+    }
+    
+    //use length of screen res vector for comparison to account for reses being in portrait or landscape
+    float screenLength = screenSize.length();
+    osg::Vec2 QHD(540,960);
+    osg::Vec2 WVGA(480,800);
+    osg::Vec2 HVGA(320,480);
+    
+    OSG_FATAL << "ScreenLength: " << screenLength << std::endl;
+    
+    if(screenLength >= QHD.length()){
+        return HIGH_DENSITY;
+    }else if(screenLength >= WVGA.length()){
+        return MEDIUM_DENSITY;
+    }else{
+        return LOW_DENSITY;
+    }
+    
+#endif
+    return LOW_DENSITY;
 }
 
 //set sreen settings
@@ -566,15 +626,15 @@ osg::ref_ptr<osg::GraphicsContext> SystemInfo::FindGoodContext()
 	{
 		if(this->FindDoubleBufferTraits( graphicsTraits.get() ))
 		{
-			m_maxTestedBuffers = 2;
+			_maxTestedBuffers = 2;
 		}
 		if(this->FindQuadBufferedTraits( graphicsTraits.get() ))
 		{
-			m_maxTestedBuffers = 4;
+			_maxTestedBuffers = 4;
 		}
-		m_maxTestedDepthBits = this->FindDepthTraits(graphicsTraits.get(), 24);
-		m_maxTestedStencilBits = this->FindStencilTraits( graphicsTraits.get(), 8 );
-		m_maxTestedMultiSamples = this->FindMultiSamplingTraits( graphicsTraits.get(), 8 );
+		_maxTestedDepthBits = this->FindDepthTraits(graphicsTraits.get(), 24);
+		_maxTestedStencilBits = this->FindStencilTraits( graphicsTraits.get(), 8 );
+		_maxTestedMultiSamples = this->FindMultiSamplingTraits( graphicsTraits.get(), 8 );
 	
 
 	}catch( std::string str ) {
@@ -738,7 +798,7 @@ unsigned int SystemInfo::FindMultiSamplingTraits(osg::GraphicsContext::Traits* c
 bool SystemInfo::SetFeatureLevel(const std::string& name, SystemFeatureLevel* featureLevel)
 {
 	if(!featureLevel){return false;}
-	m_featureLevels[name] = featureLevel;
+	_featureLevels[name] = featureLevel;
 	return true;
 }
 
@@ -748,9 +808,9 @@ bool SystemInfo::SetFeatureLevel(const std::string& name, SystemFeatureLevel* fe
 SystemFeatureLevel* SystemInfo::GetFeatureLevel(const std::string& name)
 {
 	//see if we can find a texture in channel
-	if(m_featureLevels.count(name) > 0)
+	if(_featureLevels.count(name) > 0)
 	{
-		return m_featureLevels[name];
+		return _featureLevels[name];
 	}
 	return NULL;	
 }
@@ -805,6 +865,43 @@ bool SystemInfo::IsFeatureLevelSupported(const std::string& name)
 	return IsFeatureLevelSupported(level);
 }
 
+//
+//Return the device id string
+//
+const std::string SystemInfo::GetDeviceString()
+{
+#ifdef TARGET_OS_IPHONE 
+    size_t size;
+    
+    // Set 'oldp' parameter to NULL to get the size of the data
+    // returned so we can allocate appropriate amount of space
+    sysctlbyname("hw.machine", NULL, &size, NULL, 0); 
+    
+    // Allocate the space to store name
+    char* name = (char*)malloc(size);
+    
+    // Get the platform name
+    sysctlbyname("hw.machine", name, &size, NULL, 0);
+    
+    // Place name into a string
+    std::string deviceName = std::string(name);
+    
+    // Done with this
+    free(name);
+    
+    OSG_FATAL << "Device str: '" << deviceName << "'." << std::endl;
+    
+    return deviceName;
+    
+#elif defined(WIN32
+    return "Windows";
+#elif defined(__APPLE__)
+    return "OSX";
+#elif defined(ANDROID)
+    return "AndroidDevice";
+#endif
+}
+
 
 void SystemInfo::PrintReportToLog()
 {
@@ -839,11 +936,11 @@ void SystemInfo::PrintReportToLog()
 	
 	OSG_NOTICE << "                Quad Buffered Stereo supported:= " <<  (this->quadBufferedStereoSupported() ? "True" : "False") <<std::endl; 
 
-	OSG_NOTICE << "                Max Depth bits:= " << m_maxTestedDepthBits <<std::endl; 
+	OSG_NOTICE << "                Max Depth bits:= " << _maxTestedDepthBits <<std::endl; 
 	
-	OSG_NOTICE << "                Max Stencil bits:= " << m_maxTestedStencilBits <<std::endl;  
+	OSG_NOTICE << "                Max Stencil bits:= " << _maxTestedStencilBits <<std::endl;  
 
-	OSG_NOTICE << "                Max Multi Samples:= " << m_maxTestedMultiSamples <<std::endl; 
+	OSG_NOTICE << "                Max Multi Samples:= " << _maxTestedMultiSamples <<std::endl; 
 
 	OSG_NOTICE << "        Shaders:" <<std::endl;
 

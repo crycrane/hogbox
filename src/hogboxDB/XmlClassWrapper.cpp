@@ -3,19 +3,20 @@
 using namespace hogboxDB;
 
 
-XmlClassWrapper::XmlClassWrapper(osgDB::XmlNode* node, const std::string& classType) 
+XmlClassWrapper::XmlClassWrapper(const std::string& classType) 
 	: osg::Referenced(),
-	m_classType(classType),
+	_classType(classType),
 	p_wrappedObject(NULL)
 {
+
 }
 
 XmlClassWrapper::~XmlClassWrapper(void)
 {
-	OSG_NOTICE << "Deallocating XmlClassWrapper: Type '" << this->GetClassType() << "', UniqueID '" << this->GetUniqueID() << "'." << std::endl;
+	OSG_NOTICE << "Deallocating XmlClassWrapper: Type '" << this->getClassType() << "', UniqueID '" << this->getUniqueID() << "'." << std::endl;
 	//iterate our attributes and release also
-	XmlAttributeMap::iterator itr = m_xmlAttributes.begin();
-	for( ; itr != m_xmlAttributes.end(); itr++)
+	XmlAttributeMap::iterator itr = _xmlAttributes.begin();
+	for( ; itr != _xmlAttributes.end(); itr++)
 	{	
 		(*itr).second->releaseAttribute();
 	}
@@ -25,17 +26,17 @@ XmlClassWrapper::~XmlClassWrapper(void)
 //
 //Return the uniqueID of the node
 //
-const std::string& XmlClassWrapper::GetClassType()const
+const std::string& XmlClassWrapper::getClassType()const
 {
-	return m_classType;
+	return _classType;
 }
 
 //
 //Return the uniqueID of the node
 //
-const std::string& XmlClassWrapper::GetUniqueID()const
+const std::string& XmlClassWrapper::getUniqueID()const
 {
-	return m_uniqueID;
+	return _uniqueID;
 }
 
 //
@@ -54,15 +55,15 @@ osg::Object* XmlClassWrapper::getWrappedObject()
 //
 XmlAttribute* XmlClassWrapper::get(const std::string& name)
 {
-	XmlAttributeMap::iterator _found = m_xmlAttributes.find(name);
-	return (_found != m_xmlAttributes.end()) ? _found->second.get() : NULL;
+	XmlAttributeMap::iterator _found = _xmlAttributes.find(name);
+	return (_found != _xmlAttributes.end()) ? _found->second.get() : NULL;
 }
 
 //
 //Some objects require special case name setting. the default set the objects name
 //to that of the nodes uniqueID. 
 //
-void XmlClassWrapper::SetObjectNameFromUniqueID(const std::string& name)
+void XmlClassWrapper::setObjectNameFromUniqueID(const std::string& name)
 {
 	p_wrappedObject->setName(name);
 }
@@ -74,14 +75,23 @@ void XmlClassWrapper::SetObjectNameFromUniqueID(const std::string& name)
 bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)  
 {
 	//we have to have been passed a valid object in the contructor
-	if(!p_wrappedObject){return false;}
+	if(!p_wrappedObject.get()){
+        p_wrappedObject = this->allocateClassType();
+        if(p_wrappedObject.get()){
+            this->bindXmlAttributes();
+        }else{
+            return false;
+        }
+    }
 	if(!in){return false;}
 
+    std::string xmlClassName = this->getClassNameFromXmlNode(in);
+    
 	//check it's of the correct class
-	if(in->name != this->GetClassType())
+	if(xmlClassName != this->getClassType())
 	{
-		osg::notify(osg::WARN) << "XML ERROR: Parsing classtype '" << in->name << "'," << std::endl
-							   << "                   Was expecting classtype '" << this->GetClassType() << "'" << std::endl;
+		OSG_WARN << "XML ERROR: Parsing classtype '" << xmlClassName << "'," << std::endl
+							   << "                   Was expecting classtype '" << this->getClassType() << "'" << std::endl;
 		return false;
 	}
 
@@ -90,7 +100,7 @@ bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)
 	std::string uniqueID;
 	if(!hogboxDB::getXmlPropertyValue(in, "uniqueID", uniqueID))
 	{
-		osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype '" << in->name << "' should have a uniqueID property." <<std::endl 
+		OSG_WARN	<< "XML ERROR: Nodes of classtype '" << in->name << "' should have a uniqueID property." <<std::endl 
 								<< "                    i.e. <" << in->name << " uniqueID='myID'>" << std::endl;
 		return false;
 	}
@@ -116,7 +126,7 @@ bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)
 				{
 					//returned an error while deserializing the attribute, inform the user
 					//but carry on trying the other attributes as they are in seperate xmlnodes
-					osg::notify(osg::WARN) << "XML ERROR: While reading uniqueID node '" << uniqueID << "' of type '" << in->name << "'" << std::endl
+					OSG_WARN << "XML ERROR: While reading uniqueID node '" << uniqueID << "' of type '" << in->name << "'" << std::endl
 										   << "                      Failed to read value of attribute '" << attNode->name << "', it's possible the attribute exists" << std::endl
 										   << "                      but the value type is incorect" << std::endl;
 				}
@@ -132,16 +142,37 @@ bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)
 
 	//do any implementation specific setname stuff, default implementation
 	//sets p_wrappedObjects name to uniqueID
-	this->SetObjectNameFromUniqueID(uniqueID);
+	this->setObjectNameFromUniqueID(uniqueID);
 	
-	//the node wrapper has successfully deserialised the objec, set it's name to uniqueID
+	//the node wrapper has successfully deserialised the object, set it's name to uniqueID
 	//for future identification
-	m_uniqueID = uniqueID;
+	_uniqueID = uniqueID;
 
 	return true;
 }
 
 
+//
+//Return the class name from an xml node, default is the nodes name,
+//but if a type property exists that is used instead
+//
+const std::string XmlClassWrapper::getClassNameFromXmlNode(osgDB::XmlNode* xmlNode)
+{
+    if(!xmlNode){
+        return "";
+    }
+    std::string className = xmlNode->name; 
+    //see if there is a type property, if so it overrides the name
+    std::string streamTypeStr = "";
+    if(hogboxDB::getXmlPropertyValue(xmlNode, "type", streamTypeStr))
+    {
+        //if type wasn't empty
+        if(!streamTypeStr.empty() && streamTypeStr != "Base"){
+            className = streamTypeStr;
+        }
+    }
+    return className;
+}
 
 
 //
@@ -156,8 +187,8 @@ void XmlClassWrapper::printXmlInterface()
 								 << "                            <" << p_wrappedObject->className() << " uniqueID=''>" << std::endl;
 
 		//write out all the attributes
-		XmlAttributeMap::iterator _i = m_xmlAttributes.begin();
-		for (;_i != m_xmlAttributes.end(); ++_i) 
+		XmlAttributeMap::iterator _i = _xmlAttributes.begin();
+		for (;_i != _xmlAttributes.end(); ++_i) 
 		{
 			OSG_NOTICE << "                                    <" << (*_i).first << ">" << std::endl;
 		}

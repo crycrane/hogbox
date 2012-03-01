@@ -15,6 +15,10 @@
 
 #include <hogboxDB/XmlClassManager.h>
 #include "OsgTextureXmlWrapper.h"
+#include "OsgTexture2DXmlWrapper.h"
+#include "OsgTextureRectangleXmlWrapper.h"
+#include "OsgTexture3DXmlWrapper.h"
+#include "OsgTextureCubeXmlWrapper.h"
 
 #include <osg/Texture>
 #include <osg/Texture2D>
@@ -31,10 +35,12 @@ public:
 
 	OsgTextureManager(void) : hogboxDB::XmlClassManager()
 	{
-		SupportsClassType("Texture", "Xml definition of osg Texture");
-		SupportsClassType("Texture2D", "Xml definition of osg Texture2D, inherited from Texture");
-		SupportsClassType("TextureCubeMap", "Xml definition of osg TextureCubeMap, inherited from Texture");
-		SupportsClassType("TextureRectangle", "Xml definition of osg TextureRectangle, inherited from Texture");
+        //should I have individual wrappers here?
+		SupportsClassType("Texture", new OsgTextureXmlWrapper("Texture"));//"Xml definition of osg Texture");
+		SupportsClassType("Texture2D", new OsgTexture2DXmlWrapper());//"Xml definition of osg Texture2D, inherited from Texture");
+		SupportsClassType("TextureCubeMap", new OsgTextureCubeXmlWrapper());//"Xml definition of osg TextureCubeMap, inherited from Texture");
+		SupportsClassType("TextureRectangle", new OsgTextureCubeXmlWrapper());//"Xml definition of osg TextureRectangle, inherited from Texture");
+		SupportsClassType("Texture3D", new OsgTexture3DXmlWrapper());//"Xml definition of osg TextureRectangle, inherited from Texture");
 	}
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -43,40 +49,14 @@ public:
 	{
 	}
 
-	META_Box(hogboxDB, OsgTextureManager)
+	META_Object(hogboxDB, OsgTextureManager)
 
 protected:
 
-	virtual ~OsgTextureManager(void)
-	{
-	}
-
-	//
-	//Create a HogBoxObject and read it's data in from disk
-	virtual hogboxDB::XmlClassWrapperPtr ReadObjectFromXmlNodeImplementation(osgDB::XmlNode* xmlNode)
-	{
-		hogbox::ObjectPtr object;
-		OsgTextureXmlWrapperPtr xmlWrapper;
-
-		xmlWrapper = new OsgTextureXmlWrapper(xmlNode);
-
-		if(!xmlWrapper){return NULL;}
-		//did the wrapper alocate an object
-		if(!xmlWrapper->getWrappedObject()){return NULL;}
-
-		//if the wrapper was created properly then use it 
-		//to deserialize our the xmlNode into it's wrapped object
-		if(!xmlWrapper->deserialize(xmlNode))
-		{
-			//an error occured deserializing the xml node
-			return NULL;
-		}
-
-		//we're done deserialising the object
-		return xmlWrapper;
+	virtual ~OsgTextureManager(void){
 	}
 
 };
 
-REGISTER_HOGBOXPLUGIN(Texture, OsgTextureManager)
+//REGISTER_HOGBOXPLUGIN(Texture, OsgTextureManager)
 

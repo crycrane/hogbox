@@ -81,9 +81,9 @@ osg::ref_ptr<osg::Camera> Ortho2DLayer::buildLayer()
 osg::ref_ptr<osg::Geode> Ortho2DLayer::buildLayerGeometry() 
 {
 	float minU = 0.0f;
-	float maxU = 1.0f;//m_width;//1.0f
+	float maxU = 1.0f;//_width;//1.0f
 	float minV = 0.0f;
-	float maxV = 1.0f;//m_height;//1.0f;
+	float maxV = 1.0f;//_height;//1.0f;
 
 	_layerGeode = new osg::Geode();
 
@@ -104,9 +104,9 @@ osg::ref_ptr<osg::Geode> Ortho2DLayer::buildLayerGeometry()
 	coords->push_back(osg::Vec3(-hWidth, hHeight, 0.0f));
 	
 	/*coords->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
-	coords->push_back(osg::Vec3(m_width, 0.0f, 0.0f));
-	coords->push_back(osg::Vec3(m_width, m_height, 0.0f));
-	coords->push_back(osg::Vec3(0.0f, m_height, 0.0f));*/
+	coords->push_back(osg::Vec3(_width, 0.0f, 0.0f));
+	coords->push_back(osg::Vec3(_width, _height, 0.0f));
+	coords->push_back(osg::Vec3(0.0f, _height, 0.0f));*/
 
 	tcoords->push_back(osg::Vec2(minU, minV));
 	tcoords->push_back(osg::Vec2(maxU, minV));

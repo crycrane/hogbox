@@ -29,8 +29,8 @@ class HOGBOXVIS_EXPORT VideoFileStreamWrapper : public osg::Object
 public:
 	VideoFileStreamWrapper(const std::string& name, VideoFileStream* proto)
 		: osg::Object(),
-		m_pluginName(name),
-		m_prototype(proto)
+		_pluginName(name),
+		_prototype(proto)
 	{
 	}
 
@@ -40,26 +40,26 @@ public:
 
 	}
 
-    virtual osg::Object* cloneType() const { return new VideoFileStreamWrapper (m_pluginName, m_prototype); }
+    virtual osg::Object* cloneType() const { return new VideoFileStreamWrapper (_pluginName, _prototype); }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return new VideoFileStreamWrapper (*this,copyop); }
     bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const VideoFileStreamWrapper*>(obj)!=NULL; }
-    const char* className() const { return m_prototype->className(); }
+    const char* className() const { return _prototype->className(); }
 	const char* libraryName() const { return "hogboxVision"; }
 	
-	const std::string& GetPluginName(){return m_pluginName;}
-	VideoFileStream* GetPrototype(){return m_prototype;}
+	const std::string& GetPluginName(){return _pluginName;}
+	VideoFileStream* GetPrototype(){return _prototype;}
 	
 protected:
 
 	virtual ~VideoFileStreamWrapper(void)
 	{
-		m_prototype = NULL;
+		_prototype = NULL;
 	}
 
 protected:
 
-	VideoFileStreamPtr m_prototype;	
-	std::string m_pluginName; //just base part at end of lib name e.g. dshow
+	VideoFileStreamPtr _prototype;	
+	std::string _pluginName; //just base part at end of lib name e.g. dshow
 };
 
 typedef osg::ref_ptr<VideoFileStreamWrapper> VideoFileStreamWrapperPtr;
@@ -73,8 +73,8 @@ class HOGBOXVIS_EXPORT WebCamStreamWrapper : public osg::Object
 public:
 	WebCamStreamWrapper(const std::string& name, WebCamStream* proto)
 		: osg::Object(),
-		m_pluginName(name),
-		m_prototype(proto)
+		_pluginName(name),
+		_prototype(proto)
 	{
 	}
 
@@ -84,26 +84,26 @@ public:
 
 	}
 
-    virtual osg::Object* cloneType() const { return new WebCamStreamWrapper (m_pluginName, m_prototype); }
+    virtual osg::Object* cloneType() const { return new WebCamStreamWrapper (_pluginName, _prototype); }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return new WebCamStreamWrapper (*this,copyop); }
     bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const WebCamStreamWrapper*>(obj)!=NULL; }
-    const char* className() const { return m_prototype->className(); }
+    const char* className() const { return _prototype->className(); }
 	const char* libraryName() const { return "hogboxVision"; }
 	
-	const std::string& GetPluginName(){return m_pluginName;}
-	WebCamStream* GetPrototype(){return m_prototype;}
+	const std::string& GetPluginName(){return _pluginName;}
+	WebCamStream* GetPrototype(){return _prototype;}
 	
 protected:
 
 	virtual ~WebCamStreamWrapper(void)
 	{
-		m_prototype = NULL;
+		_prototype = NULL;
 	}
 
 protected:
 
-	WebCamStreamPtr m_prototype;
-	std::string m_pluginName; //just base part at end of lib name e.g. dshow
+	WebCamStreamPtr _prototype;
+	std::string _pluginName; //just base part at end of lib name e.g. dshow
 };
 
 typedef osg::ref_ptr<WebCamStreamWrapper> WebCamStreamWrapperPtr;
@@ -117,7 +117,7 @@ class HOGBOXVIS_EXPORT CameraBaseTrackerWrapper : public osg::Object
 public:
 	CameraBaseTrackerWrapper(CameraBasedTracker* proto)
 		: osg::Object(),
-		m_prototype(proto)
+		_prototype(proto)
 	{
 	}
 
@@ -127,24 +127,24 @@ public:
 
 	}
 
-    virtual osg::Object* cloneType() const { return new CameraBaseTrackerWrapper (m_prototype); }
+    virtual osg::Object* cloneType() const { return new CameraBaseTrackerWrapper (_prototype); }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return new CameraBaseTrackerWrapper (*this,copyop); }
     bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const CameraBaseTrackerWrapper*>(obj)!=NULL; }
-    const char* className() const { return m_prototype->className(); }
+    const char* className() const { return _prototype->className(); }
 	const char* libraryName() const { return "hogboxVision"; }
 	
-	CameraBasedTracker* GetPrototype(){return m_prototype;}
+	CameraBasedTracker* GetPrototype(){return _prototype;}
 	
 protected:
 
 	virtual ~CameraBaseTrackerWrapper(void)
 	{
-		m_prototype = NULL;
+		_prototype = NULL;
 	}
 
 protected:
 
-	CameraBasedTrackerPtr m_prototype;	
+	CameraBasedTrackerPtr _prototype;	
 };
 
 typedef osg::ref_ptr<CameraBaseTrackerWrapper> CameraBaseTrackerWrapperPtr;

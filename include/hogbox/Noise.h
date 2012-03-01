@@ -18,7 +18,7 @@
 
 namespace hogbox {
 	
-	static void SetSeed(const unsigned int& seed=-1)
+	static inline void SetSeed(const unsigned int& seed=-1)
 	{
 		if(seed>=0)
 		{
@@ -29,19 +29,19 @@ namespace hogbox {
 	}
 	
 	//generates a psuedo-random int b
-	static int RandInt()
+	static inline int RandInt()
 	{
 		return rand();
 	} 
 	
 	//generates a psuedo-random float 
-	static float RandFloat()
+	static inline float RandFloat()
 	{
 		return rand()/(float(RAND_MAX)+1);
 	} 
 	
 	//generates a psuedo-random int between min and max
-	static float RandInt(int min, int max)
+	static inline float RandInt(int min, int max)
 	{
 		if (min>max)
 		{
@@ -54,7 +54,7 @@ namespace hogbox {
 	}
 	
 	//generates a psuedo-random float between min and max
-	static float RandFloat(float min, float max)
+	static inline float RandFloat(float min, float max)
 	{
 		if (min>max)
 		{
@@ -66,7 +66,7 @@ namespace hogbox {
 		}    
 	}
 	
-	static osg::Vec2 RandVec2(float min, float max)
+	static inline osg::Vec2 RandVec2(float min, float max)
 	{
 		float disX = hogbox::RandFloat(min, max);
 		float disY = hogbox::RandFloat(min, max);
@@ -74,7 +74,7 @@ namespace hogbox {
 		return osg::Vec2(disX,disY);
 	}
 	
-	static osg::Vec3 RandNormalisedVec3()
+	static inline osg::Vec3 RandNormalisedVec3()
 	{
 		float disX = hogbox::RandFloat(-1.0, 1.0);
 		float disY = hogbox::RandFloat(-1.0, 1.0);
@@ -84,7 +84,7 @@ namespace hogbox {
 		return vec;
 	}
 	
-	static osg::Vec3 RandVec3(float min, float max)
+	static inline osg::Vec3 RandVec3(float min, float max)
 	{
 		/* generate secret number: */
 		float disX = hogbox::RandFloat(min, max);
@@ -94,7 +94,7 @@ namespace hogbox {
 		return osg::Vec3(disX,disY,disZ);
 	}
 
-	static osg::Vec4 RandVec4(float min, float max)
+	static inline osg::Vec4 RandVec4(float min, float max)
 	{
 		/* generate secret number: */
 		float disX = hogbox::RandFloat(min, max);

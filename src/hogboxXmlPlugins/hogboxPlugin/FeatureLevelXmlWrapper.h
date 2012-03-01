@@ -40,40 +40,42 @@ public:
 
 
 	//pass node representing the texture object
-	FeatureLevelXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "FeatureLevel")
+	FeatureLevelXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("FeatureLevel")
 	{
-
-		//allocate Group to repesent any loaded nodes
-		hogbox::SystemFeatureLevel* featureLevel = new hogbox::SystemFeatureLevel();
-
-		//add the temporary wrapper attributes
-		m_xmlAttributes["GLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glVersion);
-
-		m_xmlAttributes["GLSLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glslVersion);
-
-		m_xmlAttributes["TextureUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureUnits);
-
-		m_xmlAttributes["TextureCoordUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureCoordUnits);
-
-		m_xmlAttributes["VertexAndFragmentShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->vertexAndFragmentShaders);
-
-		m_xmlAttributes["GeometryShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->geometryShaders);
-
-		m_xmlAttributes["ScreenResolution"] = new hogboxDB::TypedXmlAttribute<osg::Vec2>(&featureLevel->screenRes);
-
-
-		p_wrappedObject = featureLevel;
 	}
-
-public:
+    
+    //
+    virtual osg::Object* allocateClassType(){return new hogbox::SystemFeatureLevel();}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new FeatureLevelXmlWrapper();} 
 
 protected:
 
 	virtual ~FeatureLevelXmlWrapper(void){}
 
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+        hogbox::SystemFeatureLevel* featureLevel = dynamic_cast<hogbox::SystemFeatureLevel*>(p_wrappedObject.get());
+        
+		_xmlAttributes["GLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glVersion);
+        
+		_xmlAttributes["GLSLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glslVersion);
+        
+		_xmlAttributes["TextureUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureUnits);
+        
+		_xmlAttributes["TextureCoordUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureCoordUnits);
+        
+		_xmlAttributes["VertexAndFragmentShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->vertexAndFragmentShaders);
+        
+		_xmlAttributes["GeometryShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->geometryShaders);
+        
+		_xmlAttributes["ScreenResolution"] = new hogboxDB::TypedXmlAttribute<osg::Vec2>(&featureLevel->screenRes);
+    }
 };
 
-typedef osg::ref_ptr<FeatureLevelXmlWrapper> SystemFeatureLevelXmlWrapperPtr;
+typedef osg::ref_ptr<FeatureLevelXmlWrapper> FeatureLevelXmlWrapperPtr;
 
 

@@ -51,26 +51,26 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	TrackedObject(const TrackedObject&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision, TrackedObject);
+	META_Object(hogboxVision, TrackedObject);
 
 
 	//init passing the name of a config/marker file
 	virtual bool Init(const std::string& config);
 
 	//the the dimensions this marker can track
-	TrackedDimensions GetTrackedDimensions(){return m_trackingDimensions;}
+	TrackedDimensions GetTrackedDimensions(){return _trackingDimensions;}
 
 	//get pose
-	osg::Matrix GetTransform(){return m_poseMatrix;}
+	osg::Matrix GetTransform(){return _poseMatrix;}
 	
 	//our we tracking this object
 	void SetEnabled(const bool& enabled);
 	const bool& GetEnabled()const;
 
 	//is the object currently visible/being tracked
-	bool IsObjectDetected(){return m_isDetected;}
+	bool IsObjectDetected(){return _isDetected;}
 	
-	float GetConfidence(){return m_confidence;}
+	float GetConfidence(){return _confidence;}
 	
 	//base update, called by a tracker
 	//isDetected, indicates if the object was detected by the tracker calling update
@@ -84,20 +84,20 @@ protected:
 
 
 	//the dimensions being tracked
-	TrackedDimensions m_trackingDimensions;
+	TrackedDimensions _trackingDimensions;
 
 	//the 4x4 pose matrix for the marker, relative
 	//to the trackers camera
-	osg::Matrix m_poseMatrix;
+	osg::Matrix _poseMatrix;
 	
 	//our we trying to detect this object
-	bool m_isEnabled;
+	bool _isEnabled;
 
 	//was the object detected in the last update of its tracker
-	bool m_isDetected;
+	bool _isDetected;
 	
 	//the confidence of the tracked object i.e. are we getting a good signal/match, 0-1 1 being total confidence
-	float m_confidence;
+	float _confidence;
 
 };
 

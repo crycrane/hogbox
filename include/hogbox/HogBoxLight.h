@@ -14,21 +14,6 @@
 #pragma once
 
 
-//needs review still esentially the same code from old hogbox
-
-//////////////////////////////////////////////////////////
-// Author:	Thomas Hogarth								//
-// Date:	12/09/2007									//
-//														//
-// Class:												//
-// Osg Material and texture helper class				//
-//														//
-// Description:											//
-// Wraps up the functionality of loading and appying	//
-// textures and material to a piece of geometry			//
-//														//
-//////////////////////////////////////////////////////////
-
 #include <hogbox/Export.h>
 #include <hogbox/HogBoxBase.h>
 
@@ -149,70 +134,70 @@ public:
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HogBoxLight(const HogBoxLight&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
-	META_Box(hogbox,HogBoxLight);
+	META_Object(hogbox,HogBoxLight);
 
 
-	osg::MatrixTransform* GetLight(){return m_transform.get();}
-	osg::MatrixTransform* GetMatrix(){return m_transform.get();} 
+	osg::MatrixTransform* GetLight(){return _transform.get();}
+	osg::MatrixTransform* GetMatrix(){return _transform.get();} 
 	void SetLight(int id, osg::Vec4 pos, osg::Vec4 colour, float constant, float lin, float quad);
 	
 	void ApplyLightToGraph(osg::Node* root); 
 	osg::Group* CreateShadowMap(osg::Group* root, unsigned int coordGenUnit, int size);
 
-	osg::Texture2D* GetShadowMap(){return m_shadowMap.get();}
+	osg::Texture2D* GetShadowMap(){return _shadowMap.get();}
 	osg::Texture2D* GetOrCreateShadowMap()
 	{
-		if(!m_shadowMap)
+		if(!_shadowMap)
 		{
-			m_shadowMap = new osg::Texture2D();
+			_shadowMap = new osg::Texture2D();
 		}
-		return m_shadowMap.get();
+		return _shadowMap.get();
 	}
 
-	osg::TexMat* GetShadowMarix(){return m_shadowMatrix.get();}
+	osg::TexMat* GetShadowMarix(){return _shadowMatrix.get();}
 	osg::TexMat* GetOrCreateShadowMarix()
 	{
-		if(!m_shadowMatrix)
+		if(!_shadowMatrix)
 		{
-			m_shadowMatrix = new osg::TexMat();
+			_shadowMatrix = new osg::TexMat();
 		}
-		return m_shadowMatrix.get();
+		return _shadowMatrix.get();
 	}
 
 	osg::PolygonOffset* GetOrCreatePolygonOffset()
 	{
-		if(!m_polygonOffset)
+		if(!_polygonOffset)
 		{
-			m_polygonOffset = new osg::PolygonOffset();
+			_polygonOffset = new osg::PolygonOffset();
 		}
-		return m_polygonOffset.get();
+		return _polygonOffset.get();
 	}
 
-	const float& GetPolyUnits()const{return m_units;}
+	const float& GetPolyUnits()const{return _units;}
 	void SetPolyUnits(const float& units);
-	const float& GetPolyFactor()const{return m_factor;}
+	const float& GetPolyFactor()const{return _factor;}
 	void SetPolyFactor(const float& factor);
 
 	void AttachUniformsToStateSet(osg::StateSet* state);
 
 
 	//fixed function atts
-	const int& GetGLID()const{return m_glID;}
+	const int& GetGLID()const{return _glID;}
 
-	const osg::Vec4& GetPosition()const{return m_lightPos;}
+	const osg::Vec4& GetPosition()const{return _position;}
 	void SetPosition(const osg::Vec4& pos);
 	
-	const osg::Vec4& GetDiffuse()const{return m_diffuseColor;}
-	const osg::Vec4& GetAmbient()const{return m_lightAmbi;}
-	const osg::Vec4& GetSpecular()const{return m_lightSpec;}
+	const osg::Vec4& GetDiffuse()const{return _diffuseColor;}
+	const osg::Vec4& GetAmbient()const{return _ambientColor;}
+	const osg::Vec4& GetSpecular()const{return _specularColor;}
 
 	void SetDiffuse(const osg::Vec4& color);
 	void SetAmbient(const osg::Vec4& ambi);
 	void SetSpecular(const osg::Vec4& spec);
 	
-	const float& GetConsant()const{return m_constant;}
-	const float& GetLinear()const{return m_linear;}
-	const float& GetQuadratic()const{return m_quadratic;}
+	const float& GetConsant()const{return _constant;}
+	const float& GetLinear()const{return _linear;}
+	const float& GetQuadratic()const{return _quadratic;}
 
 	void SetConstant(const float& constant);
 	void SetLinear(const float& linear);
@@ -224,37 +209,44 @@ protected:
 	virtual ~HogBoxLight(void);
 protected:
 
-	int m_glID;
+	int _glID;
 
-	osg::ref_ptr<osg::Light> m_light;
-	osg::ref_ptr<osg::LightSource> m_lightSource;
-	osg::ref_ptr<osg::MatrixTransform> m_transform; 
+	osg::ref_ptr<osg::Light> _light;
+	osg::ref_ptr<osg::LightSource> _lightSource;
+	osg::ref_ptr<osg::MatrixTransform> _transform; 
 
 	// Actual light data.
-	osg::Vec4 m_diffuseColor;
-	osg::Vec4 m_lightAmbi;
-	osg::Vec4 m_lightSpec;
-	osg::Vec4 m_lightPos;
-	float m_constant, m_linear, m_quadratic;
+    osg::Vec4 _position;
+    osg::Vec3 _direction;
+    //
+	osg::Vec4 _diffuseColor;
+	osg::Vec4 _ambientColor;
+	osg::Vec4 _specularColor;
+	float _constant;
+    float _linear;
+    float _quadratic;
 
-	// Light shader parameters.
-	osg::ref_ptr<osg::Uniform> m_uLightPos;
-	osg::ref_ptr<osg::Uniform> m_uLightColor;
-	osg::ref_ptr<osg::Uniform> m_uConstant;
-	osg::ref_ptr<osg::Uniform> m_uLinear;
-	osg::ref_ptr<osg::Uniform> m_uQuadratic;
+	// Light shader uniforms.
+	osg::ref_ptr<osg::Uniform> _uPosition;
+    osg::ref_ptr<osg::Uniform> _uDirection;
+	osg::ref_ptr<osg::Uniform> _uAmbientColor;
+    osg::ref_ptr<osg::Uniform> _uDiffuseColor;
+    osg::ref_ptr<osg::Uniform> _uSpecularColor;
+	osg::ref_ptr<osg::Uniform> _uConstant;
+	osg::ref_ptr<osg::Uniform> _uLinear;
+	osg::ref_ptr<osg::Uniform> _uQuadratic;
 
 	//visualiseation node
-	osg::ref_ptr<osg::Node> m_visNode;
+	osg::ref_ptr<osg::Node> _visNode;
 
 	//shadows from light source 
-	osg::ref_ptr<osg::Texture2D> m_shadowMap;
-	osg::ref_ptr<osg::TexMat> m_shadowMatrix;
+	osg::ref_ptr<osg::Texture2D> _shadowMap;
+	osg::ref_ptr<osg::TexMat> _shadowMatrix;
 
 	//poly offset for depth render
-	osg::ref_ptr<osg::PolygonOffset> m_polygonOffset;
-	float m_units;
-	float m_factor;
+	osg::ref_ptr<osg::PolygonOffset> _polygonOffset;
+	float _units;
+	float _factor;
 
 };
 
@@ -270,12 +262,12 @@ public:
 
 	LightTransformCallback(osg::Uniform* lightPos, float angular_velocity, float height, float radius):
     _angular_velocity(angular_velocity),
-	_posUniform(lightPos),
     _height(height),
     _radius(radius),
     _previous_traversal_number(-1),
     _previous_time(-1.0f),
-    _angle(0)
+    _angle(0),
+    _posUniform(lightPos)
   {
   }
 

@@ -71,8 +71,8 @@ namespace hogboxHUD {
 		HudEventObjectCallback(osg::Object* sender, C *rObject, HudEventCallbackFunc ghandler = 0)
 			: HudEventCallback(),
 			p_sender(sender),
-			mp_object(rObject),
-			f_callbackFunc(ghandler)
+			f_callbackFunc(ghandler),
+            mp_object(rObject)
 		{
 		}
 		
@@ -115,17 +115,17 @@ namespace hogboxHUD {
 		CallbackEvent(osg::Object* sender, const std::string& eventName)
 			: osg::Referenced(),
 			p_eventSender(sender),
-			m_eventName(eventName)
+			_eventName(eventName)
 		{
 			
 		}
 		
-		const std::string& GetEventName(){return m_eventName;}
+		const std::string& GetEventName(){return _eventName;}
 		
 		//Register a new Callback receiver for this event
 		void AddCallbackReceiver(HudEventCallback* callback)
 		{
-			m_callbacks.push_back(callback);
+			_callbacks.push_back(callback);
 		}
 		
 		//
@@ -133,9 +133,9 @@ namespace hogboxHUD {
 		void TriggerEvent(HudInputEvent& inputEvent)
 		{
 			//call all our callback functions
-			for(unsigned int i=0; i<m_callbacks.size(); i++)
+			for(unsigned int i=0; i<_callbacks.size(); i++)
 			{
-				m_callbacks[i]->TriggerCallback(inputEvent);
+				_callbacks[i]->TriggerCallback(inputEvent);
 			}
 		}
 		
@@ -148,10 +148,10 @@ namespace hogboxHUD {
 		osg::Object* p_eventSender;
 		
 		//event has a name which can be used by user as a simple reference (e.g OnMouseDown)
-		std::string m_eventName; 
+		std::string _eventName; 
 		
 		//the list of callbacks registered to receive this event when triggered
-		std::vector<HudEventCallbackPtr> m_callbacks;
+		std::vector<HudEventCallbackPtr> _callbacks;
 			
 	};
 

@@ -2,7 +2,7 @@
 
 #include <osgDB/FileUtils>
 #include <osgDB/FileNameUtils>
-//#include "OsgModelCache.h"
+#include <hogbox/AssetManager.h>
 #include <osgDB/ReadFile>
 
 using namespace hogboxHUD;
@@ -50,8 +50,8 @@ static const char* textFragSource = {
 
 TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
     : HudRegion(plane, origin, isProcedural),
-    _text(NULL),
     _string(""),
+    _text(NULL),
     _fontHeight(18.0f),
     _fontName("Fonts/arial.ttf"),
     _boarderPadding(5.0f),
@@ -65,10 +65,12 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
 {
 	//create the text label to add to the button
 	_text = new osgText::Text;
-	//m_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMUM_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
+	//_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMU_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
     
 	//add the text to a geode for drawing
 	osg::Geode* textGeode = new osg::Geode();
+    //geode is visible, not pickable
+    textGeode->setNodeMask(hogbox::MAIN_CAMERA_CULL);
     osg::StateSet* stateset = textGeode->getOrCreateStateSet();
 	stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);
     
@@ -154,7 +156,7 @@ TextRegion::~TextRegion(void)
 // Create a text region using a fileName as the background
 // then creating an osg text geode and attaching directly to translate
 // so that the texts size can be set directly in pixels, without
-//being scaled by the m_scale matrix
+//being scaled by the _scale matrix
 //
 bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight)
 {
@@ -273,22 +275,10 @@ void TextRegion::SetFontResolution(const osg::Vec2& fontRes)
 void TextRegion::SetFontType(const std::string& fontFile)
 {
 	_fontName = osgDB::findDataFile(fontFile);
-    //osgText::Font* font = OsgModelCache::Inst()->getOrLoadFont(fontFile).get();
+    osgText::FontPtr font = AssetManager::Inst()->getOrLoadFont(fontFile).get();
     
-    osg::ref_ptr<osgDB::ReaderWriter::Options> localOptions;
-    localOptions = new osgDB::ReaderWriter::Options;
-    localOptions->setObjectCacheHint(osgDB::ReaderWriter::Options::CACHE_OBJECTS);
-    osg::ref_ptr<osg::Object> obj = NULL;
-    obj = osgDB::readObjectFile(_fontName,localOptions);
-    
-    if(obj.get()){
-        osgText::Font* font = dynamic_cast<osgText::Font*>(obj.get());
-        if(font){
-            OSG_FATAL << "ReadFont from archive '" << fontFile << "'." << std::endl;
-            _text->setFont(font);
-        }else{
-            _text->setFont(_fontName);
-        }
+    if(font.geT())
+        _text->setFont(_fontName);
     }
 }
 
@@ -495,7 +485,9 @@ const osg::Vec4& TextRegion::GetBackDropColor()const
 	return _backdropColor;
 }
 
-
+//
+//enable/disable the texts drop shadow/stroke
+//
 void TextRegion::SetBackDropType(const BACKDROP_TYPE& type)
 {
 	_backdropType = type;
@@ -517,6 +509,18 @@ const TextRegion::BACKDROP_TYPE& TextRegion::GetBackDropType() const
 	return _backdropType;
 }
 
+//
+//bit hacky but get/set the backdrop type using int
+//to conform to xml serialising requirements
+//
+void TextRegion::SetBackDropTypeInt(const int& type)
+{
+    this->SetBackDropType((BACKDROP_TYPE)(type));
+}
+const int& TextRegion::GetBackDropTypeInt() const
+{
+    return _backdropType;
+}
 
 int TextRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {

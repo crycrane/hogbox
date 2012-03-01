@@ -41,20 +41,20 @@ public:
 	UniformAtts(void){}
 	UniformAtts(int min, int max)
 	{
-		m_min=min;
-		m_max=max;
-		m_uniform=NULL;
+		_min=min;
+		_max=max;
+		_uniform=NULL;
 	}
 	~UniformAtts(void)
 	{
-		m_uniform=NULL;
+		_uniform=NULL;
 	}
 
-	osg::ref_ptr<osg::Uniform> m_uniform; 
-	int m_min;
-	int m_max;
+	osg::ref_ptr<osg::Uniform> _uniform; 
+	int _min;
+	int _max;
 
-	osg::Uniform* GetUniform(){return m_uniform.get();}
+	osg::Uniform* GetUniform(){return _uniform.get();}
 };
 
 
@@ -118,7 +118,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	RTTPass(const RTTPass&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision, RTTPass);
+	META_Object(hogboxVision, RTTPass);
 
 
 	//init the render to texture pass, 

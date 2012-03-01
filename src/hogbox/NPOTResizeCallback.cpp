@@ -37,24 +37,24 @@ unsigned int computeNextPowerOfTwo(unsigned int x)
 
 NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::StateSet* state)
 	: osg::Texture2D::SubloadCallback(),
-	m_modifiedCount(0),
-	m_useAsCallback(false),
-	m_scaledTexCoordX(1.0f),
-	m_scaledTexCoordY(1.0f)
+	_useAsCallback(false),
+	_scaledTexCoordX(1.0f),
+	_scaledTexCoordY(1.0f),
+    _modifiedCount(0)
 {
-	m_texMat = new osg::TexMat;
+	_texMat = new osg::TexMat;
 	//set our scale matrix to crop any empty region left by the power of two size up
-	m_texMat->setMatrix(osg::Matrix::scale(m_scaledTexCoordX, m_scaledTexCoordY, 0));	
+	_texMat->setMatrix(osg::Matrix::scale(_scaledTexCoordX, _scaledTexCoordY, 0));	
 	
 	if(!texture){return;}
 	
 	//if its a rectangle set rect matrix and return
 	if(dynamic_cast<osg::TextureRectangle*>(texture))
 	{
-		m_useAsCallback = false;
-		m_texMat->setScaleByTextureRectangleSize(true);
+		_useAsCallback = false;
+		_texMat->setScaleByTextureRectangleSize(true);
 		if(state){
-			state->setTextureAttributeAndModes(channel, m_texMat.get(), osg::StateAttribute::ON);
+			state->setTextureAttributeAndModes(channel, _texMat.get(), osg::StateAttribute::ON);
 		}
 		return;
 
@@ -72,19 +72,19 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		}
 
 		//set the true image size
-		m_imageWidth = _image->s();
-		m_imageHeight = _image->t();
+		_imageWidth = _image->s();
+		_imageHeight = _image->t();
 		
 		//first find nearest to see if it is a power of two already (having problems with calcnext power of two)
-		m_scaledWidth = osg::Image::computeNearestPowerOfTwo((int)m_imageWidth);//
-		m_scaledHeight = osg::Image::computeNearestPowerOfTwo((int)m_imageHeight); 
+		_scaledWidth = osg::Image::computeNearestPowerOfTwo((int)_imageWidth);//
+		_scaledHeight = osg::Image::computeNearestPowerOfTwo((int)_imageHeight); 
 		
 		//its not power of two, find next up
-		if(m_scaledWidth != m_imageWidth || m_scaledHeight != m_imageHeight)
+		if(_scaledWidth != _imageWidth || _scaledHeight != _imageHeight)
 		{
-			m_scaledWidth = computeNextPowerOfTwo((unsigned int) m_imageWidth);
+			_scaledWidth = computeNextPowerOfTwo((unsigned int) _imageWidth);
 			//same for height
-			m_scaledHeight = computeNextPowerOfTwo((unsigned int) m_imageHeight);
+			_scaledHeight = computeNextPowerOfTwo((unsigned int) _imageHeight);
 		}else{
 			//they are both already power of two so treturn before flaging to use
 			return;
@@ -92,10 +92,10 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		
 		
 		//we have a texture that isn't power of two so flag to use the callback
-		m_useAsCallback = true;
+		_useAsCallback = true;
 		
 		//set the texture to beleive it is of power of two size
-		texture2D->setTextureSize(m_scaledWidth, m_scaledHeight);
+		texture2D->setTextureSize(_scaledWidth, _scaledHeight);
 
 		//set to linear to disable mipmap generation
 		texture2D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
@@ -106,14 +106,14 @@ NPOTResizeCallback::NPOTResizeCallback(osg::Texture* texture, int channel, osg::
 		
 
 		//calc the scaled coords as the original dimensions divided by the new scaled up dimensions
-		m_scaledTexCoordX = m_imageWidth / (float)m_scaledWidth;
-		m_scaledTexCoordY = m_imageHeight / (float)m_scaledHeight;
+		_scaledTexCoordX = _imageWidth / (float)_scaledWidth;
+		_scaledTexCoordY = _imageHeight / (float)_scaledHeight;
 
 		//set our scale matrix to crop any empty region left by the power of two size up
-		m_texMat->setMatrix(osg::Matrix::scale(m_scaledTexCoordX, m_scaledTexCoordY, 0));	
+		_texMat->setMatrix(osg::Matrix::scale(_scaledTexCoordX, _scaledTexCoordY, 0));	
 		//apply our scale matrix to the state
 		if(state){
-			state->setTextureAttributeAndModes(channel, m_texMat.get(), osg::StateAttribute::ON);
+			state->setTextureAttributeAndModes(channel, _texMat.get(), osg::StateAttribute::ON);
 		}
 	}
 }
@@ -126,8 +126,8 @@ void NPOTResizeCallback::load(const osg::Texture2D& texture, osg::State&) const
 	//this way writes to the video memory will be quicker
 	glTexImage2D(GL_TEXTURE_2D, 0, 
 		_image->getInternalTextureFormat(), 
-		(int)m_scaledWidth, 
-		(int)m_scaledHeight, 
+		(int)_scaledWidth, 
+		(int)_scaledHeight, 
 		0, _image->getPixelFormat(), 
 		_image->getDataType(), 0);	
 }
@@ -137,14 +137,14 @@ void NPOTResizeCallback::subload(const osg::Texture2D& texture, osg::State& stat
 	//const unsigned int contextID = state.getContextID();
 	const osg::Image* _image = texture.getImage();
 
-	if(_image->valid() && m_modifiedCount != _image->getModifiedCount())
+	if(_image->valid() && _modifiedCount != _image->getModifiedCount())
 	{
 		//copy the actual res image into the sized up buffer
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-						m_imageWidth, m_imageHeight, _image->getPixelFormat(), 
+						_imageWidth, _imageHeight, _image->getPixelFormat(), 
 						_image->getDataType(), _image->data());
 		
 		// update the modified tag to show that it is up to date.
-		m_modifiedCount = _image->getModifiedCount();
+		_modifiedCount = _image->getModifiedCount();
 	}
 }

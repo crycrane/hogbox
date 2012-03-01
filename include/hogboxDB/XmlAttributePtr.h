@@ -63,9 +63,9 @@ namespace hogboxDB {
 		CallbackXmlClassPointer(C *object, 
 								GetPtrHandler ghandler = 0,
 								SetPtrHandler shandler = 0) 
-			: mp_object(object),
-			f_getptrhandler(ghandler),			
-			f_setptrhandler(shandler)
+			: f_getptrhandler(ghandler),			
+			f_setptrhandler(shandler),
+            mp_object(object)
 		{
 		}
 		
@@ -91,7 +91,7 @@ namespace hogboxDB {
 			T* pointerObject = this->get();
 			if(pointerObject){
 				std::string pointerObjectName = pointerObject->getName();
-				return hogboxDB::HogBoxManager::Instance()->ReleaseNodeByID(pointerObjectName);
+				return hogboxDB::HogBoxManager::Inst()->ReleaseNodeByID(pointerObjectName);
 			}
 			return false;
 		}
@@ -101,7 +101,7 @@ namespace hogboxDB {
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 
@@ -117,7 +117,7 @@ namespace hogboxDB {
 			//check we have some children
 			if(in->children.size()==0)
 			{
-				osg::notify(osg::WARN) << "XML WARN: Parsing pointer attribute '" << in->name << "'," << std::endl
+				OSG_WARN << "XML WARN: Parsing pointer attribute '" << in->name << "'," << std::endl
 									   << "                       Pointer attributes should contian a child node of the desired classtype. CLASSTYPE" << std::endl
 									   << "                       The child node can be a full definition of the classtype required or a useID reference. For example," << std::endl
 									   << "                       <" << in->name << ">" << std::endl
@@ -137,13 +137,13 @@ namespace hogboxDB {
 			osgDB::XmlNode* pointerNode = in->children[0];
 
 			//try and read the pointer node from the database
-			hogbox::ObjectPtr ptr = hogboxDB::HogBoxManager::Instance()->ReadNode(pointerNode);
+			osg::ObjectPtr ptr = hogboxDB::HogBoxManager::Inst()->ReadNode(pointerNode);
 			
 			//check result
 			if(!ptr)
 			{
 				//pointer was not found or failed to be read
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer attribute '" << in->name << "'," << std::endl
+				OSG_WARN << "XML ERROR: Parsing pointer attribute '" << in->name << "'," << std::endl
 									   << "                        ReadNode did not return a valid object for child node '" << pointerNode->name << "'." << std::endl
 									   << "                        The attribute pointer will not be set." << std::endl;
 				return false;
@@ -154,7 +154,7 @@ namespace hogboxDB {
 			if(!typePtr)
 			{
 				//error casting to type
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer attribute '" << in->name << "'," << std::endl
+				OSG_WARN << "XML ERROR: Parsing pointer attribute '" << in->name << "'," << std::endl
 									   << "                        Failed to cast the object returned from ReadNode to the corrent type." << std::endl
 									   << "                        Please ensure '" << in->name << "' is expecting a classnode of type '" << pointerNode->name << "'." << std::endl;
 				return false;
@@ -191,11 +191,11 @@ namespace hogboxDB {
 		//typedef L::iterator ListIter;
 								
 		CallbackXmlClassPointerList(C *object, 
-			GetPtrListHandler ghandler = 0,
-			SetPtrListHandler shandler = 0) : 
-			mp_object(object),
-			f_getptrlisthandler(ghandler),			
-			f_setptrlisthandler(shandler)
+                                    GetPtrListHandler ghandler = 0,
+                                    SetPtrListHandler shandler = 0) 
+            : f_getptrlisthandler(ghandler),			
+			f_setptrlisthandler(shandler),
+            mp_object(object)
 		{
 		}
 		
@@ -210,7 +210,7 @@ namespace hogboxDB {
 				(mp_object->*f_setptrlisthandler)(list);			
 			} else 
 			{
-				osg::notify(osg::WARN) << "XML ERROR: No set method provided for XmlClassPointerList Attribute. The pointer list will not be set." << std::endl;
+				OSG_WARN << "XML ERROR: No set method provided for XmlClassPointerList Attribute. The pointer list will not be set." << std::endl;
 			}
 		}
 
@@ -225,7 +225,7 @@ namespace hogboxDB {
 				for( ; itr != pointerObjectList.end(); itr++){
 					T* listObject = (*itr);
 					std::string listObjectName = listObject->getName();
-					if(!hogboxDB::HogBoxManager::Instance()->ReleaseNodeByID(listObjectName)){
+					if(!hogboxDB::HogBoxManager::Inst()->ReleaseNodeByID(listObjectName)){
 						result=false;
 					}
 				}
@@ -239,7 +239,7 @@ namespace hogboxDB {
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 
@@ -255,15 +255,15 @@ namespace hogboxDB {
 			unsigned int count = 0;
 			if(!hogboxDB::getXmlPropertyValue(in, "count", count))
 			{
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer list node '" << in->name << "'," << std::endl
-									   << "                      List nodes must contain a 'count' property. For example <" << in->name << " count='2>" << std::endl;
+				OSG_WARN << "XML ERROR: Parsing pointer list node '" << in->name << "'," << std::endl
+									   << "                      List nodes must contain a 'count' property. For example <" << in->name << " count='2'>" << std::endl;
 				return false;
 			}
 
 			//if count is 0 dont bother
 			if(count == 0)
 			{
-				osg::notify(osg::WARN) << "XML WARN: Parsing pointer list node '" << in->name << "'," << std::endl
+				OSG_WARN << "XML WARN: Parsing pointer list node '" << in->name << "'," << std::endl
 									  << "                      The list attribute has a count of '0', are you sure this is not a mistake?" << std::endl;
 
 				return false;
@@ -274,9 +274,12 @@ namespace hogboxDB {
 			if(in->children.size() != count)
 			{
 				//warn user
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer list attribute '" << in->name << "'," << std::endl
+				OSG_WARN << "XML ERROR: Parsing pointer list attribute '" << in->name << "'," << std::endl
 									   << "                      Nodes 'count' property (" << count << ") does not match the number of child nodes (" << in->children.size() << ")." << std::endl
 									   << "                      The list will not be parsed." << std::endl;
+                //for(unsigned int i=0;i<in->children.size(); i++){
+                //    OSG_FATAL << "CHILD '" << i << "' name: '" << in->children[i]->name << "'." << std::endl;
+                //}
 				return false;
 			}
 
@@ -295,7 +298,7 @@ namespace hogboxDB {
 				osgDB::XmlNode* pointerNode = in->children[i];
 
 				//read the pointer node from the database
-				hogbox::ObjectPtr ptr = hogboxDB::HogBoxManager::Instance()->ReadNode(pointerNode);
+				osg::ObjectPtr ptr = hogboxDB::HogBoxManager::Inst()->ReadNode(pointerNode);
 				//cast it to type and pass to set
 				T* typePtr = dynamic_cast<T*>(ptr.get()); 
 				if(typePtr){

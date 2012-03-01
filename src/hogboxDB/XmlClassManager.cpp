@@ -18,18 +18,18 @@ XmlClassManager::XmlClassManager(const XmlClassManager& manager,const osg::CopyO
 XmlClassManager::~XmlClassManager(void)
 {
 	OSG_NOTICE << "Deallocating XmlClassManager: Type '" << this->getName() << "'," << std::endl
-							 << "                                                           Releasing '" << m_objectList.size() << "' managed objects." << std::endl;
+							 << "                                                           Releasing '" << _objectList.size() << "' managed objects." << std::endl;
 	
-	m_supportedClassTypes.clear();
+	_supportedClassTypes.clear();
 	//release objects
-	for(XmlNodeToObjectMap::iterator itr=m_objectList.begin();
-		itr!=m_objectList.end();
+	for(XmlNodeToObjectMap::iterator itr=_objectList.begin();
+		itr!=_objectList.end();
 		itr++)
 	{
 		(*itr).second = NULL;
 		//osg::notify(osg::WARN)<<(*itr).second.get()->referenceCount()<<std::endl;
 	}
-	m_objectList.clear();
+	_objectList.clear();
 }
 
 
@@ -37,10 +37,28 @@ bool XmlClassManager::AcceptsClassType(const std::string& classType) const
 {
 	// check for an exact match
 	std::string lowercase_ext = classType;
-	if (m_supportedClassTypes.count(lowercase_ext)!=0) return true;
+	if (_supportedClassTypes.count(lowercase_ext)!=0) return true;
     
 	// if plugin supports wildcard extension then passthrough all types
-	return (m_supportedClassTypes.count("*")!=0);
+	return (_supportedClassTypes.count("*")!=0);
+}
+
+bool XmlClassManager::AcceptsClassType(osgDB::XmlNode* xmlNode) const
+{
+    if(!xmlNode){
+        return false;
+    }
+    std::string className = xmlNode->name; 
+    //see if there is a type property, if so it overrides the name
+    std::string streamTypeStr = "";
+    if(hogboxDB::getXmlPropertyValue(xmlNode, "type", streamTypeStr))
+    {
+        //if type wasn't empty
+        if(!streamTypeStr.empty() && streamTypeStr != "Base"){
+            className = streamTypeStr;
+        }
+    }
+    return AcceptsClassType(className);
 }
 
 //
@@ -48,19 +66,19 @@ bool XmlClassManager::AcceptsClassType(const std::string& classType) const
 //if the node has already been loaded based on its uniqueID property
 //it is returned
 //
-hogbox::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xmlNode)
+osg::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xmlNode)
 {
 	//check node is valid
 	if(!xmlNode){return NULL;}
 
 	//check we can load this class of node
-	if(!this->AcceptsClassType(xmlNode->name)){return NULL;}
+	if(!this->AcceptsClassType(xmlNode.get())){return NULL;}
 	
 	//try to find the node in our list of already loaded nodes
 	std::string uniqueIDStr;
 	getXmlPropertyValue(xmlNode, "uniqueID", uniqueIDStr);
 	
-	hogbox::ObjectPtr existingObject = GetNodeObjectByID(uniqueIDStr);
+	osg::ObjectPtr existingObject = GetNodeObjectByID(uniqueIDStr);
 	
 	//if we find it, return it
 	if(existingObject.get())
@@ -68,13 +86,14 @@ hogbox::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xm
 
 	//it wasn't found so create one by passing this xml node to ReadObjectFromXmlNodeImplementation
 	//which will allocate a new object of the managers type and deserialise the nodes contents
-	XmlClassWrapperPtr newObject = this->ReadObjectFromXmlNodeImplementation(xmlNode);
+	XmlClassWrapperPtr newObject = this->readObjectFromXmlNode(xmlNode);
 	//check it loaded
 	if(newObject.get())
 	{
+        OSG_FATAL << "XmlClassManager::GetOrLoadNode: INFO: Adding Node Object with uniqueID '" << uniqueIDStr << "' to database." << std::endl;
 		//add to our list of loaded nodes
 		XmlNodeToObjectPair newObjectEntry(xmlNode, newObject);
-		m_objectList.insert(newObjectEntry);
+		_objectList.insert(newObjectEntry);
 		return newObject->getWrappedObject();
 	}
 
@@ -82,10 +101,10 @@ hogbox::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xm
 }
 
 //Find the node if it's already been loaded
-hogbox::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID)
+osg::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID)
 {
-	for(XmlNodeToObjectMap::iterator itr=m_objectList.begin();
-		itr != m_objectList.end();
+	for(XmlNodeToObjectMap::iterator itr=_objectList.begin();
+		itr != _objectList.end();
 		itr++)
 	{
 		std::string loadedObjectsUniqueID = (*itr).first->properties["uniqueID"];
@@ -100,14 +119,14 @@ hogbox::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID
 //Release the node object if it has already been loaded
 bool XmlClassManager::ReleaseNodeByID(const std::string& uniqueID)
 {
-	for(XmlNodeToObjectMap::iterator itr=m_objectList.begin();
-		itr != m_objectList.end();
+	for(XmlNodeToObjectMap::iterator itr=_objectList.begin();
+		itr != _objectList.end();
 		itr++)
 	{
 		std::string loadedObjectsUniqueID = (*itr).first->properties["uniqueID"];
 		if(loadedObjectsUniqueID == uniqueID)
 		{
-			m_objectList.erase(itr);
+			_objectList.erase(itr);
 			return true;
 		}
 	}
@@ -115,15 +134,74 @@ bool XmlClassManager::ReleaseNodeByID(const std::string& uniqueID)
 }
 
 
-void XmlClassManager::SupportsClassType(const std::string& className, const std::string& description)
+void XmlClassManager::SupportsClassType(const std::string& className,  XmlClassWrapperPtr wrapper)
 {
-	m_supportedClassTypes[className] = description;
+	_supportedClassTypes[className] = wrapper;
 }
 
 //
-//Read this xml node into one of the supported types and add to the m_objectList
-XmlClassWrapperPtr XmlClassManager::ReadObjectFromXmlNodeImplementation(osgDB::XmlNode* xmlNode)
+//Allocate a new xml class wrapper for the passed type, returns null
+//if the class type is not supported by this manager
+//
+XmlClassWrapper* XmlClassManager::allocateXmlClassWrapperForType(const std::string& className)
 {
-	return NULL;
+    //check the type is supported
+    if(!this->AcceptsClassType(className)){
+        OSG_FATAL << "XmlClassManager::allocateXmlClassWrapperForType: ERROR: Manager does not support class type '" << className << "'." << std::endl;
+        return NULL;
+    }
+    return _supportedClassTypes[className]->cloneType();
 }
+
+//
+//Allocate a new xml class wrapper based on the name or "type" property 
+//of the passed xml node
+//
+XmlClassWrapper* XmlClassManager::allocateXmlClassWrapperForType(osg::ref_ptr<osgDB::XmlNode> xmlNode)
+{
+    if(!xmlNode.get()){
+        return NULL;
+    }
+    std::string className = xmlNode->name; 
+    //see if there is a type property, if so it overrides the name
+    std::string streamTypeStr = "";
+    if(hogboxDB::getXmlPropertyValue(xmlNode.get(), "type", streamTypeStr))
+    {
+        //if type wasn't empty
+        if(!streamTypeStr.empty() && streamTypeStr != "Base"){
+            className = streamTypeStr;
+        }
+    }
+    return allocateXmlClassWrapperForType(className);
+}
+
+//
+//
+hogboxDB::XmlClassWrapperPtr XmlClassManager::readObjectFromXmlNode(osgDB::XmlNode* xmlNode)
+{
+    hogboxDB::XmlClassWrapperPtr xmlWrapper = this->allocateXmlClassWrapperForType(xmlNode);
+    
+    //create our object and it's xml wrapper.
+    if(!xmlWrapper.get()){
+        OSG_FATAL << "XmlClassManager::readObjectFromXmlNode: ERROR: Failed to allocate XmlWrapper for node '" << xmlNode->name << "'" << std::endl;
+        return NULL;
+    }
+    
+    //if the wrapper was created properly then use it 
+    //to deserialize our the xmlNode into it's wrapped object
+    if(!xmlWrapper->deserialize(xmlNode))
+    {
+        //an error occured deserializing the xml node
+        return NULL;
+    }
+    
+    //did the wrapper alocate an object
+    if(!xmlWrapper->getWrappedObject()){
+        OSG_FATAL << "XmlClassManager::readObjectFromXmlNode: ERROR: No object type allocated by XmlWrapper for node '" << xmlNode->name << "'" << std::endl;
+        return NULL;
+    }
+
+    return xmlWrapper;
+}
+
 

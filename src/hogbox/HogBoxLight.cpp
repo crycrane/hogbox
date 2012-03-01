@@ -10,56 +10,73 @@ using namespace hogbox;
 
 HogBoxLight::HogBoxLight(int id) 
 	: osg::Object(),
-	m_glID(id),
-	m_polygonOffset(NULL),
-	m_shadowMap(NULL),
-	m_shadowMatrix(NULL),
-	m_lightPos(osg::Vec4(0.0f,0.0f,0.0f,0.0f)),
-	m_diffuseColor(osg::Vec4(1.0f,1.0f,1.0f,1.0f)),
-	m_lightAmbi(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
-	m_lightSpec(osg::Vec4(1.0f,1.0f,1.0f,1.0f))
+	_glID(id),
+	_position(osg::Vec4(0.0f,0.0f,0.0f,0.0f)),
+    _direction(osg::Vec3(0,1,0)),
+	_diffuseColor(osg::Vec4(1.0f,1.0f,1.0f,1.0f)),
+	_ambientColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
+	_specularColor(osg::Vec4(1.0f,1.0f,1.0f,1.0f)),
+    _constant(1.0f),
+    _linear(1.0f),
+    _quadratic(1.0f),
+    _shadowMap(NULL),
+    _shadowMatrix(NULL),
+    _polygonOffset(NULL)
 {
 	//create required osg objects and states
 	
-	//create light, ID has to be set manually
-	m_light = new osg::Light();
-	 m_light->setLightNum(m_glID);
-	m_light->setPosition(osg::Vec4(0,0,0,1));
+    //create light, ID has to be set manually
+    _light = new osg::Light();
+    _light->setLightNum(_glID);
+    _light->setPosition(osg::Vec4(0,0,0,1));
 
 	//create the transform to attach the light to
-	m_transform = new osg::MatrixTransform();
-	m_transform->setMatrix( osg::Matrix::translate(m_lightPos.x(), m_lightPos.y(), m_lightPos.z()) );
+	_transform = new osg::MatrixTransform();
+	_transform->setMatrix( osg::Matrix::translate(_position.x(), _position.y(), _position.z()) );
 
-	m_lightSource = new osg::LightSource();
-	m_lightSource->setLight(m_light.get());
-	m_lightSource->setLocalStateSetModes(osg::StateAttribute::ON); 
+	_lightSource = new osg::LightSource();
+	_lightSource->setLight(_light.get());
+	_lightSource->setLocalStateSetModes(osg::StateAttribute::ON); 
  
 	//add the lightsource to a transform 
-	m_transform->addChild(m_lightSource.get());
+	_transform->addChild(_lightSource.get());
 
 	
 	std::ostringstream oss;
-	oss << "hb_lightPosition" << m_glID;
-	//sprintf(name,"light[%d].lightPos", id); 
-	m_uLightPos = new osg::Uniform(oss.str().c_str(), m_lightPos);
+	oss << "hb_lights[" << _glID << "].position";
+	_uPosition = new osg::Uniform(oss.str().c_str(), _position);
 	
 	oss.str("");
 	
-	oss << "hb_lightColor" << m_glID;
-	m_uLightColor = new osg::Uniform(oss.str().c_str(), m_diffuseColor);
+	oss << "hb_lights[" << _glID << "].ambient";
+	_uAmbientColor = new osg::Uniform(oss.str().c_str(), _ambientColor);
 	
 	oss.str("");
+    
+	oss << "hb_lights[" << _glID << "].diffuse";
+	_uDiffuseColor = new osg::Uniform(oss.str().c_str(), _diffuseColor);
 	
-	//sprintf(name,"light[%d].constant", id); 
-	//m_uConstant = new osg::Uniform(name, constant);
+	oss.str("");
+    
+	oss << "hb_lights[" << _glID << "].specular";
+	_uSpecularColor = new osg::Uniform(oss.str().c_str(), _specularColor);
 	
-	//sprintf(name,"light[%d].linear", id); 
-	//m_uLinear = new osg::Uniform(name, lin);
+	oss.str("");
+    
+	oss << "hb_lights[" << _glID << "].constant";
+	_uConstant = new osg::Uniform(oss.str().c_str(), _constant);
 	
-	//sprintf(name,"light[%d].quadratic", id); 
-	//m_uQuadratic = new osg::Uniform(name, quad);
-
-	//delete [] name;
+	oss.str("");
+    
+	oss << "hb_lights[" << _glID << "].linear";
+	_uLinear = new osg::Uniform(oss.str().c_str(), _linear);
+	
+	oss.str("");
+    
+	oss << "hb_lights[" << _glID << "].quadratic";
+	_uQuadratic = new osg::Uniform(oss.str().c_str(), _quadratic);
+	
+	oss.str("");
 
 }
 
@@ -79,7 +96,7 @@ void HogBoxLight::ApplyLightToGraph(osg::Node* root)
 {
 	if(!root){return;}
 #ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
-	m_lightSource->setStateSetModes(*root->getOrCreateStateSet() ,osg::StateAttribute::ON);
+	_lightSource->setStateSetModes(*root->getOrCreateStateSet() ,osg::StateAttribute::ON);
 #else
 	AttachUniformsToStateSet(root->getOrCreateStateSet());
 #endif
@@ -88,49 +105,54 @@ void HogBoxLight::ApplyLightToGraph(osg::Node* root)
 
 void HogBoxLight::SetPosition(const osg::Vec4& pos)
 {
-	m_lightPos=pos;
-	m_transform->setMatrix( osg::Matrix::translate(osg::Vec3(pos.x(),pos.y(),pos.z())) );   
-	m_light->setPosition(osg::Vec4(0,0,0,pos.w()));
-	m_light->setPosition(pos);
+	_position=pos;
+	_transform->setMatrix( osg::Matrix::translate(osg::Vec3(pos.x(),pos.y(),pos.z())) );   
+	_light->setPosition(osg::Vec4(0,0,0,pos.w()));
+	_light->setPosition(pos);
 	
-	m_uLightPos->set(m_lightPos);
+	_uPosition->set(_position);
 }
 
 void HogBoxLight::SetDiffuse(const osg::Vec4& color)
 {
-	m_diffuseColor = color;
-    m_light->setDiffuse(color);
+	_diffuseColor = color;
+    _light->setDiffuse(color);
+    _uDiffuseColor->set(color);
 }
 
 void HogBoxLight::SetAmbient(const osg::Vec4& ambi)
 {
-	m_lightAmbi = ambi;
-	m_light->setAmbient(ambi);
+	_ambientColor = ambi;
+	_light->setAmbient(ambi);
+    _uAmbientColor->set(ambi);
 }
 
 void HogBoxLight::SetSpecular(const osg::Vec4& spec)
 {
-	m_lightSpec = spec;
-	m_light->setSpecular(spec); 
+	_specularColor = spec;
+	_light->setSpecular(spec); 
+    _uSpecularColor->set(spec);
 }
 
 void HogBoxLight::SetConstant(const float& constant)
 {
-	m_constant = constant;
-	m_light->setConstantAttenuation(constant);
-
+	_constant = constant;
+	_light->setConstantAttenuation(constant);
+    _uConstant->set(constant);
 }
 
 void HogBoxLight::SetLinear(const float& linear)
 {
-	m_linear = linear;
-	m_light->setLinearAttenuation(linear);
+	_linear = linear;
+	_light->setLinearAttenuation(linear);
+    _uLinear->set(linear);
 }
 
 void HogBoxLight::SetQuadratic(const float& quad)
 {
-	m_quadratic = quad;
-	m_light->setQuadraticAttenuation(quad); 
+	_quadratic = quad;
+	_light->setQuadraticAttenuation(quad);
+    _uQuadratic->set(quad);
 }
 
 //
@@ -139,17 +161,20 @@ void HogBoxLight::SetQuadratic(const float& quad)
 //
 void HogBoxLight::AttachVisNode(osg::Node* node)
 {
-	m_visNode=node;
-	m_transform->addChild(node); 
+	_visNode=node;
+	_transform->addChild(node); 
 }
 
 void HogBoxLight::AttachUniformsToStateSet(osg::StateSet* state)
 {
-	state->addUniform( m_uLightPos, osg::StateAttribute::ON);
-	state->addUniform( m_uLightColor, osg::StateAttribute::ON);
-//	state->addUniform( m_uConstant, osg::StateAttribute::ON);
-//	state->addUniform( m_uLinear, osg::StateAttribute::ON);
-//	state->addUniform( m_uQuadratic, osg::StateAttribute::ON);
+    if(!state){return;}
+	state->addUniform( _uPosition, osg::StateAttribute::ON);
+	state->addUniform( _uAmbientColor, osg::StateAttribute::ON);
+    state->addUniform( _uDiffuseColor, osg::StateAttribute::ON);
+    state->addUniform( _uSpecularColor, osg::StateAttribute::ON);
+	state->addUniform( _uConstant, osg::StateAttribute::ON);
+	state->addUniform( _uLinear, osg::StateAttribute::ON);
+	state->addUniform( _uQuadratic, osg::StateAttribute::ON);
 }
 
 
@@ -170,14 +195,14 @@ osg::Group* HogBoxLight::CreateShadowMap(osg::Group* root, unsigned int coordGen
     unsigned int tex_width = size;
     unsigned int tex_height = size;
     
-    m_shadowMap = new osg::Texture2D;
-    m_shadowMap->setTextureSize(tex_width, tex_height);
+    _shadowMap = new osg::Texture2D;
+    _shadowMap->setTextureSize(tex_width, tex_height);
 
-    m_shadowMap->setInternalFormat(GL_DEPTH_COMPONENT);
-    m_shadowMap->setShadowComparison(true);
-    m_shadowMap->setShadowTextureMode(Texture::LUMINANCE);
-	m_shadowMap->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::LINEAR);//LINEAR);
-    m_shadowMap->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::LINEAR);
+    _shadowMap->setInternalFormat(GL_DEPTH_COMPONENT);
+    _shadowMap->setShadowComparison(true);
+    _shadowMap->setShadowTextureMode(Texture::LUMINANCE);
+	_shadowMap->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::LINEAR);//LINEAR);
+    _shadowMap->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::LINEAR);
     
     // set up the render to texture camera.
     {
@@ -197,14 +222,14 @@ osg::Group* HogBoxLight::CreateShadowMap(osg::Group* root, unsigned int coordGen
         _local_stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
 
-        m_factor = 0.1f;
-        m_units = 1.0f;
+        _factor = 0.1f;
+        _units = 1.0f;
 
-		//if( m_polygonOffset==NULL)
-		m_polygonOffset = new PolygonOffset;
-		m_polygonOffset->setFactor(m_factor);
-        m_polygonOffset->setUnits(m_units);
-        _local_stateset->setAttribute(m_polygonOffset.get(), StateAttribute::ON | StateAttribute::OVERRIDE);
+		//if( _polygonOffset==NULL)
+		_polygonOffset = new PolygonOffset;
+		_polygonOffset->setFactor(_factor);
+        _polygonOffset->setUnits(_units);
+        _local_stateset->setAttribute(_polygonOffset.get(), StateAttribute::ON | StateAttribute::OVERRIDE);
         _local_stateset->setMode(GL_POLYGON_OFFSET_FILL, StateAttribute::ON | StateAttribute::OVERRIDE);
 
         ref_ptr<CullFace> cull_face = new CullFace;
@@ -220,7 +245,7 @@ osg::Group* HogBoxLight::CreateShadowMap(osg::Group* root, unsigned int coordGen
         camera->setRenderTargetImplementation(osg::CameraNode::FRAME_BUFFER_OBJECT);
 
         // attach the texture and use it as the color buffer.
-        camera->attach(osg::CameraNode::DEPTH_BUFFER, m_shadowMap.get());
+        camera->attach(osg::CameraNode::DEPTH_BUFFER, _shadowMap.get());
 
         // add subgraph to render
         camera->addChild(root);
@@ -232,11 +257,11 @@ osg::Group* HogBoxLight::CreateShadowMap(osg::Group* root, unsigned int coordGen
         texgenNode->setTextureUnit(coordGenUnit);
         group->addChild(texgenNode.get());
 
-		m_shadowMatrix = new osg::TexMat();
+		_shadowMatrix = new osg::TexMat();
 		
 
         // set an update callback to keep moving the camera and tex gen in the right direction.
-        group->setUpdateCallback(new UpdateCameraAndTexGenCallback(m_transform.get(), camera, texgenNode.get(), m_shadowMatrix.get()));
+        group->setUpdateCallback(new UpdateCameraAndTexGenCallback(_transform.get(), camera, texgenNode.get(), _shadowMatrix.get()));
     }
     
 	//return the new root node
@@ -250,18 +275,18 @@ osg::Group* HogBoxLight::CreateShadowMap(osg::Group* root, unsigned int coordGen
 //
 void HogBoxLight::SetPolyUnits(const float& units)
 {
-	if(m_polygonOffset!=NULL)
+	if(_polygonOffset!=NULL)
 	{
-		m_units = units;
-		m_polygonOffset->setUnitsMultiplier(m_units);	
+		_units = units;
+		_polygonOffset->setUnitsMultiplier(_units);	
 	}
 }
 void HogBoxLight::SetPolyFactor(const float& factor)
 {
-	if(m_polygonOffset!=NULL)
+	if(_polygonOffset!=NULL)
 	{
-		m_factor = factor;
-		m_polygonOffset->setFactor(m_factor);
+		_factor = factor;
+		_polygonOffset->setFactor(_factor);
 	}
 }
 ///////////////////////////////////END LIGHT//////////////////////////////

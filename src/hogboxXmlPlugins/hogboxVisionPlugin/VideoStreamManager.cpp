@@ -29,7 +29,7 @@ public:
 
 	VideoStreamManager(void) : hogboxDB::XmlClassManager()
 	{
-		SupportsClassType("VideoStream", "Xml definition of hogVision VideoStream");
+		SupportsClassType("VideoStream", new VideoStreamXmlWrapper());//"Xml definition of hogVision VideoStream");
 	}
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	VideoStreamManager(const VideoStreamManager& manager,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
@@ -37,7 +37,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxDB, VideoStreamManager)
+	META_Object(hogboxDB, VideoStreamManager)
 
 protected:
 
@@ -50,11 +50,11 @@ protected:
 	//
 	virtual hogboxDB::XmlClassWrapperPtr ReadObjectFromXmlNodeImplementation(osgDB::XmlNode* xmlNode)
 	{
-		hogbox::ObjectPtr object;
+		osg::ObjectPtr object;
 		VideoStreamXmlWrapperPtr xmlWrapper;
 
 		//create our object and it's xml wrapper.
-		xmlWrapper = new VideoStreamXmlWrapper(xmlNode);
+		xmlWrapper = new VideoStreamXmlWrapper();
 		
 		if(!xmlWrapper){return NULL;}
 		//did the wrapper alocate an object

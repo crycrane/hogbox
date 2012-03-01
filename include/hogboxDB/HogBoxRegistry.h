@@ -47,7 +47,7 @@ public:
         }
     };
 
-    static HogBoxRegistry* Instance(bool erase = false){
+    static HogBoxRegistry* Inst(bool erase = false){
         sEmpty empty;
         return empty.getIt();
     }
@@ -83,20 +83,20 @@ protected:
 	virtual ~HogBoxRegistry(void);
 
 	virtual void destruct(){
-		m_xmlNodeManagers.clear();
+		_xmlNodeManagers.clear();
 	}
 
 protected:
 	
 	//Map class types to particular library names
-	ClassTypeAliasMap m_classTypeAliasMap;
+	ClassTypeAliasMap _classTypeAliasMap;
 
 	//the list of xml node managers used to read/write nodes
 	//to the database
-	std::vector<XmlClassManagerWrapperPtr> m_xmlNodeManagers;
+	std::vector<XmlClassManagerWrapperPtr> _xmlNodeManagers;
 
 	//list of loaded libraries
-	DynamicLibraryList m_dlList;
+	DynamicLibraryList _dlList;
 
 };
 
@@ -109,7 +109,7 @@ public:
 	XmlNodeManagerRegistryProxy(XmlClassManager* proto, const char* name)
 	{
 		//check the registry instance
-		HogBoxRegistry* registry = HogBoxRegistry::Instance();
+		HogBoxRegistry* registry = HogBoxRegistry::Inst();
 		if(registry)
 		{
 			//create the wrapper and add to the reg

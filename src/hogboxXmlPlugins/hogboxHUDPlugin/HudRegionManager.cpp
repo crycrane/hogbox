@@ -29,7 +29,7 @@ public:
 
 	HudRegionManager(void) : hogboxDB::XmlClassManager()
 	{
-		SupportsClassType("HudRegion", "Xml definition of HudRegion and basic derived types");
+		SupportsClassType("HudRegion", new HudRegionXmlWrapper());//"Xml definition of HudRegion and basic derived types");
 	}
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HudRegionManager(const HudRegionManager& manager,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
@@ -37,7 +37,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxDB, HudRegionManager)
+	META_Object(hogboxDB, HudRegionManager)
 
 protected:
 
@@ -53,7 +53,7 @@ protected:
 		HudRegionXmlWrapperPtr xmlWrapper;
 
 		//create our object and it's xml wrapper.
-		xmlWrapper = new HudRegionXmlWrapper(xmlNode);
+		xmlWrapper = new HudRegionXmlWrapper();
 		
 		if(!xmlWrapper.get()){return NULL;}
 		//did the wrapper alocate an object

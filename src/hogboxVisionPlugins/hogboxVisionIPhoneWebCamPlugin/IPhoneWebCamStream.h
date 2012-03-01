@@ -56,65 +56,65 @@ public:
 	
 	IPhoneCaptureFormat(CaptureFormatPreset capturePreset, const NSString* osPresetString) 
 		: hogboxVision::CaptureFormat(),
-		m_capturePreset(capturePreset),
-		m_osPresetString(osPresetString)
+		_capturePreset(capturePreset),
+		_osPresetString(osPresetString)
 	{
-		m_isValid = false;
+		_isValid = false;
 
-		switch (m_capturePreset) {
+		switch (_capturePreset) {
 			case PHOTO:
 				//store basic params
-				m_width = 1280;//?
-				m_height = 720;//?
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 1280;//?
+				_height = 720;//?
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			case HIGH:
 				//store basic params
-				m_width = 1280;//?
-				m_height = 720;//?
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 1280;//?
+				_height = 720;//?
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			case MEDIUM:
 				//store basic params
-				m_width = 640;//?
-				m_height = 480;//?
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 640;//?
+				_height = 480;//?
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			case LOW:
 				//store basic params
-				m_width = 192;// on rear cam of ipod 4
-				m_height = 144;// on rear cam of ipod 4
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 192;// on rear cam of ipod 4
+				_height = 144;// on rear cam of ipod 4
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			case VGA_640X480:
 				//store basic params
-				m_width = 640;// should always be avaliable
-				m_height = 480;// 
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 640;// should always be avaliable
+				_height = 480;// 
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			case HD_720P:
 				//store basic params
-				m_width = 1280;// not sure if all cams do this
-				m_height = 720;// 
-				m_bitRate = 24;//?
-				m_fps = 30;
-				m_minFps = 1;
-				m_maxFps = 30;
+				_width = 1280;// not sure if all cams do this
+				_height = 720;// 
+				_bitRate = 24;//?
+				_fps = 30;
+				_minFps = 1;
+				_maxFps = 30;
 				break;
 			default:
 				break;
@@ -122,15 +122,15 @@ public:
 
 
 		//if we have any zero params return before flagging the format as valid
-		if(m_width <=0 || m_height <=0 || m_fps <=0)
-		{m_isValid = false; return;}
+		if(_width <=0 || _height <=0 || _fps <=0)
+		{_isValid = false; return;}
 
 		//create friendly description of the format
 		std::ostringstream oss(std::ostringstream::out);
-		oss << m_width << "x" << m_height << " " << (int)m_fps << "-fps " << m_bitRate << "-bit";
-		m_formatDescription = oss.str();
+		oss << _width << "x" << _height << " " << (int)_fps << "-fps " << _bitRate << "-bit";
+		_formatDescription = oss.str();
 
-		m_isValid = true;
+		_isValid = true;
 	}
 
 
@@ -141,11 +141,11 @@ public:
 	//any out of range values
 	virtual bool SetFormatFps(float fps)
 	{
-		m_fps = fps;
+		_fps = fps;
 		return true;
 	}
 
-	NSString* GetOSPresetString(){return m_osPresetString;}
+	NSString* GetOSPresetString(){return _osPresetString;}
 	
 protected:
 
@@ -155,8 +155,8 @@ protected:
 
 protected:
 
-	CaptureFormatPreset m_capturePreset;
-	NSString* m_osPresetString; 
+	CaptureFormatPreset _capturePreset;
+	NSString* _osPresetString; 
 
 };
 
@@ -177,7 +177,7 @@ public:
 	}
 	
 	//
-	//fill the m_formats list with data from our connected
+	//fill the _formats list with data from our connected
 	//device filter
 	virtual bool CreateFormatsListImplementation();
 
@@ -280,7 +280,7 @@ protected:
 
 protected:
 
-	IPhoneCameraController* m_iphoneCameraController;
+	IPhoneCameraController* _iphoneCameraController;
 
 };
 

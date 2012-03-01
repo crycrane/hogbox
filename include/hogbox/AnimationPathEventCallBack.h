@@ -45,8 +45,8 @@ public:
 	AnimationPathEventCallback(void) : AnimationPathCallback(), 
 									isPlaying(true)
 	{
-		m_timeMode = 0;
-		m_aniEventQueue.clear();
+		_timeMode = 0;
+		_aniEventQueue.clear();
 		isPlaying = true;
 	}
 	//~AnimationPathEventCallback(void){}
@@ -78,12 +78,12 @@ public:
 
 	//get the length of the animation queue
 	int GetAniQueueLength(){
-		return m_aniEventQueue.size();
+		return _aniEventQueue.size();
 	}
 
 	//clear all animations from the queue
 	void ClearAnimationQueue(){
-		m_aniEventQueue.clear();
+		_aniEventQueue.clear();
 	}
 
 	//our update operator
@@ -114,11 +114,11 @@ protected:
 	};
 
 	//queue of animtion events to fire off
-	std::vector<AniEvent> m_aniEventQueue;
+	std::vector<AniEvent> _aniEventQueue;
 
 	//manual animation
-	int m_timeMode; //0 = realtime, 1 = frame request
-	float m_manualFrame;
+	int _timeMode; //0 = realtime, 1 = frame request
+	float _manualFrame;
 
 };
 

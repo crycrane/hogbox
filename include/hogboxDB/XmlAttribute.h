@@ -35,7 +35,7 @@
 //    std::string nameStr;
 //};
 //MyClass wrapClass;
-//m_attributeMap["MyNameAttribute"] = new TypedXmlAttribute<std::string>(&wrapClass.nameStr);
+//_attributeMap["MyNameAttribute"] = new TypedXmlAttribute<std::string>(&wrapClass.nameStr);
 //
 //In xml we would be looking at
 //
@@ -90,21 +90,21 @@ namespace hogboxDB {
 	
 		TypedXmlAttribute(T* value = 0) 
 			: XmlAttribute(),			
-			m_value(value) 
+			_value(value) 
 		{
 		}
 		
-		virtual const T& get() const { return *m_value; }
+		virtual const T& get() const { return *_value; }
 		
 		virtual void set(const T& value) {			
-			*m_value = value;
+			*_value = value;
 		}
 		//write to nodes contents
 		virtual bool serialize(osgDB::XmlNode* out) {
 			//std::stringstream ss;
-			//ss << *m_value;
+			//ss << *_value;
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 
@@ -125,17 +125,17 @@ namespace hogboxDB {
 	protected:
 				
 		TypedXmlAttribute<T>& operator = (const T& value) {
-			*m_value = value;		
+			*_value = value;		
 			return *this;
 		}
 	
 		void operator = (const TypedXmlAttribute<T>& value) {
-			*m_value = value.get();		
+			*_value = value.get();		
 		}
 		
 		//the pointer to the member this
 		//attribute represents
-		T* m_value;
+		T* _value;
 	};
 	
 
@@ -158,9 +158,9 @@ namespace hogboxDB {
 		CallbackXmlAttribute(C *object, 
 			GetHandler ghandler = 0,
 			SetHandler shandler = 0) : 
-			mp_object(object),
 			f_gethandler(ghandler),			
-			f_sethandler(shandler)
+			f_sethandler(shandler),
+            mp_object(object)
 		{
 		}
 		
@@ -175,7 +175,7 @@ namespace hogboxDB {
 				(mp_object->*f_sethandler)(value);			
 			} else 
 			{
-				osg::notify(osg::WARN) << "XML ERROR: No set method provided for XmlAttribute. Objects value will not be set." << std::endl;
+				OSG_WARN << "XML ERROR: No set method provided for XmlAttribute. Objects value will not be set." << std::endl;
 			}
 		}
 		

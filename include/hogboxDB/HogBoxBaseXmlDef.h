@@ -84,11 +84,11 @@ public:
 	void AddChild(BasePtr child);
 	void RemoveChild(BasePtr child);
 
-	Base* GetCurrent(){return m_current.get();}
-	void SetCurrent(Base* current){m_current=current;}
+	Base* GetCurrent(){return _current.get();}
+	void SetCurrent(Base* current){_current=current;}
 
-	std::vector<BasePtr> GetChildren()const{return m_children;}
-	void SetChildren(const std::vector<BasePtr>& list){m_children = list;}
+	std::vector<BasePtr> GetChildren()const{return _children;}
+	void SetChildren(const std::vector<BasePtr>& list){_children = list;}
 
 protected:
 
@@ -96,8 +96,8 @@ protected:
 		osg::notify(osg::WARN) << "Delete Group '"<<getName()<<"'"<<std::endl;
 	}
 
-	BasePtr m_current;
-	std::vector<BasePtr> m_children;
+	BasePtr _current;
+	std::vector<BasePtr> _children;
 };
 
 typedef osg::ref_ptr<Group> GroupPtr;
@@ -112,11 +112,11 @@ public:
 	BaseXmlWrapper(Base* wrap) : XmlClassWrapper(wrap)
 	{
 		// create a new field 
-		m_xmlAttributes["Name"] = new CallbackXmlAttribute<Base,std::string>(wrap,
+		_xmlAttributes["Name"] = new CallbackXmlAttribute<Base,std::string>(wrap,
 																&Base::getName,
 																&Base::setName);
 		// attach a new field to the name "debug"
-		//m_fields["debug"] = new TypedField<bool>(&m_debugmode);
+		//_fields["debug"] = new TypedField<bool>(&_debugmode);
 	}
 	virtual ~BaseXmlWrapper(void){}
 
@@ -131,11 +131,11 @@ public:
 	InheritedXmlWrapper(Inherited* wrap) : BaseXmlWrapper(wrap)
 	{
 		// create a new field 
-		m_xmlAttributes["ExtraData"] = new CallbackXmlAttribute<Inherited,float>(wrap,
+		_xmlAttributes["ExtraData"] = new CallbackXmlAttribute<Inherited,float>(wrap,
 																				&Inherited::getExtraData,
 																				&Inherited::setExtraData);
 		// attach a new field to the name "debug"
-		m_xmlAttributes["ExtraList"] = new CallbackXmlAttributeList<Inherited,Vec3Vector, osg::Vec3>(wrap,
+		_xmlAttributes["ExtraList"] = new CallbackXmlAttributeList<Inherited,Vec3Vector, osg::Vec3>(wrap,
 																								&Inherited::getExtraList,
 																								&Inherited::setExtraList);
 	}
@@ -152,16 +152,16 @@ public:
 	GroupXmlWrapper(Group* wrap) : BaseXmlWrapper(wrap)
 	{
 		// create a new field 
-		m_xmlAttributes["Current"] = new CallbackXmlClassPointer<Group,Base>(wrap,
+		_xmlAttributes["Current"] = new CallbackXmlClassPointer<Group,Base>(wrap,
 																			 &Group::GetCurrent,
 																			 &Group::SetCurrent);
 
 		// attach a new field to the name "debug"
-		m_xmlAttributes["Children"] = new CallbackXmlAttributePointerList<Group,BasePtrVector, Base>(wrap,
+		_xmlAttributes["Children"] = new CallbackXmlAttributePointerList<Group,BasePtrVector, Base>(wrap,
 																									&Group::GetChildren,
 																									&Group::SetChildren);
 		// attach a new field to the name "debug"
-		//m_fields["debug"] = new TypedField<bool>(&m_debugmode);
+		//_fields["debug"] = new TypedField<bool>(&_debugmode);
 	}
 	virtual ~GroupXmlWrapper(void){}
 

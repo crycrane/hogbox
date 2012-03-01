@@ -18,6 +18,7 @@
 #include <hogboxDB/XmlAttributePtr.h>
 #include <hogboxDB/XmlAttributeMap.h>
 
+#include <hogbox/AssetManager.h>
 #include <hogboxDB/XmlUtils.h>
 
 
@@ -31,7 +32,7 @@ namespace hogboxDB {
 //
 //Provides an interface for wrapping objects of type osg::Object for use in xml database
 //Each classtype being wrapped provides a set of xmlAtrributes which are stored in
-//the m_xmlAttributes list. These provied the means of de/serialising the classes
+//the _xmlAttributes list. These provied the means of de/serialising the classes
 //member variables from an xmlnode
 //The classtype being wrapped should be of type osg::Object so that the xmlnode name
 //can use the osg::Object::className (Usually just base class)
@@ -74,19 +75,33 @@ public:
 	//the type it wraps. Depending on the implementation the p_wrappedObject
 	//is allocated to the correct type. Once this is done deserialize will be ready
 	//to read the node into our wrapped object
-	//The Wrapper nodes m_uniqueID should come from the xmlNodes 'uniqueID' property
-	XmlClassWrapper(osgDB::XmlNode* node,  const std::string& classType);
+	//The Wrapper nodes _uniqueID should come from the xmlNodes 'uniqueID' property
+	XmlClassWrapper(const std::string& classType);
 
 	//
 	//Return base class type for this type of node
-	const std::string& GetClassType()const;
+	const std::string& getClassType()const;
+    
+    //
+    //Allocate a new object of the wrapped type, this way inherited types can
+    //implement a new wrapping inheriting from the base types wrapper and overloading
+    //the allocateClassType method
+    virtual osg::Object* allocateClassType(){
+        OSG_FATAL << "XmlClassWrapper::allocateClassType: WARNING: Need to overide this method to allocate your wrapped class type." << std::endl;
+        return NULL;
+    }
+    
+    //
+    //clone this type, used so we can register an empty wrapper with the wrapper manager
+    //which can be used to allocate the relevent wrapper based on class
+    virtual XmlClassWrapper* cloneType(){return new XmlClassWrapper("Base");} 
 
 	//
 	//Return the uniqueID of the node
-	const std::string& GetUniqueID()const;
+	const std::string& getUniqueID()const;
 
 	//
-	//return the wrapped object pointer
+	//return the wrapped object pointer, 
 	osg::Object* getWrappedObject();
 
 	//
@@ -103,7 +118,7 @@ public:
 	//
 	//Some objects require special case name setting. the default set the objects name
 	//to that of the nodes uniqueID. 
-	virtual void SetObjectNameFromUniqueID(const std::string& name);
+	virtual void setObjectNameFromUniqueID(const std::string& name);
 
 	//
 	//print the xml avaliable attributes etc of the wrapped class
@@ -112,20 +127,33 @@ public:
 protected:
 
 	virtual ~XmlClassWrapper(void);
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){}
+    
+    //
+    //Return the class name from an xml node, default is the nodes name,
+    //but if a type property exists that is used instead
+    const std::string getClassNameFromXmlNode(osgDB::XmlNode* xmlNode);
 
 protected:
 
 	//the base classtype name being wrapped
-	const std::string m_classType;
+	const std::string _classType;
 
 	//the uniqueID of the node
-	std::string m_uniqueID;
+	std::string _uniqueID;
 
 	//the object the node wrapper represents
 	osg::ref_ptr<osg::Object> p_wrappedObject;
 
 	//the map of attributes to xml attribute node names
-	XmlAttributeMap m_xmlAttributes;
+	XmlAttributeMap _xmlAttributes;
+    
+    //we also store a map of derived types, to compre against a nodes
+    //'type' property to allow us to allocate the correct type for p_wrappedObject
+    
 };
 
 typedef osg::ref_ptr<XmlClassWrapper> XmlClassWrapperPtr;

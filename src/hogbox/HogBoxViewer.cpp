@@ -9,88 +9,88 @@ using namespace hogbox;
 
 HogBoxViewer::HogBoxViewer(HWND hwnd)
 	: osg::Object(),
-	m_p_scene(NULL),
-	m_hwnd(hwnd),
-	m_screenID(0),
-	m_viewer(NULL),
-	m_graphicsContext(NULL),
-	m_graphicsWindow(NULL),
-	m_resizeCallback(NULL),
-	m_requestReset(false),
+    //assume the worst for support
+    _glSystemInfo(NULL),
+    _screenID(0),	
+    _viewer(NULL),	
+    _hwnd(hwnd),
+    _graphicsContext(NULL),
+    _graphicsWindow(NULL),
+    _resizeCallback(NULL),
+    //saving
+    _viewerSettingsFile(""),
+    _scene(NULL),
+	_requestReset(false),
 	//window size in pixels
-	m_winSize(osg::Vec2(800, 600)),
-	m_prevWinSize(m_winSize),
+	_winSize(osg::Vec2(800, 600)),
+	_prevWinSize(_winSize),
 	//window corner in pixels (Windows bottom left is 0,0)
-	m_winCorner(osg::Vec2(0, 0)),
-	m_prevWinCorner(m_winCorner),
+	_winCorner(osg::Vec2(0, 0)),
+	_prevWinCorner(_winCorner),
 	//
-	m_doubleBuffer(true),
-	m_vSync(false),
-	m_colorBits(24),
-	m_depthBits(24),
-	m_alphaBits(8),
-	m_stencilBits(0),
-	m_accumulationBits(0),
+	_doubleBuffer(true),
+	_vSync(false),
+	_colorBits(24),
+	_depthBits(24),
+	_alphaBits(8),
+	_stencilBits(0),
+	_accumulationBits(0),
 	//is app in fullscreen mode
-	m_bIsFullScreen(false),
-	m_bUsingBoarder(true),
-	m_windowName("HogBoxViewer"),
-	m_usingCursor(true),
+	_bIsFullScreen(false),
+	_bUsingBoarder(true),
+	_windowName("HogBoxViewer"),
+	_usingCursor(true),
 //stereo
 	//are we using stereo
-	m_bStereoEnabled(false),
+	_bStereoEnabled(false),
 	//current eyeseperation
-	m_fStereoSep(0.006f),
-	m_swapEyes(false),
+	_fStereoSep(0.006f),
+	_swapEyes(false),
 	//current convergence distance from camera
-	m_fStereoConv(5.0f),
+	_fStereoConv(5.0f),
 	//type of stereo display
-	m_iStereoMode(1), //anaglyph
+	_iStereoMode(1), //anaglyph
 //rendering
-	m_clearColor(osg::Vec4(0.2f, 0.2f, 0.4f, 1.0f)),
+	_clearColor(osg::Vec4(0.2f, 0.2f, 0.4f, 1.0f)),
 	//antialiasing samples
-	m_aaSamples(0), //try for 4, systeminfo will prevent it if not supported
+	_aaSamples(0), //try for 4, systeminfo will prevent it if not supported
 //view/camera
 	//field of view of camera
-	m_vfov(45.0f),
-	m_cameraViewMatrix(osg::Matrix::identity()),
-	m_viewDistance(4.0f), //used for saving trackball distances
-	m_cameraHomePos(osg::Vec3(0.0f,0.0f,0.0f)),
-	m_cameraHomeLookAt(osg::Vec3(0.0f,0.0f,-1.0f)),
-	m_cameraHomeUp(osg::Vec3(0,1,0)),
-//saving
-	m_viewerSettingsFile(""),
+	_vfov(45.0f),
+	_cameraViewMatrix(osg::Matrix::identity()),
+	_viewDistance(4.0f), //used for saving trackball distances
+	_cameraHomePos(osg::Vec3(0.0f,0.0f,0.0f)),
+	_cameraHomeLookAt(osg::Vec3(0.0f,0.0f,-1.0f)),
+	_cameraHomeUp(osg::Vec3(0,1,0)),
 //renderOffscreen
-	_frameBufferImage(NULL),
-	m_bRenderOffscreen(false),
-//assume the worst for support
-	m_glSystemInfo(NULL),
+	_bRenderOffscreen(false),
+    _frameBufferImage(NULL),
 //IOS specific
 	_deviceOrientationFlags(IGNORE_ORIENTATION),
     _contentScale(1.0f)
 {
-	m_glSystemInfo = SystemInfo::Instance();
+	_glSystemInfo = SystemInfo::Inst();
 }
 
 HogBoxViewer::~HogBoxViewer(void)
 {
 	OSG_NOTICE << "    Deallocating HogBoxViewer: Name '" << this->getName() << "'." << std::endl;
 
-	m_p_scene = NULL;
+	_scene = NULL;
 
-	m_resizeCallback = NULL;
+	_resizeCallback = NULL;
 	
-	for(unsigned int i=0; i<m_p_appEventHandlers.size(); i++)
-	{m_p_appEventHandlers[i] = NULL;}
-	m_p_appEventHandlers.clear();
+	for(unsigned int i=0; i<_appEventHandlers.size(); i++)
+	{_appEventHandlers[i] = NULL;}
+	_appEventHandlers.clear();
 
-	m_viewer = NULL;
+	_viewer = NULL;
 
 	//handle to the context window for manipulaing fullscreen etc
-	m_graphicsWindow = NULL;
+	_graphicsWindow = NULL;
 
 	//single context to attach to the viewers camera
-	m_graphicsContext = NULL;
+	_graphicsContext = NULL;
 }
 
 //
@@ -102,52 +102,50 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 					   int stereoMode, bool renderOffscreen)
 {
 
-	m_screenID = screenID;
+	_screenID = screenID;
 
 	//good default fov
-	int width = m_glSystemInfo->getScreenWidth(m_screenID);
-    int height = m_glSystemInfo->getScreenHeight(m_screenID);
+	int width = _glSystemInfo->getScreenWidth(_screenID);
+    int height = _glSystemInfo->getScreenHeight(_screenID);
 	osg::Vec2 screenRes = osg::Vec2(width,height);
     //double distance = 0.5; //osg::DisplaySettings::instance()->getScreenDistance();
-   // m_vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
+   // _vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
 
 	//set the scene to render
-	m_p_scene = scene;
+	_scene = scene;
 
     //is app in fullscreen mode
-	m_bIsFullScreen = fullScreen;
+	_bIsFullScreen = fullScreen;
     
 	//window size in pixels
-	m_winSize = winSize;
+	_winSize = winSize;
     
-    if(m_bIsFullScreen){
-        m_winSize = screenRes;
+    if(_bIsFullScreen){
+        _winSize = screenRes;
     }
     
     //window corner in pixels ( Windows bottom left is 0,0)
 	if(winCr.x()==-1)//pass neg to center
 	{
 		//set the default window to center
-		if(m_winSize.x()>screenRes.x())
-		{m_winSize.x() = screenRes.x();}
-		if(m_winSize.y()>screenRes.y())
-		{m_winSize.y() = screenRes.y();}
-		m_winCorner = osg::Vec2((screenRes.x()/2)-(m_winSize.x()/2), (screenRes.y()/2)-(m_winSize.y()/2));
+		if(_winSize.x()>screenRes.x()){_winSize.x() = screenRes.x();}
+		if(_winSize.y()>screenRes.y()){_winSize.y() = screenRes.y();}
+		_winCorner = osg::Vec2((screenRes.x()/2)-(_winSize.x()/2), (screenRes.y()/2)-(_winSize.y()/2));
 	}else{
-		m_winCorner = winCr;
+		_winCorner = winCr;
 	}
     
 	//are we using stereo
-	m_bStereoEnabled = useStereo;
+	_bStereoEnabled = useStereo;
 
 	//type of stereo display
-	m_iStereoMode = stereoMode; //anaglyph
+	_iStereoMode = stereoMode; //anaglyph
 
 	//Do we want to render to offscreen image target
-	m_bRenderOffscreen = renderOffscreen;
+	_bRenderOffscreen = renderOffscreen;
 
 	//if we have a valid scene then construc the window, else divert till later
-	if(m_p_scene.valid() && realizeNow)
+	if(_scene.valid() && realizeNow)
 	{
 		return CreateAppWindow();
 	}
@@ -160,14 +158,14 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 //
 void HogBoxViewer::frame()
 {
-	if(m_viewer.valid())
+	if(_viewer.valid())
 	{
-		if(m_resizeCallback != NULL)
+		if(_resizeCallback != NULL)
 		{
-			m_winSize = m_resizeCallback->GetWinSize();
-			m_winCorner = m_resizeCallback->GetWinCorner();
+			_winSize = _resizeCallback->GetWinSize();
+			_winCorner = _resizeCallback->GetWinCorner();
 		}
-		m_viewer->frame();
+		_viewer->frame();
 	}
 }
 
@@ -176,9 +174,9 @@ void HogBoxViewer::frame()
 //
 bool HogBoxViewer::done()
 {
-	if(m_viewer.valid())
+	if(_viewer.valid())
 	{
-		return m_viewer->done();
+		return _viewer->done();
 	}
 	return true;
 }
@@ -186,10 +184,10 @@ bool HogBoxViewer::done()
 void HogBoxViewer::addEventHandler(osgGA::GUIEventHandler* eventHandler)
 {
 	//add to our list of eventHandler
-	m_p_appEventHandlers.push_back((EventHandlerObserver)eventHandler);
-	if(m_viewer.valid())
+	_appEventHandlers.push_back((EventHandlerObserver)eventHandler);
+	if(_viewer.valid())
 	{
-		m_viewer->addEventHandler(eventHandler);
+		_viewer->addEventHandler(eventHandler);
 	}
 }
 
@@ -200,60 +198,60 @@ void HogBoxViewer::addEventHandler(osgGA::GUIEventHandler* eventHandler)
 bool HogBoxViewer::CreateAppWindow()
 {
 	//if not philips mode
-	if( m_iStereoMode != 9 && m_iStereoMode != 10)
+	if( _iStereoMode != 9 && _iStereoMode != 10)
 	{
 		//if the implentation window exists get the current dimensions and close it
-		if(m_graphicsWindow != NULL)
+		if(_graphicsWindow != NULL)
 		{
 			int x, y, w, h;
-			m_graphicsWindow->getWindowRectangle(x, y, w, h);
-			m_winSize = osg::Vec2(w,h);
-			m_winCorner = osg::Vec2(x,y);
-			m_graphicsWindow->close(); //setCursor(osgViewer::GraphicsWindow::MouseCursor::
-			m_graphicsWindow = NULL;
+			_graphicsWindow->getWindowRectangle(x, y, w, h);
+			_winSize = osg::Vec2(w,h);
+			_winCorner = osg::Vec2(x,y);
+			_graphicsWindow->close(); //setCursor(osgViewer::GraphicsWindow::MouseCursor::
+			_graphicsWindow = NULL;
 		}
 
 		// create the window to draw to.
 		osg::GraphicsContext::Traits* graphicsTraits = new osg::GraphicsContext::Traits;
-		graphicsTraits->screenNum = m_screenID;
-		graphicsTraits->x = m_winCorner.x();
-		graphicsTraits->y = m_winCorner.y();
-		graphicsTraits->width = m_winSize.x();
-		graphicsTraits->height = m_winSize.y();
-		graphicsTraits->red = m_colorBits/3;
-		graphicsTraits->green = m_colorBits/3;
-		graphicsTraits->blue = m_colorBits/3;
-		graphicsTraits->depth = m_depthBits;//m_glSystemInfo->maxDepthBufferBits();
-		graphicsTraits->alpha = m_alphaBits;
-		graphicsTraits->stencil = m_stencilBits;
-		graphicsTraits->doubleBuffer = m_doubleBuffer; //m_glSystemInfo->doubleBufferedStereoSupported();
+		graphicsTraits->screenNum = _screenID;
+		graphicsTraits->x = _winCorner.x();
+		graphicsTraits->y = _winCorner.y();
+		graphicsTraits->width = _winSize.x();
+		graphicsTraits->height = _winSize.y();
+		graphicsTraits->red = _colorBits/3;
+		graphicsTraits->green = _colorBits/3;
+		graphicsTraits->blue = _colorBits/3;
+		graphicsTraits->depth = _depthBits;//_glSystemInfo->maxDepthBufferBits();
+		graphicsTraits->alpha = _alphaBits;
+		graphicsTraits->stencil = _stencilBits;
+		graphicsTraits->doubleBuffer = _doubleBuffer; //_glSystemInfo->doubleBufferedStereoSupported();
 		graphicsTraits->sharedContext = 0;
-		graphicsTraits->windowDecoration = m_bUsingBoarder;
-		graphicsTraits->useCursor = m_usingCursor;
-		graphicsTraits->windowName = m_windowName;
-		graphicsTraits->vsync = m_vSync;
+		graphicsTraits->windowDecoration = _bUsingBoarder;
+		graphicsTraits->useCursor = _usingCursor;
+		graphicsTraits->windowName = _windowName;
+		graphicsTraits->vsync = _vSync;
 
         OSG_FATAL << "HogBoxViewer Content Scale " << _contentScale << std::endl;
         
 		//attach to any handle if avaliable
-		if(m_hwnd != NULL)
+		if(_hwnd != NULL)
 		{
 			// Init the Windata Variable that holds the handle for the Window to display OSG in.
 			graphicsTraits->setInheritedWindowPixelFormat = true;
 			osg::ref_ptr<osg::Referenced> windata;
 			
 #ifdef WIN32 
-			windata = new osgViewer::GraphicsWindowWin32::WindowData(m_hwnd);
+			windata = new osgViewer::GraphicsWindowWin32::WindowData(_hwnd);
 #else
 			#if (TARGET_OS_IPHONE)
-				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)m_hwnd, _deviceOrientationFlags, _contentScale);
+				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)_hwnd, _deviceOrientationFlags, _contentScale);
 			#else
-				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)m_hwnd);
+				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)_hwnd);
 			#endif
 #endif
 			graphicsTraits->inheritedWindowData = windata;
 			graphicsTraits->windowDecoration = false;
-			m_bUsingBoarder = false;
+			_bUsingBoarder = false;
 		}else{
 			//IOS pass windata anyhow so we can set auto rotate
 			#if (TARGET_OS_IPHONE)
@@ -264,174 +262,174 @@ bool HogBoxViewer::CreateAppWindow()
 
 
 		//apply samles if supported
-		if(m_glSystemInfo->multiSamplingSupported())
+		if(_glSystemInfo->multiSamplingSupported())
         {
             //if the requested samples are within supported range
-            if(m_glSystemInfo->maxMultiSamplesSupported() >= m_aaSamples)
+            if(_glSystemInfo->maxMultiSamplesSupported() >= _aaSamples)
             {
-                graphicsTraits->samples = m_aaSamples;
+                graphicsTraits->samples = _aaSamples;
             }else{
-                graphicsTraits->samples = m_glSystemInfo->maxMultiSamplesSupported();
+                graphicsTraits->samples = _glSystemInfo->maxMultiSamplesSupported();
             }
         }
       
 		//apply extra traits required for stereo modes
-		if(m_bStereoEnabled)//add quad buffered if requested
+		if(_bStereoEnabled)//add quad buffered if requested
 		{
-			if(m_iStereoMode==0) //Quadbuffered
+			if(_iStereoMode==0) //Quadbuffered
 			{
 				//check its supported
-				if(m_glSystemInfo->quadBufferedStereoSupported())
+				if(_glSystemInfo->quadBufferedStereoSupported())
 				{
 					graphicsTraits->quadBufferStereo = true;
 				}else{
-					osg::notify(osg::WARN) << "HogBoxViewer CreateWindow ERROR: QuadBuffered Stereo has been requested but is not supported. Defaulting to Anaglyph."<<std::endl;
-					m_iStereoMode = 1;//default to anaglyph
+					OSG_WARN << "HogBoxViewer CreateWindow ERROR: QuadBuffered Stereo has been requested but is not supported. Defaulting to Anaglyph."<<std::endl;
+					_iStereoMode = 1;//default to anaglyph
 				}
 				//interlace and checker modes require stencil
-			}else if(m_iStereoMode==6 || m_iStereoMode==7 || m_iStereoMode==8){
+			}else if(_iStereoMode==6 || _iStereoMode==7 || _iStereoMode==8){
 				
-				m_stencilBits = 8;
-				graphicsTraits->stencil = m_stencilBits;
+				_stencilBits = 8;
+				graphicsTraits->stencil = _stencilBits;
 			}
 		}
 
 		//if a context exists, release it pointer
-		if(m_graphicsContext != NULL)
+		if(_graphicsContext != NULL)
 		{
-			m_graphicsContext = NULL;
+			_graphicsContext = NULL;
 		}
 
 		//now check for offscreen rendering and change our traits accordingly
-		if(m_bRenderOffscreen)
+		if(_bRenderOffscreen)
 		{
 			_frameBufferImage = new osg::Image();
-			_frameBufferImage->allocateImage(m_winSize.x(), m_winSize.y(), 1, GL_BGR, GL_UNSIGNED_BYTE);
+			_frameBufferImage->allocateImage(_winSize.x(), _winSize.y(), 1, GL_BGR, GL_UNSIGNED_BYTE);
 			graphicsTraits->windowDecoration = false;
-			//graphicsTraits->doubleBuffer = false; //m_glSystemInfo->doubleBufferedStereoSupported();
+			//graphicsTraits->doubleBuffer = false; //_glSystemInfo->doubleBufferedStereoSupported();
 			graphicsTraits->sharedContext = 0;
 			graphicsTraits->pbuffer = true;
 		}
 
 		//create graphics context using requested traits
-		m_graphicsContext = osg::GraphicsContext::createGraphicsContext(graphicsTraits);
+		_graphicsContext = osg::GraphicsContext::createGraphicsContext(graphicsTraits);
 
-		if(!m_graphicsContext.valid())
+		if(!_graphicsContext.valid())
 		{
-			osg::notify(osg::WARN) << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
+			OSG_WARN << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
 			return false;
 		}
 
 		//cast the context to a window to set position etc
-		m_graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(m_graphicsContext.get());
+		_graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(_graphicsContext.get());
 
-		if (!m_graphicsWindow && !m_bRenderOffscreen)
+		if (!_graphicsWindow && !_bRenderOffscreen)
 		{
-			osg::notify(osg::WARN) << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
+			OSG_WARN << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
 			return false;
 		}
 
 		//now window is created apply settings that don't seem to persist from the traits (useCursor)
-		this->SetCursorVisible(m_usingCursor);
+		this->SetCursorVisible(_usingCursor);
 
 		// create the view of the scene.
-		if(m_viewer != NULL)
+		if(_viewer != NULL)
 		{
 			//release old
-			m_viewer->done();
-			m_viewer = NULL;
+			_viewer->done();
+			_viewer = NULL;
 		}
 
 		//create the osg viewer
-		m_viewer = new osgViewer::Viewer();
-		m_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+		_viewer = new osgViewer::Viewer();
+		_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 		
 		//set cameras projection and viewport
-		double height = m_glSystemInfo->getScreenWidth(m_screenID);
-		double width = m_glSystemInfo->getScreenHeight(m_screenID);
+		double height = _glSystemInfo->getScreenWidth(_screenID);
+		double width = _glSystemInfo->getScreenHeight(_screenID);
 		osg::Vec2 screenRes = osg::Vec2(width,height);
 
-		m_viewer->getCamera()->setProjectionMatrixAsPerspective( m_vfov, width/height, 1.0f,1000.0f);
+		_viewer->getCamera()->setProjectionMatrixAsPerspective( _vfov, width/height, 1.0f,1000.0f);
 
 		//attach the graphics context to the viewers camera
-		m_viewer->getCamera()->setGraphicsContext(m_graphicsContext.get());
-		m_viewer->getCamera()->setViewport(0,0,m_winSize.x(),m_winSize.y());
-		m_viewer->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		m_viewer->getCamera()->setClearColor(m_clearColor);
+		_viewer->getCamera()->setGraphicsContext(_graphicsContext.get());
+		_viewer->getCamera()->setViewport(0,0,_winSize.x(),_winSize.y());
+		_viewer->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		_viewer->getCamera()->setClearColor(_clearColor);
 		
 		//also bind our buffer image if rendering offscreen
-		if(m_bRenderOffscreen)
+		if(_bRenderOffscreen)
 		{
 			// tell the camera to use OpenGL frame buffer objects
-			m_viewer->getCamera()->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
-			m_viewer->getCamera()->attach(osg::Camera::COLOR_BUFFER, _frameBufferImage.get());
+			_viewer->getCamera()->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+			_viewer->getCamera()->attach(osg::Camera::COLOR_BUFFER, _frameBufferImage.get());
 		}
 		
 		//attach the resize callback
 		//destroy old callback if it exists]
-		if(m_resizeCallback)
+		if(_resizeCallback)
 		{
-			m_resizeCallback = NULL;
+			_resizeCallback = NULL;
 		}
 		#ifndef TARGET_OS_IPHONE
-			m_resizeCallback = new HogBoxViewerResizedCallback(m_viewer.get(), m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
-			m_graphicsContext->setResizedCallback(m_resizeCallback);
+			_resizeCallback = new HogBoxViewerResizedCallback(_viewer.get(), _winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
+			_graphicsContext->setResizedCallback(_resizeCallback);
 		#endif
 		//force a resize to acount for the initial state
-		//m_resizeCallback->resizedImplementation(m_graphicsContext, m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+		//_resizeCallback->resizedImplementation(_graphicsContext, _winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
 	
 		// set the scene to render
 		//check a scene has been set
-		if(!m_p_scene)
+		if(!_scene)
 		{
-			osg::notify(osg::WARN) << "HogBoxViewer CreateWindow WARN: No SceneNode has been set the viewer will only render the ClearColor"<<std::endl;
+			OSG_WARN << "HogBoxViewer CreateWindow WARN: No SceneNode has been set the viewer will only render the ClearColor"<<std::endl;
 		}else{
-			m_viewer->setSceneData(m_p_scene.get());
+			_viewer->setSceneData(_scene.get());
 		}
 
 		//set our default cull masks
-		m_viewer->getCamera()->setCullMask(MAIN_CAMERA_CULL);
-		m_viewer->getCamera()->setCullMaskLeft(MAIN_CAMERA_LEFT_CULL);
-		m_viewer->getCamera()->setCullMaskRight(MAIN_CAMERA_RIGHT_CULL);
+		_viewer->getCamera()->setCullMask(MAIN_CAMERA_CULL);
+		_viewer->getCamera()->setCullMaskLeft(MAIN_CAMERA_LEFT_CULL);
+		_viewer->getCamera()->setCullMaskRight(MAIN_CAMERA_RIGHT_CULL);
 
 		// set up the use of stereo by default. (Is this the only way of doing this ?)
-		osg::DisplaySettings::instance()->setStereo(m_bStereoEnabled);
-		osg::DisplaySettings::instance()->setStereoMode((osg::DisplaySettings::StereoMode) m_iStereoMode);
+		osg::DisplaySettings::instance()->setStereo(_bStereoEnabled);
+		osg::DisplaySettings::instance()->setStereoMode((osg::DisplaySettings::StereoMode) _iStereoMode);
 
 		//set seperation based on swap
-		if(m_swapEyes)
+		if(_swapEyes)
 		{
-			osg::DisplaySettings::instance()->setEyeSeparation( -m_fStereoSep );
+			osg::DisplaySettings::instance()->setEyeSeparation( -_fStereoSep );
 		}else{
-			osg::DisplaySettings::instance()->setEyeSeparation( m_fStereoSep );
+			osg::DisplaySettings::instance()->setEyeSeparation( _fStereoSep );
 		}
-		m_viewer->setFusionDistance(osgUtil::SceneView::USE_FUSION_DISTANCE_VALUE, m_fStereoConv );
+		_viewer->setFusionDistance(osgUtil::SceneView::USE_FUSION_DISTANCE_VALUE, _fStereoConv );
 
 
 		//add any external app event handler
-		for(unsigned int i=0; i<m_p_appEventHandlers.size(); i++)
+		for(unsigned int i=0; i<_appEventHandlers.size(); i++)
 		{
-			m_viewer->addEventHandler(m_p_appEventHandlers[i].get());
+			_viewer->addEventHandler(_appEventHandlers[i].get());
 		}
 
 		//everything is inplace so realize our viewer (creating window etc)
 		#ifndef TARGET_OS_IPHONE
-			m_viewer->realize();
+			_viewer->realize();
 			//force a resize to get a proper initial state
-			m_resizeCallback->resizedImplementation(m_graphicsContext,m_winCorner.x(),m_winCorner.y(),m_winSize.x(),m_winSize.y());
+			_resizeCallback->resizedImplementation(_graphicsContext,_winCorner.x(),_winCorner.y(),_winSize.x(),_winSize.y());
 		#endif
 
 	
 		//set request back to false
-		m_requestReset = false;
+		_requestReset = false;
 
-		if(m_viewer->isRealized())
+		if(_viewer->isRealized())
 		{
 			//if we want full sceen mode set it now
-			if(m_bIsFullScreen)
+			if(_bIsFullScreen)
 			{
 //				CMsgLog::Inst()->WriteToLog("Window Created");
-				this->SetFullScreen(m_bIsFullScreen);
+				this->SetFullScreen(_bIsFullScreen);
 			}
 			return true;
 		}
@@ -445,7 +443,7 @@ bool HogBoxViewer::CreateAppWindow()
 //
 bool HogBoxViewer::isRequestingReset()
 {
-	return m_requestReset;
+	return _requestReset;
 }
 
 //
@@ -453,14 +451,14 @@ bool HogBoxViewer::isRequestingReset()
 //
 osg::ref_ptr<osgViewer::Viewer> HogBoxViewer::GetViewer()
 {
-    return m_viewer;
+    return _viewer;
 }
 
 //
 //Return the context created by CreateAppWindow
 osg::ref_ptr<osg::GraphicsContext> HogBoxViewer::GetContext()
 {
-    return m_graphicsContext;
+    return _graphicsContext;
 }
 
 //
@@ -468,8 +466,8 @@ osg::ref_ptr<osg::GraphicsContext> HogBoxViewer::GetContext()
 //
 void HogBoxViewer::SetSceneNode(osg::Node* scene, bool resetWindow)
 {
-	m_p_scene = scene;
-	if(m_viewer.valid()){m_viewer->setSceneData(m_p_scene.get());}
+	_scene = scene;
+	if(_viewer.valid()){_viewer->setSceneData(_scene.get());}
 	if(resetWindow){CreateAppWindow();}
 }
 
@@ -479,17 +477,17 @@ void HogBoxViewer::SetSceneNode(osg::Node* scene, bool resetWindow)
 void HogBoxViewer::SetScreenID(const unsigned int& screen)
 {
 	//check it's in range of total displays
-	if(screen >= m_glSystemInfo->getNumberOfScreens()){return;}
+	if(screen >= _glSystemInfo->getNumberOfScreens()){return;}
 	
 	//if it's a different screen, reset
-	if(screen != m_screenID){m_requestReset=true;}
+	if(screen != _screenID){_requestReset=true;}
 
-	m_screenID = screen;
+	_screenID = screen;
 }
 
 const unsigned int& HogBoxViewer::GetScreenID()const
 {
-	return m_screenID;
+	return _screenID;
 }
 
 //
@@ -497,19 +495,19 @@ const unsigned int& HogBoxViewer::GetScreenID()const
 //
 void HogBoxViewer::SetWindowSize(const osg::Vec2& winSize)
 {
-	m_winSize = winSize;
+	_winSize = winSize;
 	//if window exists apply straight away
-	if(m_graphicsWindow != NULL)
+	if(_graphicsWindow != NULL)
 	{
-		m_graphicsWindow->setWindowRectangle(m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+		_graphicsWindow->setWindowRectangle(_winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
 		//also set the viewport
-		m_viewer->getCamera()->getViewport()->setViewport(0,0,m_winSize.x(),m_winSize.y()); 
+		_viewer->getCamera()->getViewport()->setViewport(0,0,_winSize.x(),_winSize.y()); 
 	}
 }
 
 const osg::Vec2& HogBoxViewer::GetWindowSize()const
 {
-	return m_winSize;
+	return _winSize;
 }
 
 //
@@ -517,224 +515,224 @@ const osg::Vec2& HogBoxViewer::GetWindowSize()const
 //
 void HogBoxViewer::SetWindowCorner(const osg::Vec2& winCr)
 {
-	m_winCorner = winCr;
+	_winCorner = winCr;
 	//if window exists apply straight away
-	if(m_graphicsWindow != NULL)
+	if(_graphicsWindow != NULL)
 	{
-		m_graphicsWindow->setWindowRectangle(m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+		_graphicsWindow->setWindowRectangle(_winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
 	}
 }
 
 const osg::Vec2& HogBoxViewer::GetWindowCorner()const
 {
-	return m_winCorner;
+	return _winCorner;
 }
 
 void HogBoxViewer::SetWindowDecoration(const bool& enableBoarder)
 {
-	m_bUsingBoarder = enableBoarder;
-	if(m_graphicsWindow != NULL)
+	_bUsingBoarder = enableBoarder;
+	if(_graphicsWindow != NULL)
 	{
-		m_graphicsWindow->setWindowDecoration(m_bUsingBoarder);
+		_graphicsWindow->setWindowDecoration(_bUsingBoarder);
 	}
 }
 
 const bool& HogBoxViewer::GetWindowDecoration()const
 {
-	return m_bUsingBoarder;
+	return _bUsingBoarder;
 }
 
 void HogBoxViewer::SetDoubleBuffered(const bool& doubleBuffer)
 {
-	if(!m_glSystemInfo->doubleBufferSupported()){
-		m_doubleBuffer = false;
+	if(!_glSystemInfo->doubleBufferSupported()){
+		_doubleBuffer = false;
 	}else{
-		m_doubleBuffer = doubleBuffer;
+		_doubleBuffer = doubleBuffer;
 	}
-	this->m_requestReset = true;
+	this->_requestReset = true;
 }
 
 const bool& HogBoxViewer::GetDoubleBuffered()const
 {
-	return m_doubleBuffer;
+	return _doubleBuffer;
 }
 
 void HogBoxViewer::SetVSync(const bool& vsync)
 {
-	m_vSync = vsync;
-	if(m_graphicsWindow != NULL)
+	_vSync = vsync;
+	if(_graphicsWindow != NULL)
 	{
-		m_graphicsWindow->setSyncToVBlank(m_vSync);
+		_graphicsWindow->setSyncToVBlank(_vSync);
 	}
 }
 
 const bool& HogBoxViewer::GetVSync()const
 {
-	return m_vSync;
+	return _vSync;
 }
 
 void HogBoxViewer::SetColorBits(const unsigned int& bits)
 {
-	m_colorBits = bits;
-	this->m_requestReset = true;
+	_colorBits = bits;
+	this->_requestReset = true;
 }
 
 const unsigned int& HogBoxViewer::GetColorBits()const
 {
-	return m_colorBits;
+	return _colorBits;
 }
 
 void HogBoxViewer::SetDepthBits(const unsigned int& bits)
 {
-	if(bits > m_glSystemInfo->maxDepthBufferBits())
+	if(bits > _glSystemInfo->maxDepthBufferBits())
 	{
-		m_depthBits = m_glSystemInfo->maxDepthBufferBits();
+		_depthBits = _glSystemInfo->maxDepthBufferBits();
 	}else{
-		m_depthBits = bits;
+        _depthBits = bits;
 	}
-	this->m_requestReset = true;	
+	this->_requestReset = true;	
 }
 
 const unsigned int& HogBoxViewer::GetDepthBits()const
 {
-	return m_depthBits;
+	return _depthBits;
 }
 
 void HogBoxViewer::SetAlphaBits(const unsigned int& bits)
 {
-	m_alphaBits = bits;
-	this->m_requestReset = true;
+	_alphaBits = bits;
+	this->_requestReset = true;
 }
 
 const unsigned int& HogBoxViewer::GetAlphaBits()const
 {
-	return m_alphaBits;
+	return _alphaBits;
 }
 
 void HogBoxViewer::SetStencilBits(const unsigned int& bits)
 {
-	if(bits > m_glSystemInfo->maxStencilBitsSupported())
+	if(bits > _glSystemInfo->maxStencilBitsSupported())
 	{
-		m_stencilBits = m_glSystemInfo->maxStencilBitsSupported();
+		_stencilBits = _glSystemInfo->maxStencilBitsSupported();
 	}else{
-		m_stencilBits = bits;
+		_stencilBits = bits;
 	}
-	this->m_requestReset = true;
+	this->_requestReset = true;
 }
 const unsigned int& HogBoxViewer::GetStencilBits()const
 {
-	return m_stencilBits;
+	return _stencilBits;
 }
 
 void HogBoxViewer::SetAccumulationBits(const unsigned int& bits)
 {
-	m_accumulationBits = bits;
-	this->m_requestReset = true;
+	_accumulationBits = bits;
+	this->_requestReset = true;
 }
 
 const unsigned int& HogBoxViewer::GetAcculationBits()const
 {
-	return m_accumulationBits;
+	return _accumulationBits;
 }
 
 //
-//set fullscreen resizing to m_sSize, must be set by init()
+//set fullscreen resizing to _sSize, must be set by init()
 //
 void HogBoxViewer::SetFullScreen(const bool& fullScreen)
 {
-	m_bIsFullScreen = fullScreen;
+	_bIsFullScreen = fullScreen;
 
-	if(!m_graphicsWindow){return;}
+	if(!_graphicsWindow){return;}
 
 	if(fullScreen) //fullscreen mode
 	{
 		//capture current window size and corner, so we can swap back when we leave fullscreen mode
 		int x, y, w, h;
-		m_graphicsWindow->getWindowRectangle(x, y, w, h);
-		m_winSize = osg::Vec2(w,h);
-		m_prevWinSize = m_winSize;
-		m_winCorner = osg::Vec2(x,y);
-		m_prevWinCorner = m_winCorner;
+		_graphicsWindow->getWindowRectangle(x, y, w, h);
+		_winSize = osg::Vec2(w,h);
+		_prevWinSize = _winSize;
+		_winCorner = osg::Vec2(x,y);
+		_prevWinCorner = _winCorner;
 
 		//set the window to sSize at 0,0
-		m_graphicsWindow->setWindowRectangle(0, 0, m_glSystemInfo->getScreenWidth(m_screenID), m_glSystemInfo->getScreenHeight(m_screenID));
+		_graphicsWindow->setWindowRectangle(0, 0, _glSystemInfo->getScreenWidth(_screenID), _glSystemInfo->getScreenHeight(_screenID));
 		//also set the viewport
-		m_viewer->getCamera()->getViewport()->setViewport(0,0,m_glSystemInfo->getScreenWidth(m_screenID),m_glSystemInfo->getScreenWidth(m_screenID)); 
+		_viewer->getCamera()->getViewport()->setViewport(0,0,_glSystemInfo->getScreenWidth(_screenID),_glSystemInfo->getScreenWidth(_screenID)); 
 		//remove decoration
-		m_bUsingBoarder=false;
-		m_graphicsWindow->setWindowDecoration(m_bUsingBoarder);
-		m_bIsFullScreen=true;
+		_bUsingBoarder=false;
+		_graphicsWindow->setWindowDecoration(_bUsingBoarder);
+		_bIsFullScreen=true;
 
 	}else{
-		m_bUsingBoarder=true;
-		m_graphicsWindow->setWindowDecoration(m_bUsingBoarder);
+		_bUsingBoarder=true;
+		_graphicsWindow->setWindowDecoration(_bUsingBoarder);
 		//get previous window corner
-		m_winSize = m_prevWinSize;
-		m_winCorner = m_prevWinCorner;
+		_winSize = _prevWinSize;
+		_winCorner = _prevWinCorner;
 
 		//clip to screen
-		//ClipWinToScreen(m_screenID);
+		//ClipWinToScreen(_screenID);
 
-		m_graphicsWindow->setWindowRectangle(m_winCorner.x(), m_winCorner.y(), m_winSize.x(), m_winSize.y());
+		_graphicsWindow->setWindowRectangle(_winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
 		//also set the viewport
-		m_viewer->getCamera()->getViewport()->setViewport(0,0,m_winSize.x(),m_winSize.y()); 
-		m_bIsFullScreen=false;
+		_viewer->getCamera()->getViewport()->setViewport(0,0,_winSize.x(),_winSize.y()); 
+		_bIsFullScreen=false;
 	}
 }
 
 const bool& HogBoxViewer::isFullScreen()const
 {
-	return m_bIsFullScreen;
+	return _bIsFullScreen;
 }
 
 void HogBoxViewer::ClipWinToScreen(int screenID)
 {
 
 	//float boarder = 20;
-	//float xMax = m_winCorner.x() + m_winSize.x();
-	//float xMin = m_winCorner.x();
+	//float xMax = _winCorner.x() + _winSize.x();
+	//float xMin = _winCorner.x();
 	//if(xMin
 
-	//float yMax = m_winCorner.y() + m_winSize.y();
-	float yMin = m_winCorner.y();
-	printf("Win corner y %f\n", m_winCorner.y());
+	//float yMax = _winCorner.y() + _winSize.y();
+	float yMin = _winCorner.y();
+	OSG_FATAL << "Win corner y " << _winCorner.y() << std::endl;
 	//if the win is off top of screen and we have a boarder
 	//move down so user can still use bar
-	/*if( (yMax+boarder >= m_sSize.y()) && m_bUsingBoarder)
+	/*if( (yMax+boarder >= _sSize.y()) && _bUsingBoarder)
 	{
-		float dif = (yMax)-m_sSize.y()+boarder;
+		float dif = (yMax)-_sSize.y()+boarder;
 		printf("Win Diff y %f\n", dif);
-		m_winCorner.y() +=  dif;
+		_winCorner.y() +=  dif;
 	}*/
 
 	if(yMin<0)
 	{
-		m_winCorner.y() = -m_winCorner.y();
+		_winCorner.y() = -_winCorner.y();
 	}
 }
 
 void HogBoxViewer::SetWindowName(const std::string& windowName)
 {
-	m_windowName = windowName;
-	if(m_graphicsWindow == NULL){return;}
-	m_graphicsWindow->setWindowName( m_windowName);
+	_windowName = windowName;
+	if(_graphicsWindow == NULL){return;}
+	_graphicsWindow->setWindowName( _windowName);
 }
 
 const std::string& HogBoxViewer::GetWindowName()const
 {
-	return m_windowName;
+	return _windowName;
 }
 
 void HogBoxViewer::SetCursorVisible(const bool& visible)
 {
-	m_usingCursor = visible;
-	if(m_graphicsWindow == NULL){return;}
-	m_graphicsWindow->useCursor(visible);
+	_usingCursor = visible;
+	if(_graphicsWindow == NULL){return;}
+	_graphicsWindow->useCursor(visible);
 }
 
 const bool& HogBoxViewer::isCursorVisible()const
 {
-	return m_usingCursor;
+	return _usingCursor;
 }
 
 //
@@ -759,51 +757,51 @@ osg::Image* HogBoxViewer::GetCurrentFrameBuffer()
 
 void HogBoxViewer::SetUseStereo(const bool& useStereo)
 {
-	m_bStereoEnabled = useStereo;
+	_bStereoEnabled = useStereo;
 
-	if(m_viewer.valid())
+	if(_viewer.valid())
 	{
-		osg::DisplaySettings::instance()->setStereo(m_bStereoEnabled);
+		osg::DisplaySettings::instance()->setStereo(_bStereoEnabled);
 	}
 }
 
 const bool& HogBoxViewer::isUsingStereo()const
 {
-	return m_bStereoEnabled;
+	return _bStereoEnabled;
 }
 
 void HogBoxViewer::SetStereoConvDistance(const float& distance)
 {
-	m_fStereoConv = distance;
-	if(m_viewer.valid())
+	_fStereoConv = distance;
+	if(_viewer.valid())
 	{
-		m_viewer->setFusionDistance(osgUtil::SceneView::USE_FUSION_DISTANCE_VALUE, m_fStereoConv);
+		_viewer->setFusionDistance(osgUtil::SceneView::USE_FUSION_DISTANCE_VALUE, _fStereoConv);
 	}
 }
 
 const float& HogBoxViewer::GetStereoConvDistance()const
 {
-	return m_fStereoConv;
+	return _fStereoConv;
 }
 
 void HogBoxViewer::SetStereoEyeSeperation(const float& distance)
 {
-	m_fStereoSep = distance;
-	if(m_viewer.valid())
+	_fStereoSep = distance;
+	if(_viewer.valid())
 	{
 		//apply the eye swapping
-		if(m_swapEyes)
+		if(_swapEyes)
 		{
-			osg::DisplaySettings::instance()->setEyeSeparation(-m_fStereoSep);
+			osg::DisplaySettings::instance()->setEyeSeparation(-_fStereoSep);
 		}else{
-			osg::DisplaySettings::instance()->setEyeSeparation(m_fStereoSep);
+			osg::DisplaySettings::instance()->setEyeSeparation(_fStereoSep);
 		}
 	}
 }
 
 const float& HogBoxViewer::GetStereoEyeSeperation()const
 {
-	return m_fStereoSep;
+	return _fStereoSep;
 }
 
 //
@@ -811,13 +809,13 @@ const float& HogBoxViewer::GetStereoEyeSeperation()const
 //
 void HogBoxViewer::SetSwapEyes(const bool& swap)
 {
-	m_swapEyes = swap;
+	_swapEyes = swap;
 	SetStereoEyeSeperation(GetStereoEyeSeperation());
 }
 
 const bool& HogBoxViewer::GetSwapEyes()const
 {
-	return m_swapEyes;
+	return _swapEyes;
 }
 
 //
@@ -826,51 +824,51 @@ const bool& HogBoxViewer::GetSwapEyes()const
 void HogBoxViewer::SetStereoMode(const int& mode)
 {
 	//store so we can check if the context needs re creating
-	int prevMode = m_iStereoMode;
+	int prevMode = _iStereoMode;
 
 	//no need to set if there the same
 	if(prevMode == mode)
 	{return;}
 
-	m_iStereoMode = mode;
+	_iStereoMode = mode;
 
 	//if viewer exists then set the stereo imidiatly
-	if(m_viewer.valid())
+	if(_viewer.valid())
 	{
 		//check for philips modes
-		if(m_iStereoMode == 9 || m_iStereoMode == 10)
+		if(_iStereoMode == 9 || _iStereoMode == 10)
 		{
 
 		}else{
 
 			//do we need to recreate window
-			m_requestReset = false;
+			_requestReset = false;
 
 			//if the previous mode was qad buffered we always need to recreate
 			if( prevMode == osg::DisplaySettings::QUAD_BUFFER)
 			{
-				m_requestReset = true;
+				_requestReset = true;
 			}
 
 			//check for particular different modes that will require a new context
-			switch(m_iStereoMode)
+			switch(_iStereoMode)
 			{
 				//if its a stencil mode (interlaced/checkboard) then we need to reset
 				case osg::DisplaySettings::HORIZONTAL_INTERLACE:
 				case osg::DisplaySettings::VERTICAL_INTERLACE:
 				case osg::DisplaySettings::CHECKERBOARD:
 				{
-					m_requestReset = true;//only way to currently force a redrawe of the stencil mask
+					_requestReset = true;//only way to currently force a redrawe of the stencil mask
 					break;
 				}
 				case osg::DisplaySettings::QUAD_BUFFER:
 				{
-				    if(m_glSystemInfo->quadBufferedStereoSupported())
+				    if(_glSystemInfo->quadBufferedStereoSupported())
                     {
-                        m_requestReset = true;
+                        _requestReset = true;
                     }else{
                         //if it's not supported ensure we revert to a safe on
-                        m_iStereoMode = prevMode;
+                        _iStereoMode = prevMode;
 						return;
                     }
 					break;
@@ -878,7 +876,7 @@ void HogBoxViewer::SetStereoMode(const int& mode)
 				default:break;
 			}
 
-			osg::DisplaySettings::instance()->setStereoMode((osg::DisplaySettings::StereoMode)m_iStereoMode);
+			osg::DisplaySettings::instance()->setStereoMode((osg::DisplaySettings::StereoMode)_iStereoMode);
 			return;
 		}
 	}
@@ -887,7 +885,7 @@ void HogBoxViewer::SetStereoMode(const int& mode)
 
 const int& HogBoxViewer::GetStereoMode()const
 {
-	return m_iStereoMode;
+	return _iStereoMode;
 }
 
 //
@@ -898,15 +896,15 @@ const int& HogBoxViewer::GetStereoMode()const
 //
 void HogBoxViewer::SetClearColor(const osg::Vec4& color)
 {
-	m_clearColor = color;
+	_clearColor = color;
 
-	if(m_viewer)
-	{m_viewer->getCamera()->setClearColor(m_clearColor);}
+	if(_viewer)
+	{_viewer->getCamera()->setClearColor(_clearColor);}
 }
 
 const osg::Vec4& HogBoxViewer::GetClearColor()const
 {
-	return m_clearColor;
+	return _clearColor;
 }
 
 //
@@ -915,21 +913,21 @@ const osg::Vec4& HogBoxViewer::GetClearColor()const
 void HogBoxViewer::SetAASamples(const int& samples)
 {
 	//return if its the same or out of range
-	if( (m_aaSamples < 0) || (m_aaSamples == samples))
+	if( (_aaSamples < 0) || (_aaSamples == samples))
 	{return;}
 
-	if(m_aaSamples>m_glSystemInfo->maxMultiSamplesSupported()) 
+	if(_aaSamples>_glSystemInfo->maxMultiSamplesSupported()) 
 	{
-		m_aaSamples = m_glSystemInfo->maxMultiSamplesSupported();
+		_aaSamples = _glSystemInfo->maxMultiSamplesSupported();
 	}else{
-		m_aaSamples = samples;
+		_aaSamples = samples;
 	}
-	m_requestReset = true;
+	_requestReset = true;
 }
 
 const int& HogBoxViewer::GetAASamples()const
 {
-	return m_aaSamples;
+	return _aaSamples;
 }
 
 //
@@ -937,11 +935,11 @@ const int& HogBoxViewer::GetAASamples()const
 //
 osg::Camera* HogBoxViewer::GetCamera()
 {
-   	if(m_viewer.valid())
+   	if(_viewer.valid())
 	{
-		return m_viewer->getCamera();
+		return _viewer->getCamera();
 	} 
-    return false;
+    return NULL;
 }
 
 //
@@ -949,9 +947,9 @@ osg::Camera* HogBoxViewer::GetCamera()
 //
 void HogBoxViewer::SetProjectionMatrix(osg::Projection* projection)
 {
-	if(m_viewer.valid())
+	if(_viewer.valid())
 	{
-		m_viewer->getCamera()->setProjectionMatrix(projection->getMatrix());
+		_viewer->getCamera()->setProjectionMatrix(projection->getMatrix());
 	}
 }
 
@@ -960,35 +958,62 @@ void HogBoxViewer::SetProjectionMatrix(osg::Projection* projection)
 //
 void HogBoxViewer::SetCameraViewMatrix(const osg::Matrix& viewMatrix)
 {
-	m_cameraViewMatrix = viewMatrix;
-	if(m_viewer.valid())
+	_cameraViewMatrix = viewMatrix;
+	if(_viewer.valid())
 	{
-		m_viewer->getCamera()->setViewMatrix(viewMatrix);
+		_viewer->getCamera()->setViewMatrix(viewMatrix);
 	}
 }
 
 const osg::Matrix& HogBoxViewer::GetCameraViewMatrix()const
 {
-	return m_cameraViewMatrix;
+	return _cameraViewMatrix;
+}
+
+//
+// Set the home lookat vectors
+//
+void HogBoxViewer::SetCameraViewMatrixFromLookAt(osg::Vec3 camPos, osg::Vec3 lookAtPos, osg::Vec3 upVec)
+{
+
+    osg::Matrix lookAt = osg::Matrix::lookAt(camPos, lookAtPos, upVec);
+    this->SetCameraViewMatrix(lookAt);
+}
+
+//
+// Compute a good camera view matrix for the current scene
+//
+void HogBoxViewer::SetCameraViewMatrixFromSceneBounds(osg::Vec3 forwardAxis, osg::Vec3 upAxis)
+{
+    if(!_scene.get()){
+        return;
+    }
+    forwardAxis.normalize();
+    osg::BoundingSphere bounds = _scene->computeBound();
+    osg::Vec3 lookAt = bounds.center();
+    osg::Vec3 camPos = lookAt + (-forwardAxis * (bounds.radius()*3.0f));
+    osg::Vec3 up = upAxis;
+    up.normalize();
+    this->SetCameraViewMatrixFromLookAt(camPos, lookAt, up);
 }
 
 void HogBoxViewer::SetCameraViewDistance(const float& distance)
 {
-	m_viewDistance = distance;
+	_viewDistance = distance;
 }
 
 const float& HogBoxViewer::GetCameraViewDistance()const
 {
-	return m_viewDistance;
+	return _viewDistance;
 }
 
 //
 // Set the home lookat vectors
 bool HogBoxViewer::SetHomeLookAtVectors(osg::Vec3 camPos, osg::Vec3 lookAtPos, osg::Vec3 upVec)
 {
-	m_cameraHomePos = camPos;
-	m_cameraHomeLookAt = lookAtPos;
-	m_cameraHomeUp = upVec;
+	_cameraHomePos = camPos;
+	_cameraHomeLookAt = lookAtPos;
+	_cameraHomeUp = upVec;
 	return true;
 }
 
@@ -997,12 +1022,12 @@ bool HogBoxViewer::SetHomeLookAtVectors(osg::Vec3 camPos, osg::Vec3 lookAtPos, o
 //
 bool HogBoxViewer::GetHomeLookAtVectors(osg::Vec3& camPos, osg::Vec3& lookAtPos, osg::Vec3& upVec)
 {
-	camPos = m_cameraHomePos;
-	lookAtPos = m_cameraHomeLookAt;
-	upVec = m_cameraHomeUp;
+	camPos = _cameraHomePos;
+	lookAtPos = _cameraHomeLookAt;
+	upVec = _cameraHomeUp;
 
 	//float distance = 0.0f;
-	//m_cameraHomeMatrix.getLookAt(camPos, lookAtPos, upVec, distance);
+	//_cameraHomeMatrix.getLookAt(camPos, lookAtPos, upVec, distance);
 
 	return true;
 }
@@ -1011,8 +1036,8 @@ bool HogBoxViewer::GetHomeLookAtVectors(osg::Vec3& camPos, osg::Vec3& lookAtPos,
 //Helper to set a lookat using a trackball (captures the current state of the track ball as lookat vectors)
 bool HogBoxViewer::SetHomeLookAtVectorsFromTrackBall(osgGA::TrackballManipulator* trackBall)
 {
-	//m_hogViewer->SetCameraHomeMatrix(m_hogViewer->GetCameraViewMatrix());
-	//m_hogViewer->SetCameraHomeDistance(cameraManipulator->getDistance());
+	//_hogViewer->SetCameraHomeMatrix(_hogViewer->GetCameraViewMatrix());
+	//_hogViewer->SetCameraHomeDistance(cameraManipulator->getDistance());
 	osg::Vec3 center = trackBall->getCenter();
 
 	osg::Vec3 camPos;
@@ -1022,31 +1047,38 @@ bool HogBoxViewer::SetHomeLookAtVectorsFromTrackBall(osgGA::TrackballManipulator
 
 	lookAt = center;
 
-	m_cameraHomePos = camPos;
-	m_cameraHomeLookAt = lookAt;
-	m_cameraHomeUp = up;
+	_cameraHomePos = camPos;
+	_cameraHomeLookAt = lookAt;
+	_cameraHomeUp = up;
 	trackBall->setHomePosition(camPos, lookAt, up);
 	return true;
 }
 
+//
+//Set camera view matrix to home position
+//
+void HogBoxViewer::SetCameraViewMatrixToHomePosition()
+{
+    this->SetCameraViewMatrixFromLookAt(_cameraHomePos, _cameraHomeLookAt, _cameraHomeUp);
+}
 
 //
 //Set cameras vfov
 //
 void HogBoxViewer::SetCameraFOV(const double& fov)
 {
-	m_vfov = fov;
-	if(m_viewer.valid())
+	_vfov = fov;
+	if(_viewer.valid())
 	{
 		double fovy, aspect, zNear, zFar;
-		m_viewer->getCamera()->getProjectionMatrixAsPerspective(fovy, aspect, zNear, zFar);
-		m_viewer->getCamera()->setProjectionMatrixAsPerspective(m_vfov, aspect, zNear,zFar);
+		_viewer->getCamera()->getProjectionMatrixAsPerspective(fovy, aspect, zNear, zFar);
+		_viewer->getCamera()->setProjectionMatrixAsPerspective(_vfov, aspect, zNear,zFar);
 	}
 }
 
 const double& HogBoxViewer::GetCameraFOV()const
 {
-	return m_vfov;
+	return _vfov;
 }
 
 void HogBoxViewer::SetDeviceOrientationFlags(const DeviceOrientationFlags& flags)

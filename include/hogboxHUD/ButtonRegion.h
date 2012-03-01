@@ -29,7 +29,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	ButtonRegion(const ButtonRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxHUD,ButtonRegion);
+	META_Object(hogboxHUD,ButtonRegion);
 
 	//
 	//Create a region to behave like a basic button
@@ -67,7 +67,7 @@ protected:
 protected:
 
 	//is the button currently held down (received mouseDown Event)
-	//if mouse up occurs while m_butonDown is true a ButtonClick Event is triggered
+	//if mouse up occurs while _butonDown is true a ButtonClick Event is triggered
 	bool _buttonDown;
 
 	//mouse down/pressed texture

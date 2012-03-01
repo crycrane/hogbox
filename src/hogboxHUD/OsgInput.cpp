@@ -5,10 +5,10 @@
 using namespace hogboxHUD;
 
 HudInputHandler::HudInputHandler(osgViewer::Viewer* sceneView, osg::Vec2 hudDimensions)
-	: m_inputState(new HudInputEvent()),
+	: _inputState(new HudInputEvent()),
 	_sceneView(sceneView),
 	p_focusRegion(NULL),
-	m_hudDimensions(hudDimensions)
+	_hudDimensions(hudDimensions)
 {
 	
 }
@@ -33,11 +33,11 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::KEYDOWN):
         {
 			//add the key to our list of pressed keys for the frame
-			m_inputState->PressKey(ea.getKey());			
+			_inputState->PressKey(ea.getKey());			
 			//add to held keys
-			m_inputState->PressHeldKey(ea.getKey()); 
+			_inputState->PressHeldKey(ea.getKey()); 
 
-			m_inputState->SetEvent(ON_KEY_DOWN, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_KEY_DOWN, ea, _hudDimensions);
             applyEvent = true;
 			break;
         }
@@ -46,9 +46,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::KEYUP):
         {
 			//remove key from held list
-			m_inputState->ReleaseHeldKey(ea.getKey());
+			_inputState->ReleaseHeldKey(ea.getKey());
 			
-			m_inputState->SetEvent(ON_KEY_UP, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_KEY_UP, ea, _hudDimensions);
             applyEvent = true;
 			break;
 		}
@@ -58,7 +58,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         {
 			pick(ea,true); //hover check
 			
-			m_inputState->SetEvent(ON_MOUSE_MOVE, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_MOUSE_MOVE, ea, _hudDimensions);
             applyEvent = true;
 			break;
 		}
@@ -67,7 +67,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::DRAG):
         {
 			//pass drag to our infoucs region
-			m_inputState->SetEvent(ON_MOUSE_DRAG, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_MOUSE_DRAG, ea, _hudDimensions);
             applyEvent = true;
 			break;
         } 
@@ -76,9 +76,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::PUSH):
 		{
 			pick(ea,true);//MDOWN
-			pick(ea,false);//MDOWN
+			//pick(ea,false);//MDOWN
 			//pass mouse down to our infoucs region
-			m_inputState->SetEvent(ON_MOUSE_DOWN, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_MOUSE_DOWN, ea, _hudDimensions);
             applyEvent = true;
 			break;
 		}
@@ -87,9 +87,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::RELEASE):
         {
 			pick(ea,true);//MDOWN
-			pick(ea,false);//MDOWN
+			//pick(ea,false);//MDOWN
 			//pass mouse up to our infoucs region
-			m_inputState->SetEvent(ON_MOUSE_UP, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_MOUSE_UP, ea, _hudDimensions);
             applyEvent = true;
 			break;
         } 
@@ -98,9 +98,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		case(osgGA::GUIEventAdapter::DOUBLECLICK):
         {
 			pick(ea,true);//MDOWN
-			pick(ea,false);//MDOWN
+			//pick(ea,false);//MDOWN
 			//pass double click to our infoucs region
-			m_inputState->SetEvent(ON_DOUBLE_CLICK, ea, m_hudDimensions);
+			_inputState->SetEvent(ON_DOUBLE_CLICK, ea, _hudDimensions);
             applyEvent = true;
 			break;
         } 
@@ -112,14 +112,14 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
     {        
         if(p_focusRegion)
         {
-            p_focusRegion->HandleInputEvent(*m_inputState.get());
+            p_focusRegion->HandleInputEvent(*_inputState.get());
             
         }else{
             if(p_clickObject){
                 osg::Referenced* userData = p_clickObject->getUserData();
                 CallbackEvent* callback = dynamic_cast<CallbackEvent*>(userData);
                 if(callback){
-                    callback->TriggerEvent(*m_inputState.get());
+                    callback->TriggerEvent(*_inputState.get());
                 }
                 //clear
                 p_clickObject=NULL;
@@ -137,7 +137,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 {
 	//select the sub graph to pick from based on hudPick
 	osg::Node* scene = NULL;
-	if(hudPick){
+	if(true){//hudPick){
 		//get our hud node
 		scene = HogBoxHud::Instance()->GetHudNode();
 	}else{
@@ -148,10 +148,10 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
     if (scene == NULL) return;
 
 	//when we pick disable any unpickable nodes and store their current mask as prev
-	for(unsigned int i = 0; i<m_vUnPickableNodes.size(); i++)
+	for(unsigned int i = 0; i<_vUnPickableNodes.size(); i++)
 	{
-		m_vUnPickableNodes[i]._prevMask = m_vUnPickableNodes[i]._node->getNodeMask();
-		m_vUnPickableNodes[i]._node->setNodeMask(0x0);
+		_vUnPickableNodes[i]._prevMask = _vUnPickableNodes[i]._node->getNodeMask();
+		_vUnPickableNodes[i]._node->setNodeMask(0x0);
 	}
 
 	osg::Node* node = 0;
@@ -169,9 +169,9 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 	scene->accept(iv);
 
 	//toggle unpickable nodes back to previous
-	for(unsigned int i = 0; i<m_vUnPickableNodes.size(); i++)
+	for(unsigned int i = 0; i<_vUnPickableNodes.size(); i++)
 	{
-		m_vUnPickableNodes[i]._node->setNodeMask(m_vUnPickableNodes[i]._prevMask);
+		_vUnPickableNodes[i]._node->setNodeMask(_vUnPickableNodes[i]._prevMask);
 	}
 
 	//get simplified mouse coord
@@ -189,7 +189,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
         node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
         parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
 
-		//OSG_INFO << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
+		OSG_FATAL << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
 		
 		//did we pick a node
         if (node)// && (node->getName().size() != 0) )

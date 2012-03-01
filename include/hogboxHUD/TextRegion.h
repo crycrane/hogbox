@@ -29,15 +29,15 @@ class HOGBOXHUD_EXPORT TextRegion : public HudRegion
 {
 public:
     enum TEXT_ALIGN{
-        CENTER_ALIGN = 0,
-        RIGHT_ALIGN,
-        LEFT_ALIGN
+        CENTER_ALIGN=0,
+        RIGHT_ALIGN=1,
+        LEFT_ALIGN=2
     };
     
     enum BACKDROP_TYPE{
-        NO_BACKDROP,
-        DROP_SHADOW,
-        STROKE
+        NO_BACKDROP=0,
+        DROP_SHADOW=1,
+        STROKE=2
     };
     
     TextRegion(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
@@ -100,9 +100,14 @@ public:
     void SetBackDropColor(const osg::Vec4& color);
     const osg::Vec4& GetBackDropColor() const;
     
-    //enable/disable the texts drop shadow
+    //enable/disable the texts drop shadow/stroke
     void SetBackDropType(const BACKDROP_TYPE& type);
     const BACKDROP_TYPE& GetBackDropType() const;
+    
+    //bit hacky but get/set the backdrop type using int
+    //to conform to xml serialising requirements
+    void SetBackDropTypeInt(const int& type);
+    const int& GetBackDropTypeInt() const;
     
 public:
     

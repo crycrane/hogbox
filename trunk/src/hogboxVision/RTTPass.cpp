@@ -13,7 +13,7 @@ using namespace hogboxVision;
 #define SHADER_COMPAT \
 "#ifndef GL_ES\n" \
 "#if (__VERSION__ <= 110)\n" \
-"#define lowp\n" \ 
+"#define lowp\n" \
 "#define mediump\n" \
 "#define highp\n" \
 "#endif\n" \
@@ -22,7 +22,7 @@ using namespace hogboxVision;
 #define SHADER_COMPAT ""
 #endif
 
-static const char* depthPassVertSource = { 
+static const char* depthPassVertSource = {
 	SHADER_COMPAT 
     "uniform mat4 osg_ModelViewProjectionMatrix;\n"
     "attribute vec4 osg_Vertex;\n"
@@ -33,7 +33,7 @@ static const char* depthPassVertSource = {
     "}\n"  
 }; 
 
-static const char* depthPassFragSource = { 
+static const char* depthPassFragSource = {
 	SHADER_COMPAT 
     "void main(void)\n"
     "{\n"	
@@ -344,7 +344,7 @@ bool RTTPass::setInputTexture(int channel, TextureRef tex, std::string uniformNa
 bool RTTPass::addInputUniform(osg::Uniform* uniform, int min, int max)
 {
 	UniformAtts atts = UniformAtts(min, max);
-	//atts.m_uniform = uniform;
+	//atts._uniform = uniform;
 	_uniformList.push_back(atts);
 
 	_stateSet->addUniform(uniform);

@@ -4,11 +4,11 @@ using namespace hogboxVision;
 
 VideoStream::VideoStream() 
 		: osg::ImageStream(),
-		m_frameRate(0.0f),
-		m_isValid(false),
-		m_hFlip(false),
-		m_vFlip(false),
-		m_isInter(false)
+		_frameRate(0.0f),
+		_isValid(false),
+		_hFlip(false),
+		_vFlip(false),
+		_isInter(false)
 {
 
 }
@@ -25,11 +25,11 @@ VideoStream::~VideoStream(void)
 
 VideoStream::VideoStream(const VideoStream& image,const osg::CopyOp& copyop)
 		: osg::ImageStream(image,copyop),
-		m_frameRate(image.m_frameRate),
-		m_isValid(image.m_isValid),
-		m_isInter(image.m_isInter),
-		m_hFlip(image.m_hFlip),
-		m_vFlip(image.m_vFlip)
+		_frameRate(image._frameRate),
+		_isValid(image._isValid),
+		_isInter(image._isInter),
+		_hFlip(image._hFlip),
+		_vFlip(image._vFlip)
 {
 }
 
@@ -40,15 +40,15 @@ VideoStream::VideoStream(const VideoStream& image,const osg::CopyOp& copyop)
 //
 bool VideoStream::CreateStream(const std::string& config, bool hflip, bool vflip, bool deinter)
 {
-	this->m_hFlip = hflip;
-	this->m_vFlip = vflip;
-	this->m_isInter = deinter;
+	this->_hFlip = hflip;
+	this->_vFlip = vflip;
+	this->_isInter = deinter;
 
 	//use file name as images file name
 	this->setFileName(config);
 
 	//set image as upside down if required
-	if(m_vFlip)
+	if(_vFlip)
 	{osg::Image::setOrigin(osg::Image::TOP_LEFT);}
 
 	return true;

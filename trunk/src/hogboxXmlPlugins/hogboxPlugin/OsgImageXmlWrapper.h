@@ -41,21 +41,17 @@ public:
 
 
 	//pass node representing the texture object
-	OsgImageXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "Image")
+	OsgImageXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("Image")
 	{
 
-		//allocate Group to repesent any loaded nodes
-		osg::Image* image = new osg::Image();
-
-		//add the temporary wrapper attributes
-		m_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Image,std::string>(image,
-																						&osg::Image::getFileName,
-																						&osg::Image::setFileName);
-
-		p_wrappedObject = image;
 	}
 
+    //
+    virtual osg::Object* allocateClassType(){return new osg::Image();}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new OsgImageXmlWrapper();}
 
 	//overload deserialise
 	virtual bool deserialize(osgDB::XmlNode* in)  
@@ -69,11 +65,11 @@ public:
 		if(!image->getFileName().empty())
 		{
 			//load the image file into a temp image,
-			osg::ref_ptr<osg::Image> fileImage = osgDB::readImageFile(image->getFileName());
+			osg::ref_ptr<osg::Image> fileImage = hogbox::AssetManager::Inst()->GetOrLoadImage(image->getFileName());
 
 			if(fileImage)
 			{
-				p_wrappedObject = fileImage;//->copySubImage(1,1,1,fileImage);
+				p_wrappedObject = fileImage;
 
 			}else{
 				osg::notify(osg::WARN) << "XML ERROR: Loading Image file '" << image->getFileName() << "', for Image Node '" << image->getName() << "'." << std::endl;
@@ -86,12 +82,18 @@ public:
 	}
 
 
-public:
-
-
 protected:
 
 	virtual ~OsgImageXmlWrapper(void){}
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+        osg::Image* image = dynamic_cast<osg::Image*>(p_wrappedObject.get());
+		_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Image,std::string>(image,
+                                                                                            &osg::Image::getFileName,
+                                                                                            &osg::Image::setFileName);
+    }
 
 };
 

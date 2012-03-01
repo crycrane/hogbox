@@ -33,8 +33,8 @@ public:
 
 	HogBoxMaterialManager(void) : hogboxDB::XmlClassManager()
 	{
-		SupportsClassType("HogBoxMaterial", "Xml definition of HogBoxMaterial");
-		SupportsClassType("FeatureLevel", "Xml definition of SystemFeatureLevel");
+		SupportsClassType("HogBoxMaterial", new HogBoxMaterialXmlWrapper());//"Xml definition of HogBoxMaterial");
+		SupportsClassType("FeatureLevel", new FeatureLevelXmlWrapper());//"Xml definition of SystemFeatureLevel");
 	}
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -43,50 +43,28 @@ public:
 	{
 	}
 
-	META_Box(hogboxDB, HogBoxMaterialManager)
+	META_Object(hogboxDB, HogBoxMaterialManager)
 
 
 protected:
 
-	virtual ~HogBoxMaterialManager(void)
-	{
+	virtual ~HogBoxMaterialManager(void){
 	}
 	
 	//
-	//Create an HogBoxObject from xml
 	//
-	virtual hogboxDB::XmlClassWrapperPtr ReadObjectFromXmlNodeImplementation(osgDB::XmlNode* xmlNode)
+	virtual hogboxDB::XmlClassWrapperPtr readObjectFromXmlNode(osgDB::XmlNode* xmlNode)
 	{
-		hogboxDB::XmlClassWrapperPtr xmlWrapper;
-
-		//allocate the correct wrapper type
-		if(xmlNode->name == "HogBoxMaterial")
-		{
-			//create our object and it's xml wrapper.
-			xmlWrapper = new HogBoxMaterialXmlWrapper(xmlNode);
-		}else if(xmlNode->name == "FeatureLevel"){
-			xmlWrapper = new FeatureLevelXmlWrapper(xmlNode);
-		}
-
-		if(!xmlWrapper){return NULL;}
-		//did the wrapper alocate an object
-		if(!xmlWrapper->getWrappedObject()){return NULL;}
-
-		//if the wrapper was created properly then use it 
-		//to deserialize our the xmlNode into it's wrapped object
-		if(!xmlWrapper->deserialize(xmlNode))
-		{
-			//an error occured deserializing the xml node
-			return NULL;
-		}
+        
+		hogboxDB::XmlClassWrapperPtr xmlWrapper = XmlClassManager::readObjectFromXmlNode(xmlNode);
 
 		//hack pass the loaded featurelevel to the system info
 		if(xmlNode->name == "FeatureLevel"){
 			hogbox::SystemFeatureLevel* featureLevel = dynamic_cast<hogbox::SystemFeatureLevel*>(xmlWrapper->getWrappedObject());
-			if(featureLevel){hogbox::SystemInfo::Instance()->SetFeatureLevel(featureLevel->getName(), featureLevel);}
+			if(featureLevel){hogbox::SystemInfo::Inst()->SetFeatureLevel(featureLevel->getName(), featureLevel);}
 		}
 		return xmlWrapper;
 	}
 };
 
-REGISTER_HOGBOXPLUGIN(HogBoxMaterial, HogBoxMaterialManager)
+//REGISTER_HOGBOXPLUGIN(HogBoxMaterial, HogBoxMaterialManager)

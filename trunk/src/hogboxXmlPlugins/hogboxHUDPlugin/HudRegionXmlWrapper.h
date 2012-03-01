@@ -67,39 +67,39 @@ public:
 
 		//Src should be a folder/directory containing the regions assests, which needs to be passed
 		//to create after deserialising
-		m_xmlAttributes["Src"] = new hogboxDB::TypedXmlAttribute<std::string>(&_assetDir);
+		_xmlAttributes["Src"] = new hogboxDB::TypedXmlAttribute<std::string>(&_assetDir);
 
-		m_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec2>(region,
+		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec2>(region,
 																	&hogboxHUD::HudRegion::GetPosition,
 																	&hogboxHUD::HudRegion::SetPosition);
 
-		m_xmlAttributes["Size"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec2>(region,
+		_xmlAttributes["Size"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec2>(region,
 																	&hogboxHUD::HudRegion::GetSize,
 																	&hogboxHUD::HudRegion::SetSize);
 
-		m_xmlAttributes["Rotation"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
+		_xmlAttributes["Rotation"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
 																	&hogboxHUD::HudRegion::GetRotation,
 																	&hogboxHUD::HudRegion::SetRotation);
 
-		m_xmlAttributes["Color"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec3>(region,
+		_xmlAttributes["Color"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,osg::Vec3>(region,
 																	&hogboxHUD::HudRegion::GetColor,
 																	&hogboxHUD::HudRegion::SetColor);
 
-		m_xmlAttributes["Alpha"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
+		_xmlAttributes["Alpha"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
 																	&hogboxHUD::HudRegion::GetAlpha,
 																	&hogboxHUD::HudRegion::SetAlpha);
 
 
-		m_xmlAttributes["UseAlpha"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,bool>(region,
+		_xmlAttributes["UseAlpha"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,bool>(region,
 																	&hogboxHUD::HudRegion::IsAlphaEnabled,
 																	&hogboxHUD::HudRegion::EnableAlpha);
 
-		m_xmlAttributes["Layer"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
+		_xmlAttributes["Layer"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::HudRegion,float>(region,
 																	&hogboxHUD::HudRegion::GetLayer,
 																	&hogboxHUD::HudRegion::SetLayer);
 
 		//children
-		m_xmlAttributes["Children"] = new hogboxDB::CallbackXmlClassPointerList<hogboxHUD::HudRegion,hogboxHUD::HudRegion::HudRegionList, hogboxHUD::HudRegion>(region,
+		_xmlAttributes["Children"] = new hogboxDB::CallbackXmlClassPointerList<hogboxHUD::HudRegion,hogboxHUD::HudRegion::HudRegionList, hogboxHUD::HudRegion>(region,
 																																		&hogboxHUD::HudRegion::GetChildrenList,
 																																		&hogboxHUD::HudRegion::SetChildrenList);
 
@@ -113,34 +113,34 @@ public:
 			if(text)
 			{
 
-				m_xmlAttributes["Text"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,std::string>(text,
+				_xmlAttributes["Text"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,std::string>(text,
 																							&hogboxHUD::TextRegion::GetText,
 																							&hogboxHUD::TextRegion::SetText);
 				
-				m_xmlAttributes["Font"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,std::string>(text,
+				_xmlAttributes["Font"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,std::string>(text,
 																		&hogboxHUD::TextRegion::GetFontType,
 																		&hogboxHUD::TextRegion::SetFontType);
 
-				m_xmlAttributes["FontHeight"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,float>(text,
+				_xmlAttributes["FontHeight"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,float>(text,
 																		&hogboxHUD::TextRegion::GetFontHeight,
 																		&hogboxHUD::TextRegion::SetFontHeight);
 
-				m_xmlAttributes["Boarder"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,float>(text,
+				_xmlAttributes["Boarder"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,float>(text,
 																		&hogboxHUD::TextRegion::GetBoarderPadding,
 																		&hogboxHUD::TextRegion::SetBoarderPadding);
 
-				m_xmlAttributes["TextColor"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,osg::Vec4>(text,
+				_xmlAttributes["TextColor"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,osg::Vec4>(text,
 																		&hogboxHUD::TextRegion::GetTextColor,
 																		&hogboxHUD::TextRegion::SetTextColor);
 
 				//drop shadow
-				m_xmlAttributes["UseShadow"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,bool>(text,
-																		&hogboxHUD::TextRegion::isUsingDropShadow,
-																		&hogboxHUD::TextRegion::UseDropShadow);
+				_xmlAttributes["TextBackDropType"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,int>(text,
+																		&hogboxHUD::TextRegion::GetBackDropTypeInt,
+																		&hogboxHUD::TextRegion::SetBackDropTypeInt);
 
-				m_xmlAttributes["ShadowColor"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,osg::Vec4>(text,
-																		&hogboxHUD::TextRegion::GetDropShadowColor,
-																		&hogboxHUD::TextRegion::SetDropShadowColor);
+				_xmlAttributes["TextBackDropColor"] = new hogboxDB::CallbackXmlAttribute<hogboxHUD::TextRegion,osg::Vec4>(text,
+																		&hogboxHUD::TextRegion::GetBackDropColor,
+																		&hogboxHUD::TextRegion::SetBackDropColor);
 
 			}
 		}

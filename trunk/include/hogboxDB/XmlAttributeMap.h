@@ -58,11 +58,11 @@ namespace hogboxDB {
 		typedef void (C::* SetValueByKeyHandler)(const K&, T*);
 								
 		CallbackXmlClassPointerMap(C *object, 
-			GetValueByKeyHandler ghandler = 0,
-			SetValueByKeyHandler shandler = 0) : 
-			mp_object(object),
-			f_getvaluebykeyhandler(ghandler),			
-			f_setvaluebykeyhandler(shandler)
+                                   GetValueByKeyHandler ghandler = 0,
+                                   SetValueByKeyHandler shandler = 0) 
+            : f_getvaluebykeyhandler(ghandler),			
+			f_setvaluebykeyhandler(shandler),
+			mp_object(object)
 		{
 		}
 		
@@ -87,7 +87,7 @@ namespace hogboxDB {
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 
@@ -103,7 +103,7 @@ namespace hogboxDB {
 			unsigned int count = 0;
 			if(!hogboxDB::getXmlPropertyValue(in, "count", count))
 			{
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer map node '" << in->name << "'," << std::endl
+				OSG_WARN << "XML ERROR: Parsing pointer map node '" << in->name << "'," << std::endl
 									   << "                      Map nodes must contain a 'count' property. For example <" << in->name << " count='2>" << std::endl;
 				return false;
 			}
@@ -111,7 +111,7 @@ namespace hogboxDB {
 			//if count is 0 dont bother
 			if(count == 0)
 			{
-				osg::notify(osg::WARN) << "XML WARN: Parsing pointer map node '" << in->name << "'," << std::endl
+				OSG_WARN << "XML WARN: Parsing pointer map node '" << in->name << "'," << std::endl
 									  << "                      The map attribute has a count of '0', are you sure this is not a mistake?" << std::endl;
 
 				return false;
@@ -122,7 +122,7 @@ namespace hogboxDB {
 			if(in->children.size() != count)
 			{
 				//warn user
-				osg::notify(osg::WARN) << "XML ERROR: Parsing pointer map node '" << in->name << "'," << std::endl
+				OSG_WARN << "XML ERROR: Parsing pointer map node '" << in->name << "'," << std::endl
 									   << "                      Nodes 'count' property (" << count << ") does not match the number of child nodes (" << in->children.size() << ")." << std::endl
 									   << "                      The list will not be passed." << std::endl;
 				return false;
@@ -139,7 +139,7 @@ namespace hogboxDB {
 				K mapKey = 0;
 				if(!hogboxDB::getXmlPropertyValue(mapNode, "key", mapKey))
 				{
-					osg::notify(osg::WARN) << "XML ERROR: Parsing map value node '" << mapNode->name << "'," << std::endl
+					OSG_WARN << "XML ERROR: Parsing map value node '" << mapNode->name << "'," << std::endl
 										   << "                      Map value nodes must contain a 'key' property. For example <" << mapNode->name << " key='1>" << std::endl;
 					return false;
 				}
@@ -147,13 +147,13 @@ namespace hogboxDB {
 				//we have our key into the map, now read the value node of the mapvalue
 				if(mapNode->children.size() == 0)
 				{
-					osg::notify(osg::WARN) << "XML ERROR: Parsing map value node '" << mapNode->name << "'," << std::endl
+					OSG_WARN << "XML ERROR: Parsing map value node '" << mapNode->name << "'," << std::endl
 										   << "                      Map value nodes must contain a child node representing the value" << std::endl;
 					return false;
 				}
 
 				//read the mapvalue pointer node from the database
-				hogbox::ObjectPtr ptr = hogboxDB::HogBoxManager::Instance()->ReadNode(mapNode->children[0]);
+				osg::ObjectPtr ptr = hogboxDB::HogBoxManager::Inst()->ReadNode(mapNode->children[0]);
 				
 				//cast it to type and pass to set
 				T* typePtr = dynamic_cast<T*>(ptr.get()); 

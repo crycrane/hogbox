@@ -21,14 +21,7 @@ SET(TARGET_DEFAULT_LABEL_PREFIX "xmlPlugin_")
 
 
 SET(TARGET_SRC
-	HogBoxLightManager.cpp
-	HogBoxMaterialManager.cpp
-	HogBoxObjectManager.cpp
-	HogBoxViewerManager.cpp
-	OsgImageManager.cpp
-	OsgNodeManager.cpp
-	OsgShaderManager.cpp
-	OsgTextureManager.cpp
+    HogBoxXmlManager.cpp
 )
 SET(TARGET_H
 	FeatureLevelXmlWrapper.h
@@ -41,6 +34,10 @@ SET(TARGET_H
 	OsgNodeXmlWrapper.h
 	OsgShaderXmlWrapper.h
 	OsgTextureXmlWrapper.h
+    OsgTexture2DXmlWrapper.h
+    OsgTextureRectangleXmlWrapper.h
+    OsgTexture3DXmlWrapper.h
+    OsgTextureCubeXmlWrapper.h
 	OsgUniformXmlWrapper.h
 )
 #SET(TARGET_ADDED_LIBRARIES )

@@ -39,37 +39,17 @@ class OsgUniformXmlWrapper : public hogboxDB::XmlClassWrapper
 public:
 
 	//pass node representing the uniform 
-	OsgUniformXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "Uniform")
+	OsgUniformXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("Uniform")
 	{
-		//allocate the uniform
-		osg::Uniform* wrappedUniform = new osg::Uniform();
-		if(!wrappedUniform){return;}
 
-		//get the uniform type from the nodes 'type' property
-		//uniform nodes should have a 'type' property 
-		std::string uniformTypeStr;
-		if(!hogboxDB::getXmlPropertyValue(node, "type", uniformTypeStr))
-		{
-			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype 'Uniform' should have a 'type' property." <<std::endl 
-									<< "                    i.e. <Uniform uniqueID='myID' type='int'>" << std::endl;
-			return;
-		}
-
-		//use the string representation of the uniform to find the uniform type
-		osg::Uniform::Type uniformType = osg::Uniform::getTypeId(uniformTypeStr.c_str());
-
-		//set the uniform type (this can only happen once)
-		if(!wrappedUniform->setType(uniformType))
-		{
-			osg::notify(osg::WARN)	<< "XML WRAP ERROR: OsgUniformXmlWrapper can not set the type of the uniform to '" << uniformTypeStr << "'," << std::endl
-									<< "                               The type is already set to '" << osg::Uniform::getTypename(wrappedUniform->getType()) << "'." << std::endl;
-			return;
-		}
-
-		//allocated a uniform of the correct type, store it as the wrapped object
-		p_wrappedObject = wrappedUniform;
 	}
+    
+    //
+    virtual osg::Object* allocateClassType(){return new osg::Uniform();}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new OsgUniformXmlWrapper();}
 
 	//
 	//Read the in xmlNode into our wrapped object via the
@@ -89,6 +69,27 @@ public:
 			osg::notify(osg::WARN)	<< "XML WRAP ERROR: OsgUniformXmlWrapper expects an object of type 'osg::Uniform', it got '" << p_wrappedObject->className() << "'." <<std::endl; 
 			return false;
 		}
+        
+		//get the uniform type from the nodes 'type' property
+		//uniform nodes should have a 'type' property 
+		std::string uniformTypeStr;
+		if(!hogboxDB::getXmlPropertyValue(in, "type", uniformTypeStr))
+		{
+			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype 'Uniform' should have a 'type' property." <<std::endl 
+            << "                    i.e. <Uniform uniqueID='myID' type='int'>" << std::endl;
+			return false;
+		}
+        
+		//use the string representation of the uniform to find the uniform type
+		osg::Uniform::Type uniformType = osg::Uniform::getTypeId(uniformTypeStr.c_str());
+        
+		//set the uniform type (this can only happen once)
+		if(!wrappedUniform->setType(uniformType))
+		{
+			osg::notify(osg::WARN)	<< "XML WRAP ERROR: OsgUniformXmlWrapper can not set the type of the uniform to '" << uniformTypeStr << "'," << std::endl
+            << "                               The type is already set to '" << osg::Uniform::getTypename(wrappedUniform->getType()) << "'." << std::endl;
+			return false;
+		}
 
 
 		//now we have a uniform of the correct type we need to read the approptiate variable
@@ -100,9 +101,8 @@ public:
 		float floatValue;
 		osg::Vec2 vec2Value;osg::Vec3 vec3Value;osg::Vec4 vec4Value;
 
-		//track if it was set succssesfully
+		//read the correct type for the uniform type
 		bool isSet = false;
-		osg::Uniform::Type uniformType = wrappedUniform->getType();
 		switch( uniformType )
 		{
 		case osg::Uniform::BOOL:
@@ -219,6 +219,14 @@ public:
 protected:
 
 	virtual ~OsgUniformXmlWrapper(void){}
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+
+		//osg::Uniform* uniform = dynamic_cast<osg::Uniform*>(p_wrappedObject.get());
+
+    }
 
 };
 

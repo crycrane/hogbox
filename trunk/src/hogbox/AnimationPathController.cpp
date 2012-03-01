@@ -7,21 +7,21 @@ using namespace hogbox;
 
 void SplitAni::ReSampleSubAni(int subID, int from, int to)
 {
-	if(subID<0 || subID>=(int)m_splitAnis.size())
+	if(subID<0 || subID>=(int)_splitAnis.size())
 	{return;}
 	//check the original path is good
-	if(!m_originalAni)
+	if(!_originalAni)
 	{return;}
 	
 	//clear the current path
-	m_splitAnis[subID]->getTimeControlPointMap().clear();
+	_splitAnis[subID]->getTimeControlPointMap().clear();
 
 	//find the number of frames in the original animation
-	osg::AnimationPath::TimeControlPointMap timeMap = m_originalAni->getTimeControlPointMap();
+	osg::AnimationPath::TimeControlPointMap timeMap = _originalAni->getTimeControlPointMap();
 
 	//seconds per rame
 	//int totalFrames = (int)timeMap.size();
-	double secsPerFrame = (double)1.0f/m_fps;
+	double secsPerFrame = (double)1.0f/_fps;
 
 	//get start end frames as times
 	double frameT = from*secsPerFrame;
@@ -32,10 +32,10 @@ void SplitAni::ReSampleSubAni(int subID, int from, int to)
 	while(frameT<endT)
 	{
 		osg::AnimationPath::ControlPoint cp;
-		m_originalAni->getInterpolatedControlPoint(frameT, cp);   
+		_originalAni->getInterpolatedControlPoint(frameT, cp);   
 
 		//insert into the subanimation starting from time 0
-		m_splitAnis[subID]->insert(newCount*secsPerFrame, cp);
+		_splitAnis[subID]->insert(newCount*secsPerFrame, cp);
 
 		//step to nxt time
 		frameT+=secsPerFrame;
@@ -49,27 +49,27 @@ void SplitAni::ReSampleSubAni(int subID, int from, int to)
 
 AnimationPathControl::AnimationPathControl(void)
 {
-	m_paused = false;
+	_paused = false;
 }
 
 AnimationPathControl::~AnimationPathControl(void)
 {
 	OSG_NOTICE << "    Deallocating AnimationPathControl: Name '" << this->getName() << "'." << std::endl;
 	//the group of all entities that are in the markers space
-	m_animatedNode = NULL;
+	_animatedNode = NULL;
 
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i] = NULL;
+		_aniCallbacks[i] = NULL;
 	}
-	m_aniCallbacks.clear();
+	_aniCallbacks.clear();
 
 	//the split paths for each node
-	for(unsigned int i=0; i<m_splitAnis.size(); i++)
+	for(unsigned int i=0; i<_splitAnis.size(); i++)
 	{;
-		m_splitAnis[i] = NULL;
+		_splitAnis[i] = NULL;
 	}
-	m_splitAnis.clear();
+	_splitAnis.clear();
 }
 
 
@@ -78,10 +78,10 @@ AnimationPathControl::~AnimationPathControl(void)
 //
 bool AnimationPathControl::Init(osg::Node* aniNode, int fps, std::string config)
 {
-	m_fps = fps;
+	_fps = fps;
 
-	m_animatedNode = aniNode;
-	int total =  FindAnimationNodes(m_animatedNode);
+	_animatedNode = aniNode;
+	int total =  FindAnimationNodes(_animatedNode);
 	if(total==0)
 	{
 		osg::notify(osg::WARN) << "AnimationPathControl::Init: WARN: There are no animation nodes in this MODEL, animation control will not be applied" <<std::endl;  
@@ -90,10 +90,10 @@ bool AnimationPathControl::Init(osg::Node* aniNode, int fps, std::string config)
 
 	//now create the sub helpers
 	//loop through each callback
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
 		//get a pointer to the callbacks original path
-		osg::AnimationPath* originalPath = m_aniCallbacks[i]->getAnimationPath();
+		osg::AnimationPath* originalPath = _aniCallbacks[i]->getAnimationPath();
 
 		if(originalPath)
 		{
@@ -103,10 +103,10 @@ bool AnimationPathControl::Init(osg::Node* aniNode, int fps, std::string config)
 			//create a new split animation to store this callbacks split version
 			SplitAniPtr l_splitAnis = SplitAniPtr(new SplitAni());
 			//add the original path to the split ani
-			l_splitAnis->SetOriginal(originalPath, m_fps); 
+			l_splitAnis->SetOriginal(originalPath, _fps); 
 
 			//add the splitpth list onto our list, should be insame position a our callback index
-			m_splitAnis.push_back(l_splitAnis); 
+			_splitAnis.push_back(l_splitAnis); 
 		}
 	}
 
@@ -127,7 +127,7 @@ void AnimationPathControl::AddAnimation(osg::Node* node, osg::AnimationPathCallb
 	
 	node->setUpdateCallback(newCallBack.get()); 
 	
-	m_aniCallbacks.push_back(newCallBack);
+	_aniCallbacks.push_back(newCallBack);
 }
 
 //
@@ -156,7 +156,7 @@ int AnimationPathControl::FindAnimationNodes(osg::Node* node)
 
 			//set the new call back to the node
 			node->setUpdateCallback(newCallBack); 
-			m_aniCallbacks.push_back(newCallBack);//dynamic_cast<osg::AnimationPathCallback*> (node->getUpdateCallback()) );
+			_aniCallbacks.push_back(newCallBack);//dynamic_cast<osg::AnimationPathCallback*> (node->getUpdateCallback()) );
 		
 		}else{
 
@@ -174,7 +174,7 @@ int AnimationPathControl::FindAnimationNodes(osg::Node* node)
 		}
 	}
 
-	return m_aniCallbacks.size();
+	return _aniCallbacks.size();
 }
 
 //
@@ -182,39 +182,39 @@ int AnimationPathControl::FindAnimationNodes(osg::Node* node)
 //
 void AnimationPathControl::AddNewSubAnimation(std::string name)
 {
-	for(int i=0; i<(int)m_splitAnis.size(); i++)
+	for(int i=0; i<(int)_splitAnis.size(); i++)
 	{
-		m_splitAnis[i]->AddSplitAni();
+		_splitAnis[i]->AddSplitAni();
 	}
-	m_animationNames.push_back(name);
+	_animationNames.push_back(name);
 }
 
 void AnimationPathControl::AddNewSubAnimation(std::string name, int from, int to)
 {
-	for(int i=0; i<(int)m_splitAnis.size(); i++)
+	for(int i=0; i<(int)_splitAnis.size(); i++)
 	{
-		m_splitAnis[i]->AddSplitAni();
-		int newIndex = m_splitAnis[i]->GetTotalSplitAnimations();
-		m_splitAnis[i]->ReSampleSubAni(newIndex-1, from, to);
+		_splitAnis[i]->AddSplitAni();
+		int newIndex = _splitAnis[i]->GetTotalSplitAnimations();
+		_splitAnis[i]->ReSampleSubAni(newIndex-1, from, to);
 	}
-	m_animationNames.push_back(name);
+	_animationNames.push_back(name);
 }
 
 void AnimationPathControl::ReSampleSubAni(int subID, int from, int to)
 {
-	for(int i=0; i<(int)m_splitAnis.size(); i++)
+	for(int i=0; i<(int)_splitAnis.size(); i++)
 	{
-		m_splitAnis[i]->ReSampleSubAni(subID, from, to);
+		_splitAnis[i]->ReSampleSubAni(subID, from, to);
 	}
 }
 
 int AnimationPathControl::GetMaxFrames()
 {
-	if(m_aniCallbacks.size() == 0)
+	if(_aniCallbacks.size() == 0)
 	{return 0;}
 
 	//get a pointer to the callbacks original path
-	osg::AnimationPath* originalPath = m_aniCallbacks[0]->getAnimationPath();
+	osg::AnimationPath* originalPath = _aniCallbacks[0]->getAnimationPath();
 
 	if(originalPath==NULL){return -1;}
 
@@ -226,9 +226,9 @@ int AnimationPathControl::GetMaxFrames()
 
 double AnimationPathControl::GetAnimationLength()
 {
-	if(m_aniCallbacks.size()==0)
+	if(_aniCallbacks.size()==0)
 	{return 0.0f;}
-	return m_aniCallbacks[0]->GetAniLength(); 
+	return _aniCallbacks[0]->GetAniLength(); 
 }
 
 //
@@ -237,7 +237,7 @@ double AnimationPathControl::GetAnimationLength()
 void AnimationPathControl::SplitAnimations(int fpa)
 {
 	int totalFrames = this->GetMaxFrames();
-	//double secsPerFrame = (double)1.0f/m_fps;
+	//double secsPerFrame = (double)1.0f/_fps;
 	
 	//the number of frames we have used in the original animation
 	int offSet=0;
@@ -305,9 +305,9 @@ void AnimationPathControl::SetMultiplier(float multi)
 {
 
 	//loop through callbacks and set the muliplies
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i]->setTimeMultiplier(multi);
+		_aniCallbacks[i]->setTimeMultiplier(multi);
 	}
 
 }
@@ -315,17 +315,17 @@ void AnimationPathControl::SetMultiplier(float multi)
 void AnimationPathControl::SetTimeMode(int mode)
 {
 	//loop through callbacks and set the time mode
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i]->SetTimeMode(mode);
+		_aniCallbacks[i]->SetTimeMode(mode);
 	}
 }
 
 int AnimationPathControl::GetTimeMode()
 {
-	if(m_aniCallbacks.size()==0)
+	if(_aniCallbacks.size()==0)
 	{return 0;}
-	return m_aniCallbacks[0]->GetTimeMode();
+	return _aniCallbacks[0]->GetTimeMode();
 }
 
 //
@@ -334,25 +334,25 @@ int AnimationPathControl::GetTimeMode()
 void AnimationPathControl::SetManualFrame(double frame)
 {
 	//loop through callbacks and set the manualFrame
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i]->SetManualFrame(frame);
+		_aniCallbacks[i]->SetManualFrame(frame);
 	}
 }
 
 double AnimationPathControl::GetManualFrame()
 {
-	if(m_aniCallbacks.size()==0)
+	if(_aniCallbacks.size()==0)
 	{return 0.0f;}
-	return	m_aniCallbacks[0]->GetManualFrame();
+	return	_aniCallbacks[0]->GetManualFrame();
 }
 
 float AnimationPathControl::GetMultiplier()
 {
-	if(m_aniCallbacks.size()==0)
+	if(_aniCallbacks.size()==0)
 	{return 0.0f;}
 	//just return the first one as they should be the same
-	return	m_aniCallbacks[0]->getTimeMultiplier();
+	return	_aniCallbacks[0]->getTimeMultiplier();
 }
 
 //
@@ -360,9 +360,9 @@ float AnimationPathControl::GetMultiplier()
 //
 void AnimationPathControl::SwapAnimation(int id)
 {
-	if((int)m_splitAnis.size()>0)
+	if((int)_splitAnis.size()>0)
 	{
-		if( (id<0) || (id>=(int)m_splitAnis[0]->GetTotalSplitAnimations()))
+		if( (id<0) || (id>=(int)_splitAnis[0]->GetTotalSplitAnimations()))
 		{
 			return;
 		}
@@ -370,9 +370,9 @@ void AnimationPathControl::SwapAnimation(int id)
 
 	//loop all the callbacks and swap their paths for one of the
 	// split animations
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i]->setAnimationPath(m_splitAnis[i]->GetSplitAni(id));
+		_aniCallbacks[i]->setAnimationPath(_splitAnis[i]->GetSplitAni(id));
 	}
 
 	//reset current to ensure it starts at the begining
@@ -392,8 +392,8 @@ void AnimationPathControl::SwapAnimation(std::string name)
 void AnimationPathControl::NextAnimation()
 {
 	//check we wont go over the end
-	if(m_splitAnis[0]->GetCurrentAnimation()+1 < m_splitAnis[0]->GetTotalSplitAnimations())
-	{SwapAnimation(m_splitAnis[0]->GetCurrentAnimation()+1);}
+	if(_splitAnis[0]->GetCurrentAnimation()+1 < _splitAnis[0]->GetTotalSplitAnimations())
+	{SwapAnimation(_splitAnis[0]->GetCurrentAnimation()+1);}
 	else{SwapAnimation(0);}
 }
 
@@ -402,10 +402,11 @@ void AnimationPathControl::NextAnimation()
 //
 void AnimationPathControl::PreviousAnimation()
 {
+    int prevIndex = (int)(_splitAnis[0]->GetCurrentAnimation()-1);
 	//check we wont go over the end
-	if(m_splitAnis[0]->GetCurrentAnimation()-1 >= 0)
-	{SwapAnimation(m_splitAnis[0]->GetCurrentAnimation()-1);}
-	else{SwapAnimation(m_splitAnis[0]->GetTotalSplitAnimations()-1);}
+	if(prevIndex >= 0)
+	{SwapAnimation(_splitAnis[0]->GetCurrentAnimation()-1);}
+	else{SwapAnimation(_splitAnis[0]->GetTotalSplitAnimations()-1);}
 }
 
 //
@@ -413,26 +414,26 @@ void AnimationPathControl::PreviousAnimation()
 //
 void AnimationPathControl::SetAnimationType(osg::AnimationPath::LoopMode mode)
 {
-	for(unsigned int i=0; i<m_splitAnis.size(); i++)
-	{	m_splitAnis[i]->SetAnimationType(mode); }
+	for(unsigned int i=0; i<_splitAnis.size(); i++)
+	{	_splitAnis[i]->SetAnimationType(mode); }
 }
 
 
 void AnimationPathControl::SetPause(bool pause)
 {
-	m_paused = pause;
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	_paused = pause;
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		m_aniCallbacks[i]->setPause(m_paused);
+		_aniCallbacks[i]->setPause(_paused);
 	}
 }
 
 void AnimationPathControl::TogglePause()
 {
-	m_paused = m_paused ? false : true;
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	_paused = _paused ? false : true;
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		m_aniCallbacks[i]->setPause(m_paused);
+		_aniCallbacks[i]->setPause(_paused);
 	}
 }
 
@@ -445,9 +446,9 @@ void AnimationPathControl::TogglePause()
 //
 int AnimationPathControl::GetAniQueueLength()
 {
-	if(m_aniCallbacks.size() == 0)
+	if(_aniCallbacks.size() == 0)
 	{return 0;}
-	return m_aniCallbacks[0]->GetAniQueueLength();
+	return _aniCallbacks[0]->GetAniQueueLength();
 }
 
 //
@@ -455,9 +456,9 @@ int AnimationPathControl::GetAniQueueLength()
 //
 void AnimationPathControl::ClearAnimationQueue()
 {
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		m_aniCallbacks[i]->ClearAnimationQueue();
+		_aniCallbacks[i]->ClearAnimationQueue();
 	}
 }
 
@@ -466,9 +467,9 @@ void AnimationPathControl::ClearAnimationQueue()
 //
 int AnimationPathControl::FindAnimationNameIndex(std::string name)
 {
-	for(unsigned int i=0; i<m_animationNames.size(); i++)
+	for(unsigned int i=0; i<_animationNames.size(); i++)
 	{
-		if(m_animationNames[i].compare(name) == 0)
+		if(_animationNames[i].compare(name) == 0)
 		{return i;}
 	}
 	return -1;
@@ -480,10 +481,10 @@ int AnimationPathControl::FindAnimationNameIndex(std::string name)
 void AnimationPathControl::AddSubAnimationToQueue(int id)
 {
 	//TTT 0006 see if we need to use stop loop mode for any non subID change tos
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (m_aniCallbacks[i].get());
-		call->SetChangeToEvent(m_splitAnis[i]->GetSplitAni(id), m_aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f);  
+		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (_aniCallbacks[i].get());
+		call->SetChangeToEvent(_splitAnis[i]->GetSplitAni(id), _aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f);  
 	}
 }
 
@@ -492,9 +493,9 @@ void AnimationPathControl::AddSubAnimationToQueue(int id)
 //
 void AnimationPathControl::AddDelayedAnimationToQueue(int id, float delay)
 {
-	if((int)m_splitAnis.size()>0)
+	if((int)_splitAnis.size()>0)
 	{
-		if( (id<0) || (id>=(int)m_splitAnis[0]->GetTotalSplitAnimations()))
+		if( (id<0) || (id>=(int)_splitAnis[0]->GetTotalSplitAnimations()))
 		{
 			return;
 		}
@@ -502,10 +503,10 @@ void AnimationPathControl::AddDelayedAnimationToQueue(int id, float delay)
 
 	//loop all the callbacks and swap their paths for one of the
 	// split animations
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{
-		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (m_aniCallbacks[i].get());
-		call->SetDelayedAnimation(m_splitAnis[i]->GetSplitAni(id) ,m_aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f, delay); 
+		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (_aniCallbacks[i].get());
+		call->SetDelayedAnimation(_splitAnis[i]->GetSplitAni(id) ,_aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f, delay); 
 	}
 }
 
@@ -536,10 +537,10 @@ void AnimationPathControl::AddDelayedAnimationToQueue(std::string name, float de
 //
 void AnimationPathControl::AddChangeToManualToQueue(int id)
 {
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (m_aniCallbacks[i].get());
-		call->SetChangeToManualEvent(m_splitAnis[i]->GetSplitAni(id), m_aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f );  
+		AnimationPathEventCallback* call = dynamic_cast<AnimationPathEventCallback*> (_aniCallbacks[i].get());
+		call->SetChangeToManualEvent(_splitAnis[i]->GetSplitAni(id), _aniCallbacks[i]->getAnimationPath()->getLoopMode(), 1.0f );  
 	}
 }
 
@@ -548,17 +549,17 @@ void AnimationPathControl::AddChangeToManualToQueue(int id)
 //
 void AnimationPathControl::ResetAnimation()
 {
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		m_aniCallbacks[i]->reset();
+		_aniCallbacks[i]->reset();
 	}
 }
 
 bool AnimationPathControl::isPlaying()
 {
-	for(unsigned int i=0; i<m_aniCallbacks.size(); i++)
+	for(unsigned int i=0; i<_aniCallbacks.size(); i++)
 	{ 
-		if(m_aniCallbacks[i]->isAniPlaying())
+		if(_aniCallbacks[i]->isAniPlaying())
 		{return true;}
 	}
 	return false;

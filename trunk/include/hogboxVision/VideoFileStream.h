@@ -37,16 +37,16 @@ class HOGBOXVIS_EXPORT VideoFileStream : public VideoStream
 {
 public:
 	VideoFileStream() : VideoStream(),
-						m_syncClock(NULL), 
-						m_isSynced(false)
+						_syncClock(NULL), 
+						_isSynced(false)
 	{
 	}
 	
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
 	VideoFileStream(const VideoFileStream& image,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
 		: VideoStream(image, copyop),
-		m_syncClock(image.m_syncClock),
-		m_isSynced(image.m_isSynced)
+		_syncClock(image._syncClock),
+		_isSynced(image._isSynced)
 	{
 	}
 
@@ -65,21 +65,21 @@ public:
 	//Get sync clock, if it hasn't got a sync clock then one is allocated
 	//via CreateSyncClockImplementation
 	VideoFileSyncClock* GetSyncClock(){
-		if(!m_syncClock){CreateSyncClockImplementation();}
-		return m_syncClock;
+		if(!_syncClock){CreateSyncClockImplementation();}
+		return _syncClock;
 	}
 
 	//Set our clock pointer then call SetSyncClockImplementation
 	//to do implementation specific syncing stuff
 	void SetSyncClock(VideoFileSyncClock* clock){
-		m_syncClock = clock;
-		SetSyncClockImplementation(m_syncClock);
+		_syncClock = clock;
+		SetSyncClockImplementation(_syncClock);
 	}
 
 protected:
 
 	virtual ~VideoFileStream(void){
-		m_syncClock=NULL;
+		_syncClock=NULL;
 	}
 
 	//Should be pure virtual but inheriting from osg::Object require cloneType
@@ -90,10 +90,10 @@ protected:
 protected:
 
 	//The syncing clock being used
-	osg::ref_ptr<VideoFileSyncClock> m_syncClock;
+	osg::ref_ptr<VideoFileSyncClock> _syncClock;
 
 	//syncing 
-	bool m_isSynced;
+	bool _isSynced;
 };
 
 typedef osg::ref_ptr<VideoFileStream> VideoFileStreamPtr;

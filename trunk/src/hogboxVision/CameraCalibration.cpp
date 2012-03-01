@@ -4,9 +4,9 @@ using namespace hogboxVision;
 
 CameraCalibration::CameraCalibration(void) 
 		: osg::Object(),
-		m_cameraWidth(0),
-		m_cameraHeight(0),
-		m_focalLength(0.0f)
+		_cameraWidth(0),
+		_cameraHeight(0),
+		_focalLength(0.0f)
 {
 }
 
@@ -24,6 +24,6 @@ CameraCalibration::CameraCalibration(const CameraCalibration& calib,const osg::C
 
 void CameraCalibration::ChangeSize(int width, int height)
 {
-	m_cameraWidth = width;
-	m_cameraHeight = height;
+	_cameraWidth = width;
+	_cameraHeight = height;
 }

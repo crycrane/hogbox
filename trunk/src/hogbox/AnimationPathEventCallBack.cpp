@@ -18,7 +18,7 @@ void AnimationPathEventCallback::SetChangeToEvent(osg::AnimationPath* path, osg:
 
 	isPlaying = true;
 
-	m_aniEventQueue.push_back(aniEvent);
+	_aniEventQueue.push_back(aniEvent);
 }
 
 void AnimationPathEventCallback::SetChangeToManualEvent(osg::AnimationPath* path, osg::AnimationPath::LoopMode changeToMode, double multi)
@@ -29,7 +29,7 @@ void AnimationPathEventCallback::SetChangeToManualEvent(osg::AnimationPath* path
 	aniEvent.changeToMode=changeToMode;
 	aniEvent.changeToMulti=multi;
 
-	m_aniEventQueue.push_back(aniEvent);
+	_aniEventQueue.push_back(aniEvent);
 }
 
 void AnimationPathEventCallback::SetDelayedAnimation(osg::AnimationPath* path, osg::AnimationPath::LoopMode changeToMode, 
@@ -44,23 +44,23 @@ void AnimationPathEventCallback::SetDelayedAnimation(osg::AnimationPath* path, o
 
 	aniEvent.startTick = osg::Timer::instance()->tick();
 
-	m_aniEventQueue.push_back(aniEvent);
+	_aniEventQueue.push_back(aniEvent);
 }
 
 void AnimationPathEventCallback::SetTimeMode(int mode)
 {
-	m_timeMode = mode;
-	if(m_timeMode == 1)
+	_timeMode = mode;
+	if(_timeMode == 1)
 	{
 		SetManualFrame(_latestTime);
 		_firstTime=0.0f;
 	}
 }
-int AnimationPathEventCallback::GetTimeMode(){return m_timeMode;}
+int AnimationPathEventCallback::GetTimeMode(){return _timeMode;}
 
-void AnimationPathEventCallback::SetManualFrame(double time){m_manualFrame=time;}
+void AnimationPathEventCallback::SetManualFrame(double time){_manualFrame=time;}
 
-float AnimationPathEventCallback::GetManualFrame(){return m_manualFrame;}
+float AnimationPathEventCallback::GetManualFrame(){return _manualFrame;}
 
 double AnimationPathEventCallback::GetAniLength(){return _animationPath->getLastTime();}
 
@@ -72,17 +72,17 @@ void AnimationPathEventCallback::operator()(osg::Node* node, osg::NodeVisitor* n
 	{
 		//get the current event from the queue
 		AniEvent* pEvent = NULL;
-		if(m_aniEventQueue.size() > 0)
-		{ pEvent = &m_aniEventQueue[0];}
+		if(_aniEventQueue.size() > 0)
+		{ pEvent = &_aniEventQueue[0];}
 
 		double time = nv->getFrameStamp()->getReferenceTime();
 
-		if(m_timeMode==0)
+		if(_timeMode==0)
 		{
 			_latestTime = time;
 		}else{
-			_latestTime = m_manualFrame;
-			if(m_timeMode==1)
+			_latestTime = _manualFrame;
+			if(_timeMode==1)
 			{ _firstTime = 0.0f;}//_latestTime;}
 		}
 
@@ -102,8 +102,8 @@ void AnimationPathEventCallback::operator()(osg::Node* node, osg::NodeVisitor* n
 						this->reset();
 						this->setTimeMultiplier(pEvent->changeToMulti); 
 						_animationPath->setLoopMode(pEvent->changeToMode);
-						//m_event=NONE;
-						m_aniEventQueue.erase(m_aniEventQueue.begin());
+						//_event=NONE;
+						_aniEventQueue.erase(_aniEventQueue.begin());
 					}
 				}
 			}
@@ -124,8 +124,8 @@ void AnimationPathEventCallback::operator()(osg::Node* node, osg::NodeVisitor* n
 						_animationPath->setLoopMode(pEvent->changeToMode); 
 					
 						//remove the event from the queue
-						m_aniEventQueue.erase(m_aniEventQueue.begin());
-						//m_event=NONE;
+						_aniEventQueue.erase(_aniEventQueue.begin());
+						//_event=NONE;
 
 						break;
 					}
@@ -138,8 +138,8 @@ void AnimationPathEventCallback::operator()(osg::Node* node, osg::NodeVisitor* n
 						this->SetTimeMode(1); 
 						
 						//remove the event from the queue
-						//m_event=NONE;
-						m_aniEventQueue.erase(m_aniEventQueue.begin());
+						//_event=NONE;
+						_aniEventQueue.erase(_aniEventQueue.begin());
 
 						break;
 					}

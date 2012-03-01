@@ -38,8 +38,8 @@ class OsgTextureXmlWrapper : public hogboxDB::XmlClassWrapper
 public:
 
 	//pass node representing the texture object
-	OsgTextureXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "Texture"),
+	OsgTextureXmlWrapper(const std::string& classType) 
+			: hogboxDB::XmlClassWrapper(classType),
 			_wrapU("REPEAT"),
 			_wrapV("REPEAT"),
 			_wrapW("REPEAT"),
@@ -52,75 +52,13 @@ public:
 			_resizeNPOT(true)
 	{
 
-		osg::Texture* texture = NULL;
-
-		//get the Texture type from the nodes 'type' property
-		std::string texTypeStr;
-		if(!hogboxDB::getXmlPropertyValue(node, "type", texTypeStr))
-		{
-			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype 'Texture' should have a 'type' property." <<std::endl 
-									<< "                    i.e. <Texture uniqueID='myID' type='Texture2D'>" << std::endl;
-			return;
-		}
-
-		//create our object and it's xml wrapper.
-		//handle various types
-		if(texTypeStr == "Texture2D")
-		{
-			osg::Texture2D* tex2D = new osg::Texture2D();
-
-			//The image used by the texture2D
-			m_xmlAttributes["TextureImage"] = new hogboxDB::CallbackXmlClassPointer<osg::Texture2D,osg::Image>(tex2D,
-																							&osg::Texture2D::getImage,
-																							&osg::Texture2D::setImage);
-
-			//store the object
-			texture = tex2D;
-
-		}else if(texTypeStr == "TextureRectangle"){
-
-			osg::TextureRectangle* texRect = new osg::TextureRectangle();
-
-			//The image used by the texture2D
-			m_xmlAttributes["TextureImage"] = new hogboxDB::CallbackXmlClassPointer<osg::TextureRectangle,osg::Image>(texRect,
-																							&osg::TextureRectangle::getImage,
-																							&osg::TextureRectangle::setImage);
-
-			//store the object
-			texture = texRect;
-
-		}else if(texTypeStr == "TextureCubeMap"){
-
-			osg::TextureCubeMap* cubeMap = new osg::TextureCubeMap();
-
-			//store the object
-			texture = cubeMap;
-
-		}else{
-
-			osg::notify(osg::WARN) << "XML ERROR: Parsing node '" << node->name << "'," << std::endl
-								   << "                      It is not a valid texture type." << std::endl;
-			return;
-		}
-
-		//register common attributes
-
-		//use helper variables to load the texture wrap modes
-		m_xmlAttributes["WrapU"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapU);
-		m_xmlAttributes["WrapV"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapV);
-		m_xmlAttributes["WrapW"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapW);
-
-		m_xmlAttributes["MinFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_minFilter);
-		m_xmlAttributes["MagFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_magFilter);
-
-		m_xmlAttributes["GenMipMaps"] = new hogboxDB::TypedXmlAttribute<bool>(&_autoGenMipMaps);
-		m_xmlAttributes["ResizeNPOT"] = new hogboxDB::TypedXmlAttribute<bool>(&_resizeNPOT);
-
-		m_xmlAttributes["MaxAnisotropy"] = new hogboxDB::TypedXmlAttribute<float>(&_maxAnisotropic);
-		
-		//store texture
-		p_wrappedObject = texture;
 	}
+    
+    //should be a inherited type e.g. texture2D
+    virtual osg::Object* allocateClassType(){return NULL;}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new OsgTextureXmlWrapper("Texture");}
 
 
 	//overload deserialise
@@ -193,10 +131,26 @@ public:
 
 protected:
 
-	virtual ~OsgTextureXmlWrapper(void)
-	{
-
+	virtual ~OsgTextureXmlWrapper(void){
 	}
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+        //osg::Texture* texture = dynamic_cast<osg::Texture*>(p_wrappedObject.get());
+		//use helper variables to load the texture wrap modes
+		_xmlAttributes["WrapU"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapU);
+		_xmlAttributes["WrapV"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapV);
+		_xmlAttributes["WrapW"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapW);
+        
+		_xmlAttributes["MinFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_minFilter);
+		_xmlAttributes["MagFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_magFilter);
+        
+		_xmlAttributes["GenMipMaps"] = new hogboxDB::TypedXmlAttribute<bool>(&_autoGenMipMaps);
+		_xmlAttributes["ResizeNPOT"] = new hogboxDB::TypedXmlAttribute<bool>(&_resizeNPOT);
+        
+		_xmlAttributes["MaxAnisotropy"] = new hogboxDB::TypedXmlAttribute<float>(&_maxAnisotropic);
+    }
 
 };
 

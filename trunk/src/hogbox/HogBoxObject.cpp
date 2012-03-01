@@ -10,63 +10,63 @@ using namespace hogbox;
 HogBoxObject::HogBoxObject(void) 
 	: osg::Object()
 { 	
-	m_scaleMat = osg::Matrix::identity();
-	m_rotationMat = osg::Matrix::identity();
-	m_translationMat = osg::Matrix::identity(); 
+	_scaleMat = osg::Matrix::identity();
+	_rotationMat = osg::Matrix::identity();
+	_translationMat = osg::Matrix::identity(); 
 
-	m_root = new osg::MatrixTransform();
-	m_root->setName("Object_Root_World_Transform");
+	_root = new osg::MatrixTransform();
+	_root->setName("Object_Root_World_Transform");
 
-	m_localTransform = new osg::MatrixTransform();
-	m_localTransform->setName("Object_Local_Transform");
+	_localTransform = new osg::MatrixTransform();
+	_localTransform->setName("Object_Local_Transform");
 
 	//hook together the basic subgraph
-	m_root->addChild(m_localTransform.get()); 
+	_root->addChild(_localTransform.get()); 
 
 	SetLocalScale(1.0f);
 	SetLocalRotation(0.0f,0.0f,0.0f);
 	SetLocalTranslation(0.0f,0.0f,0.0f);
 
-	m_loadScale=1.0f;
+	_loadScale=1.0f;
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 HogBoxObject::HogBoxObject(const HogBoxObject& object,const osg::CopyOp& copyop) 
 		: osg::Object(object, copyop),
-		m_scale(object.m_scale),
-		m_position(object.m_position),
-		m_rotDegrees(object.m_rotDegrees),
-		m_scaleMat(object.m_scaleMat),
-		m_rotationMat(object.m_rotationMat),
-		m_translationMat(object.m_translationMat),
-		m_loadScale(object.m_loadScale)
+        _scaleMat(object._scaleMat),
+        _rotationMat(object._rotationMat),
+        _translationMat(object._translationMat),
+		_scale(object._scale),
+		_rotDegrees(object._rotDegrees),
+        _position(object._position),
+		_loadScale(object._loadScale)
 {
 
 	//copy of root 
-	m_root = dynamic_cast<osg::MatrixTransform*>(copyop(object.m_root.get()));
+	_root = dynamic_cast<osg::MatrixTransform*>(copyop(object._root.get()));
 	//copy of root will have copied the local transform, we need to get it
-	for(unsigned int i=0; i<m_root->getNumChildren(); i++)
+	for(unsigned int i=0; i<_root->getNumChildren(); i++)
 	{
-		if(m_root->getChild(i)->getName()==object.m_localTransform->getName())
+		if(_root->getChild(i)->getName()==object._localTransform->getName())
 		{
-			m_localTransform = dynamic_cast<osg::MatrixTransform*>(m_root->getChild(i));
+			_localTransform = dynamic_cast<osg::MatrixTransform*>(_root->getChild(i));
 			break;
 		}
 	}
 
-	SetLocalScale(m_scale);
-	SetLocalRotation(m_rotDegrees);
-	SetLocalTranslation(m_position);
+	SetLocalScale(_scale);
+	SetLocalRotation(_rotDegrees);
+	SetLocalTranslation(_position);
 }
 
 HogBoxObject::~HogBoxObject(void)
 {
 	OSG_NOTICE << "    Deallocating HogBoxObject: Name '" << this->getName() << "'." << std::endl;
 	//transformation members
-	//m_p_worldTrans = NULL; // the final world transform matrix for the model
+	//_p_worldTrans = NULL; // the final world transform matrix for the model
 
-	//m_subGeometry.clear();
-	//m_subGeode.clear();
+	//_subGeometry.clear();
+	//_subGeode.clear();
 }
 
 
@@ -77,15 +77,15 @@ void HogBoxObject::SetVisible(const bool& vis)
 {
 	if(vis)
 	{
-		m_root->setNodeMask(0xffffffff);
+		_root->setNodeMask(0xffffffff);
 	}else{
-		m_root->setNodeMask(0x0);
+		_root->setNodeMask(0x0);
 	}
 }
 
 bool HogBoxObject::GetVisible() const
 {
-	if(m_root->getNodeMask() == 0x0)
+	if(_root->getNodeMask() == 0x0)
 	{
 		return false;
 	}else{
@@ -96,7 +96,7 @@ bool HogBoxObject::GetVisible() const
 osg::Node* HogBoxObject::GetNodeByName(const std::string& name, const bool& subString)
 {
 	FindNodesByName findNodes(name,subString);
-	m_root->accept(findNodes);
+	_root->accept(findNodes);
 	if(findNodes._count>0)
 	{return findNodes._foundList[0];}
 	return NULL;
@@ -108,7 +108,7 @@ osg::Node* HogBoxObject::GetNodeByName(const std::string& name, const bool& subS
 std::vector<osg::Node*> HogBoxObject::GetNodesByName(const std::string& name, const bool& subString)
 {
 	FindNodesByName findNodes(name,subString);
-	m_root->accept(findNodes);
+	_root->accept(findNodes);
 	return findNodes._foundList;
 }
 
@@ -117,7 +117,7 @@ std::vector<osg::Node*> HogBoxObject::GetNodesByName(const std::string& name, co
 //
 void HogBoxObject::SetWorldTransform(const osg::Matrix& trans)
 {
-	m_root->setMatrix(trans);
+	_root->setMatrix(trans);
 }
 
 //
@@ -125,7 +125,7 @@ void HogBoxObject::SetWorldTransform(const osg::Matrix& trans)
 //
 const osg::Matrix& HogBoxObject::GetWorldTransform()const
 {
-	return m_root->getMatrix();
+	return _root->getMatrix();
 }
 
 //
@@ -133,17 +133,17 @@ const osg::Matrix& HogBoxObject::GetWorldTransform()const
 //
 void HogBoxObject::SetLocalScale(const osg::Vec3& scale)
 {
-	m_scale = scale;
+	_scale = scale;
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalScale(const double& x, const double& y, const double& z)
 {
-	m_scale = osg::Vec3(x,y,z);
+	_scale = osg::Vec3(x,y,z);
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalScale(const double& u)
 {
-	m_scale = osg::Vec3(u,u,u);
+	_scale = osg::Vec3(u,u,u);
 	UpdateLocalTransform();
 }
 
@@ -153,26 +153,26 @@ void HogBoxObject::SetLocalScale(const double& u)
 //
 void HogBoxObject::SetLocalRotation(const osg::Vec3& rot)
 {
-	m_rotDegrees = rot;
+	_rotDegrees = rot;
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalRotationRadians(const osg::Vec3& rot)
 {
-	m_rotDegrees.x() = osg::RadiansToDegrees(rot.x());
-	m_rotDegrees.y() = osg::RadiansToDegrees(rot.y());
-	m_rotDegrees.z() = osg::RadiansToDegrees(rot.z());
+	_rotDegrees.x() = osg::RadiansToDegrees(rot.x());
+	_rotDegrees.y() = osg::RadiansToDegrees(rot.y());
+	_rotDegrees.z() = osg::RadiansToDegrees(rot.z());
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalRotation(const double& x, const double& y, const double& z)
 {
-	m_rotDegrees = osg::Vec3(x,y,z);
+	_rotDegrees = osg::Vec3(x,y,z);
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalRotationRadians(const double& x, const double& y, const double& z)
 {
-	m_rotDegrees.x() = osg::RadiansToDegrees(x);
-	m_rotDegrees.y() = osg::RadiansToDegrees(y);
-	m_rotDegrees.z() = osg::RadiansToDegrees(z);
+	_rotDegrees.x() = osg::RadiansToDegrees(x);
+	_rotDegrees.y() = osg::RadiansToDegrees(y);
+	_rotDegrees.z() = osg::RadiansToDegrees(z);
 	UpdateLocalTransform();
 }
 
@@ -182,46 +182,46 @@ void HogBoxObject::SetLocalRotationRadians(const double& x, const double& y, con
 //
 void HogBoxObject::SetLocalTranslation(const osg::Vec3& pos)
 {
-	m_position = pos;
+	_position = pos;
 	UpdateLocalTransform();
 }
 void HogBoxObject::SetLocalTranslation(const double& x, const double& y, const double& z)
 {
-	m_position = osg::Vec3(x,y,z);
+	_position = osg::Vec3(x,y,z);
 	UpdateLocalTransform();
 }
 
 
 //
 // Update the scale matrix using the values of
-// m_scaleX,Y,Z
+// _scaleX,Y,Z
 //
 void HogBoxObject::UpdateLocalScaleMatrix()
 {
-	m_scaleMat.set( osg::Matrix::scale(m_scale) );  
+	_scaleMat.set( osg::Matrix::scale(_scale) );  
 }
 
 //
 // Update the rotation matrix using the values of
-// m_rotDegrees
+// _rotDegrees
 //
 void HogBoxObject::UpdateLocalRotationMatrix()
 {
 	//have to create a sub matrix for each axis
 	//get rotation as radians
 	osg::Vec3 rads = GetLocalRotationRadians();
-	m_rotationMat.set(	osg::Matrix::rotate(rads.x(), osg::Vec3(1,0,0)) *
+	_rotationMat.set(	osg::Matrix::rotate(rads.x(), osg::Vec3(1,0,0)) *
 						osg::Matrix::rotate(rads.y(), osg::Vec3(0,1,0)) *
 						osg::Matrix::rotate(rads.z(), osg::Vec3(0,0,1)) );
 }
 
 //
 // Update the translation matrix using the values of
-// m_position
+// _position
 //
 void HogBoxObject::UpdateLocalTranslationMatrix()
 {
-	m_translationMat.set( osg::Matrix::translate(m_position) ); 
+	_translationMat.set( osg::Matrix::translate(_position) ); 
 }
 
 
@@ -233,7 +233,7 @@ void HogBoxObject::UpdateLocalTransform()
 	UpdateLocalTranslationMatrix();
 	UpdateLocalRotationMatrix();
 	UpdateLocalScaleMatrix();
-	m_localTransform->setMatrix( m_scaleMat * m_rotationMat * m_translationMat );
+	_localTransform->setMatrix( _scaleMat * _rotationMat * _translationMat );
 }
 
 
@@ -246,12 +246,12 @@ bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 	if(!node){return false;}
 
 	//attach the node to our local transform
-	m_localTransform->addChild(node);
+	_localTransform->addChild(node);
 
 	//bounding sphere of entire model
-	m_totalBounds = m_root->computeBound();
+	_totalBounds = _root->computeBound();
 
-	m_wrappedNodes.push_back(node);
+	_wrappedNodes.push_back(node);
 
 	//apply the default node masks to our geom
 	ApplyDefaultNodeMaskVisitor applyNodeMasks;
@@ -265,9 +265,9 @@ bool HogBoxObject::AddNodeToObject(osg::ref_ptr<osg::Node> node)
 	//pass all the meshmappings over the the new node
 	//applying the material and other parameters to any geodes
 	//in the subgraph matching the mapto list
-	for(unsigned int i=0; i<m_meshMappings.size(); i++)
+	for(unsigned int i=0; i<_meshMappings.size(); i++)
 	{
-		node->accept(*m_meshMappings[i]->m_visitor);
+		node->accept(*_meshMappings[i]->_visitor);
 	}
 	
 	return true;
@@ -300,7 +300,7 @@ void HogBoxObject::WrapGeometryNode(osg::Geode* parentGeode, osg::Geometry* geom
 
 	HogBoxMeshPtr l_subM = new HogBoxMesh(parentGeode, geometry);
 	l_subM->setName(name);
-	m_subGeometry.push_back(l_subM); 
+	_subGeometry.push_back(l_subM); 
 }
 */
 
@@ -310,7 +310,7 @@ void HogBoxObject::WrapGeometryNode(osg::Geode* parentGeode, osg::Geometry* geom
 //
 NodePtrVector HogBoxObject::GetWrappedNodes() const
 {
-	return m_wrappedNodes;
+	return _wrappedNodes;
 }
 //
 //on set the nodes are passed through AddNodeToObject to 
@@ -319,7 +319,7 @@ void HogBoxObject::SetWrappedNodes(const NodePtrVector& nodes)
 {
 	//iterate the list and pass through add to object
 	for(unsigned int i=0; i<nodes.size(); i++)
-	{
+	{OSG_FATAL << "Add Wrapped Node" << std::endl;
 		this->AddNodeToObject(nodes[i]);
 	}
 }
@@ -333,10 +333,10 @@ bool HogBoxObject::AddMeshMapping(MeshMapping* mapping)
 	if(!mapping){return false;}
 
 	//pass to our wrapped nodes via the root
-	m_root->accept(*mapping->m_visitor);
+	_root->accept(*mapping->_visitor);
 
 	//add to our list
-	m_meshMappings.push_back(mapping);
+	_meshMappings.push_back(mapping);
 	return true;
 }
 
@@ -345,7 +345,7 @@ bool HogBoxObject::AddMeshMapping(MeshMapping* mapping)
 //
 std::vector<MeshMappingPtr> HogBoxObject::GetMeshMappings() const
 {
-	return m_meshMappings;
+	return _meshMappings;
 }
 
 void HogBoxObject::SetMeshMappings(const std::vector<MeshMappingPtr>& mappings)

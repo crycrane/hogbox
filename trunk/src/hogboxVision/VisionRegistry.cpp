@@ -46,10 +46,10 @@ VisionRegistry::VisionRegistry(void) : osg::Referenced()
 
 VisionRegistry::~VisionRegistry(void)
 {
-	m_videoFileStreamTypes.clear();
-	m_webcamStreamTypes.clear();
-	m_cameraBaseTrackerTypes.clear();
-	m_dlList.clear();
+	_videoFileStreamTypes.clear();
+	_webcamStreamTypes.clear();
+	_cameraBaseTrackerTypes.clear();
+	_dlList.clear();
 }
 
 //
@@ -61,7 +61,7 @@ void VisionRegistry::AddVideoStreamTypeToRegistry(VideoFileStreamWrapper* protoW
 	//VideoFileStream* existing = GetXmlClassManager(object->className());
 	//if(existing){return;}
 
-	m_videoFileStreamTypes.push_back(protoWrapper);
+	_videoFileStreamTypes.push_back(protoWrapper);
 }
 
 
@@ -124,8 +124,8 @@ void VisionRegistry::AddWebCamStreamTypeToRegistry(WebCamStreamWrapper* protoWra
 	//VideoFileStream* existing = GetXmlClassManager(object->className());
 	//if(existing){return;}
 	OSG_FATAL << "ADD WEBCAM TYPE TO LIST" << std::endl;
-	m_webcamStreamTypes.push_back(protoWrapper);
-	OSG_FATAL << "NEW TYPES LIST COUNT '" << m_webcamStreamTypes.size() << "'" << std::endl;
+	_webcamStreamTypes.push_back(protoWrapper);
+	OSG_FATAL << "NEW TYPES LIST COUNT '" << _webcamStreamTypes.size() << "'" << std::endl;
 }
 
 //
@@ -182,7 +182,7 @@ WebCamStreamPtr VisionRegistry::CreateWebCamStream(const std::string& fileName, 
 //Add an alias for a classtype to the library that will load it
 void VisionRegistry::AddClassTypeAlias(const std::string mapClassType, const std::string toLibraryName)
 {
-    m_classTypeAliasMap[mapClassType] = toLibraryName;
+    _classTypeAliasMap[mapClassType] = toLibraryName;
 }
 
 //
@@ -283,16 +283,16 @@ VideoFileStreamWrapperPtr VisionRegistry::GetVideoFileStreamPluginProto(const st
 	//if no plugin name return the first
 	if(plugin.empty())
 	{
-		if(m_videoFileStreamTypes.size() > 0){return m_videoFileStreamTypes[0];}
+		if(_videoFileStreamTypes.size() > 0){return _videoFileStreamTypes[0];}
 		return NULL;
 	}
 	//try to find requested
-	for(unsigned int i=0; i<m_videoFileStreamTypes.size(); i++)
+	for(unsigned int i=0; i<_videoFileStreamTypes.size(); i++)
 	{
 		//compare to plugin base name
-		if(m_videoFileStreamTypes[i]->GetPluginName() == plugin)
+		if(_videoFileStreamTypes[i]->GetPluginName() == plugin)
 		{
-			return m_videoFileStreamTypes[i];
+			return _videoFileStreamTypes[i];
 		}
 	}
 	return NULL;
@@ -395,20 +395,20 @@ const std::string VisionRegistry::FindWebCamLibraryName(int index)
 WebCamStreamWrapperPtr VisionRegistry::GetWebCamStreamPluginProto(const std::string& plugin)
 {
 	OSG_FATAL << "WEBCAM PLUGIN NAME '" << plugin << "'" << std::endl;
-	OSG_FATAL << "WEBCAM PLUGIN COUNT '" << m_webcamStreamTypes.size() << "'" << std::endl;
+	OSG_FATAL << "WEBCAM PLUGIN COUNT '" << _webcamStreamTypes.size() << "'" << std::endl;
 	//if no plugin name return the first
 	if(plugin.empty())
 	{
-		if(m_webcamStreamTypes.size() > 0){return m_webcamStreamTypes[0];}
+		if(_webcamStreamTypes.size() > 0){return _webcamStreamTypes[0];}
 		return NULL;
 	}
 	//try to find requested
-	for(unsigned int i=0; i<m_webcamStreamTypes.size(); i++)
+	for(unsigned int i=0; i<_webcamStreamTypes.size(); i++)
 	{
 		//compare to plugin base name
-		if(m_webcamStreamTypes[i]->GetPluginName() == plugin)
+		if(_webcamStreamTypes[i]->GetPluginName() == plugin)
 		{
-			return m_webcamStreamTypes[i];
+			return _webcamStreamTypes[i];
 		}
 	}
 	return NULL;
@@ -482,12 +482,12 @@ const std::string VisionRegistry::GetPluginExtension()
 
 VisionRegistry::DynamicLibraryList::iterator VisionRegistry::GetLibraryItr(const std::string& fileName)
 {
-    DynamicLibraryList::iterator ditr = m_dlList.begin();
-    for(;ditr!=m_dlList.end();++ditr)
+    DynamicLibraryList::iterator ditr = _dlList.begin();
+    for(;ditr!=_dlList.end();++ditr)
     {
         if ((*ditr)->getName()==fileName) return ditr;
     }
-    return m_dlList.end();
+    return _dlList.end();
 }
 
 //
@@ -498,7 +498,7 @@ osgDB::Registry::LoadStatus VisionRegistry::LoadLibrary(const std::string& fileN
    // OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
 
     DynamicLibraryList::iterator ditr = GetLibraryItr(fileName);
-	if (ditr!=m_dlList.end()) return osgDB::Registry::PREVIOUSLY_LOADED;
+	if (ditr!=_dlList.end()) return osgDB::Registry::PREVIOUSLY_LOADED;
 
     //_openingLibrary=true;
 
@@ -508,7 +508,7 @@ osgDB::Registry::LoadStatus VisionRegistry::LoadLibrary(const std::string& fileN
 
     if (dl)
     {
-        m_dlList.push_back(dl);
+        _dlList.push_back(dl);
         return osgDB::Registry::LOADED;
     }
     return osgDB::Registry::NOT_LOADED;

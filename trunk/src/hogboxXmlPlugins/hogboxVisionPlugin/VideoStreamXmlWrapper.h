@@ -14,9 +14,9 @@ class VideoStreamXmlWrapper : public hogboxDB::XmlClassWrapper
 public:
 
 	//pass HogBoxObject to be wrapped
-	VideoStreamXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "VideoStream"),
-			m_streamTypeStr(""),
+	VideoStreamXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("VideoStream"),
+			_streamTypeStr(""),
 			_srcName(""),
 			_vFlip(false),
 			_hFlip(false),
@@ -31,43 +31,43 @@ public:
 
 		//get the Texture type from the nodes 'type' property
 		std::string streamTypeStr;
-		if(!hogboxDB::getXmlPropertyValue(node, "type", streamTypeStr))
+		if(!hogboxDB::getXmlPropertyValue(in, "type", streamTypeStr))
 		{
 			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype 'VideoStream' should have a 'type' property." <<std::endl 
 									<< "                    i.e. <VideoStream uniqueID='myID' type='VideoFile'>" << std::endl;
 			return;
 		}
 
-		m_streamTypeStr = streamTypeStr;
+		_streamTypeStr = streamTypeStr;
 
 		//see if a specific plugin is specified
 		std::string plugin = "";
-		if(!hogboxDB::getXmlPropertyValue(node, "plugin", plugin))
+		if(!hogboxDB::getXmlPropertyValue(in, "plugin", plugin))
 		{
 		}
 
 		//allocate the correct type
-		if(m_streamTypeStr == "VideoFile")
+		if(_streamTypeStr == "VideoFile")
 		{
 			stream = hogboxVision::VisionRegistry::Instance()->AllocateVideoFileStream(plugin);
-		}else if(m_streamTypeStr == "WebCam"){
+		}else if(_streamTypeStr == "WebCam"){
 			stream = hogboxVision::VisionRegistry::Instance()->AllocateWebCamStream(plugin);
 		}
 
 		//add the base attributes
 		
 		//src is file or device name
-		m_xmlAttributes["Src"] = new hogboxDB::TypedXmlAttribute<std::string>(&_srcName);
+		_xmlAttributes["Src"] = new hogboxDB::TypedXmlAttribute<std::string>(&_srcName);
 
 		//
-		m_xmlAttributes["VFlip"] = new hogboxDB::TypedXmlAttribute<bool>(&_vFlip);
-		m_xmlAttributes["HFlip"] = new hogboxDB::TypedXmlAttribute<bool>(&_hFlip);
-		m_xmlAttributes["Deinterlace"] = new hogboxDB::TypedXmlAttribute<bool>(&_deinter);
+		_xmlAttributes["VFlip"] = new hogboxDB::TypedXmlAttribute<bool>(&_vFlip);
+		_xmlAttributes["HFlip"] = new hogboxDB::TypedXmlAttribute<bool>(&_hFlip);
+		_xmlAttributes["Deinterlace"] = new hogboxDB::TypedXmlAttribute<bool>(&_deinter);
 
-		m_xmlAttributes["Width"] = new hogboxDB::TypedXmlAttribute<int>(&_width);
-		m_xmlAttributes["Height"] = new hogboxDB::TypedXmlAttribute<int>(&_height);
-		m_xmlAttributes["Fps"] = new hogboxDB::TypedXmlAttribute<int>(&_fps);
-		m_xmlAttributes["Bitrate"] = new hogboxDB::TypedXmlAttribute<int>(&_bitrate);
+		_xmlAttributes["Width"] = new hogboxDB::TypedXmlAttribute<int>(&_width);
+		_xmlAttributes["Height"] = new hogboxDB::TypedXmlAttribute<int>(&_height);
+		_xmlAttributes["Fps"] = new hogboxDB::TypedXmlAttribute<int>(&_fps);
+		_xmlAttributes["Bitrate"] = new hogboxDB::TypedXmlAttribute<int>(&_bitrate);
 
 		//store the VideoFileStrem as the wrapped object
 		p_wrappedObject = stream;
@@ -80,7 +80,7 @@ public:
 
 
 		//allocate the correct type
-		if(m_streamTypeStr == "VideoFile")
+		if(_streamTypeStr == "VideoFile")
 		{
 			//cast wrapped to VideoFileStream
 			hogboxVision::VideoFileStream* fileStream = dynamic_cast<hogboxVision::VideoFileStream*>(p_wrappedObject.get());
@@ -88,7 +88,7 @@ public:
 			{
 				return fileStream->CreateStream(_srcName, _hFlip, _vFlip, _deinter);
 			}
-		}else if(m_streamTypeStr == "WebCam"){
+		}else if(_streamTypeStr == "WebCam"){
 			//cast wrapped to WebCamStream
 			hogboxVision::WebCamStream* webcamStream = dynamic_cast<hogboxVision::WebCamStream*>(p_wrappedObject.get());
 			if(webcamStream)
@@ -109,7 +109,7 @@ protected:
 	//type of stream
 	//VideoFile = VideoFileStream
 	//WebCamS = WebCamStream
-	std::string m_streamTypeStr;
+	std::string _streamTypeStr;
 
 	//helper loading variables
 	std::string _srcName;

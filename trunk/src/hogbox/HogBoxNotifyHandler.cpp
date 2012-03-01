@@ -8,30 +8,30 @@ using namespace hogbox;
 HogBoxNotifyHandler::HogBoxNotifyHandler(const std::string& outputFileName)
 		: PlatformNotifyHandler()
 {
-	m_outputFile.open(outputFileName.c_str());
-	if(m_outputFile.is_open())
+	_outputFile.open(outputFileName.c_str());
+	if(_outputFile.is_open())
 	{
 		//create our html styles for each severity
 		HtmlStyle fatalStyle(osg::Vec3(0.9f,0.1f,0.1f));
-		m_levelToHtmlStyleList[osg::FATAL] = fatalStyle;
+		_levelToHtmlStyleList[osg::FATAL] = fatalStyle;
 
 		HtmlStyle warnStyle(osg::Vec3(0.1f,0.1f,0.9f));
-		m_levelToHtmlStyleList[osg::WARN] = warnStyle;
+		_levelToHtmlStyleList[osg::WARN] = warnStyle;
 
 		HtmlStyle noticeStyle(osg::Vec3(0.1f,0.9f,0.1f));
-		m_levelToHtmlStyleList[osg::NOTICE] = noticeStyle;
+		_levelToHtmlStyleList[osg::NOTICE] = noticeStyle;
 
 		HtmlStyle infoStyle(osg::Vec3(0.0f,0.0f,0.0f));
-		m_levelToHtmlStyleList[osg::INFO] = infoStyle;
+		_levelToHtmlStyleList[osg::INFO] = infoStyle;
 
 		HtmlStyle debugStyle(osg::Vec3(0.3f,0.3f,0.3f));
-		m_levelToHtmlStyleList[osg::DEBUG_INFO] = debugStyle;
+		_levelToHtmlStyleList[osg::DEBUG_INFO] = debugStyle;
 
 		HtmlStyle debugFPStyle(osg::Vec3(0.6f,0.6f,0.6f));
-		m_levelToHtmlStyleList[osg::DEBUG_FP] = debugFPStyle;
+		_levelToHtmlStyleList[osg::DEBUG_FP] = debugFPStyle;
 
 		//write our html header
-		m_outputFile << "<html>" << std::endl << "<body>";
+		_outputFile << "<html>" << std::endl << "<body>";
 	}else{
 		osg::notify(osg::WARN) << "HogBoxNotifyHandler::HogBoxNotifyHandler: ERROR: Failed to create Message log file '" << outputFileName << "'. The standard log output will be used." << std::endl;
 	}
@@ -41,11 +41,11 @@ HogBoxNotifyHandler::~HogBoxNotifyHandler()
 {
 	OSG_NOTICE << "    Deallocating HogBoxNotifyHandler Instance." << std::endl;
 	//write our html closing tags
-	if(m_outputFile.is_open())
+	if(_outputFile.is_open())
 	{
 		//write our html closing tags
-		m_outputFile << "</body>" << std::endl << "</html>" << std::endl;
-		m_outputFile.close();
+		_outputFile << "</body>" << std::endl << "</html>" << std::endl;
+		_outputFile.close();
 	}
 }
 
@@ -55,9 +55,9 @@ HogBoxNotifyHandler::~HogBoxNotifyHandler()
 void HogBoxNotifyHandler::notify(osg::NotifySeverity severity, const char *message)
 {
 	//place the line into html paragraph
-	if(m_outputFile.is_open())
+	if(_outputFile.is_open())
 	{
-		m_outputFile << "<PRE " << CreateHtmlStyleString(severity) << ">" << message << "</PRE>" << std::endl;
+		_outputFile << "<PRE " << CreateHtmlStyleString(severity) << ">" << message << "</PRE>" << std::endl;
 	
 		//if file failed to open, then use the standard handler
 		PlatformNotifyHandler::notify(severity, message);
@@ -73,9 +73,9 @@ void HogBoxNotifyHandler::notify(osg::NotifySeverity severity, const char *messa
 const std::string HogBoxNotifyHandler::CreateHtmlStyleString(osg::NotifySeverity severity)
 {
 	//get style
-	if(m_levelToHtmlStyleList.count(severity) > 0)
+	if(_levelToHtmlStyleList.count(severity) > 0)
 	{
-		HtmlStyle htmlStyle = m_levelToHtmlStyleList[severity];
+		HtmlStyle htmlStyle = _levelToHtmlStyleList[severity];
 
 		//make our hex color string
 		std::ostringstream colorStr(std::ostringstream::out);

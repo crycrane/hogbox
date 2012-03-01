@@ -66,7 +66,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HogBoxMaterial(const HogBoxMaterial&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogbox, HogBoxMaterial);
+	META_Object(hogbox, HogBoxMaterial);
 	
 	//mapping mask, all can be combined to make uber shader :)
 	enum MappingMask
@@ -101,7 +101,7 @@ public:
 
 	//
 	//Return the materials stateset
-	osg::StateSet* GetStateSet(){return m_stateset.get();}
+	osg::StateSet* GetStateSet(){return _stateset.get();}
 
 	//
 	//overload set name to also set the name of the stateset
@@ -115,36 +115,36 @@ public:
 	void SetDefaultMaterial();
 
 	void SetAmbient(const osg::Vec3& ambient){
-		SetMaterial(ambient, m_diffuseColor, m_specularColour, m_shininess);
+		SetMaterial(ambient, _diffuseColor, _specularColour, _shininess);
 	}
-	const osg::Vec3& GetAmbient() const{return m_ambientColour;}
+	const osg::Vec3& GetAmbient() const{return _ambientColour;}
 	void SetDiffuse(const osg::Vec3& diffuse){
-		SetMaterial(m_ambientColour, diffuse, m_specularColour, m_shininess);
+		SetMaterial(_ambientColour, diffuse, _specularColour, _shininess);
 	}
-	const osg::Vec3& GetDiffuse() const{return m_diffuseColor;}
+	const osg::Vec3& GetDiffuse() const{return _diffuseColor;}
 	void SetSpecular(const osg::Vec3& specular){
-		SetMaterial(m_ambientColour, m_diffuseColor, specular, m_shininess);
+		SetMaterial(_ambientColour, _diffuseColor, specular, _shininess);
 	}
-	const osg::Vec3& GetSpecular() const{return m_specularColour;}
+	const osg::Vec3& GetSpecular() const{return _specularColour;}
 	void SetShine(const double& shine){
-		SetMaterial(m_ambientColour, m_diffuseColor, m_specularColour, shine);
+		SetMaterial(_ambientColour, _diffuseColor, _specularColour, shine);
 	}
-	const double& GetShine() const{return m_shininess;}
+	const double& GetShine() const{return _shininess;}
 
 	//Get set the alpha gl material
 	void SetAlphaValue(const double& blend);
-	const double& GetAlphaValue() const{return m_alpha;}
+	const double& GetAlphaValue() const{return _alpha;}
 	//enable/disable gl bending
 	void SetAlphaEnabled(const bool& enabled);
 	const bool& GetAlphaEnabled() const;
 	
 	//enable disable lighting
 	void SetLightingEnabled(const bool& val);
-	const bool& GetLightingEnabled()const{return m_isLit;}
+	const bool& GetLightingEnabled()const{return _isLit;}
 
 	//enable disable 2 sided lighting
 	void SetTwoSidedLightingEnabled(const bool& val);
-	const bool& GetTwoSidedLightingEnabled()const{return m_backFaceLit;}
+	const bool& GetTwoSidedLightingEnabled()const{return _backFaceLit;}
 	
 	//render bins
 	void SetBinNumber(const int& num);
@@ -187,24 +187,24 @@ public:
 	//add a unform to the state and to our list
 	bool AddUniform(osg::Uniform* uni); 
 	bool RemoveUniform(osg::Uniform* uni); 
-	osg::Uniform* GetUniform(const unsigned int index);
+	osg::Uniform* GetUniform(const unsigned int& index);
 	osg::Uniform* GetUniform(const std::string& name);	
-	const unsigned int GetNumUniforms(){return m_uniforms.size();}
+	const unsigned int GetNumUniforms(){return _uniforms.size();}
 
 	//get set the entire list of uniforms for easier xmlwrapping, setUniformList
 	//performa AddUniform on each of the passed list
-	UniformPtrVector GetUniformList()const{return m_uniforms;}
+	UniformPtrVector GetUniformList()const{return _uniforms;}
 	void SetUniformList(const UniformPtrVector& list);
 
 //shaders
 
 	//true if there is currently any active shader program
 	//attached to the materials stateset
-	bool isShaderMaterial(){return m_isShaderMaterial;}
+	bool isShaderMaterial(){return _isShaderMaterial;}
 
 	//Add/Remove shaders from the materials shader program
 	//if this is the first shader added the shader program is created
-	//and attached to the materials stateset (also flaging m_isShaderMaterial
+	//and attached to the materials stateset (also flaging _isShaderMaterial
 	bool AddShader(osg::Shader* shader);
 	//if this is the last shader removed, the program is also detached
 	//and destroyed
@@ -216,7 +216,7 @@ public:
 
 	//get set the entire list of shaders for easier xmlwrapping, setShaderList
 	//will perform AddShader on each of the passed list
-	ShaderPtrVector GetShaderList()const{return m_shaders;}
+	ShaderPtrVector GetShaderList()const{return _shaders;}
 	void SetShaderList(const ShaderPtrVector& list);
 	
 	//Add shader of type from file
@@ -228,7 +228,7 @@ public:
 
 	//binds the hb_tangent anf hb_binormal attributes to the material program
 	void UseTangentSpace(const bool& useTangent);
-	const bool& IsUsingTangetSpace()const{return m_useTangentSpace;}
+	const bool& IsUsingTangetSpace()const{return _useTangentSpace;}
 	
 	//
 	//bind the hb_boneWeight 0-x(4?) attributes to the material program
@@ -237,7 +237,7 @@ public:
 	//material shader
 	//note that the geode we apply the material to, must contain a rig etc
 	void UseSkinning(const bool& useSkinning);
-	const bool& IsUsingSkinning()const{return m_useSkinning;}
+	const bool& IsUsingSkinning()const{return _useSkinning;}
 	//
 	//Shader composer
 	
@@ -255,15 +255,15 @@ public:
 
 	//Feature level
 
-	void SetFeatureLevel(SystemFeatureLevel* level){m_featureLevel = level;}
-	SystemFeatureLevel* GetFeatureLevel(){return m_featureLevel;}
+	void SetFeatureLevel(SystemFeatureLevel* level){_featureLevel = level;}
+	SystemFeatureLevel* GetFeatureLevel(){return _featureLevel;}
 
 	void SetFallbackMaterial(HogBoxMaterial* material){p_fallbackMaterial = material;}
 	HogBoxMaterial* GetFallbackMaterial(){return p_fallbackMaterial;}
 
 	//
-	//Returns this if a m_featureLevelName is "" or is matched by SystemInfo's current FeatureLevelName
-	//if m_featureLevelName is provided but not matched then p_fallbackMaterial is tried, until a functional
+	//Returns this if a _featureLevelName is "" or is matched by SystemInfo's current FeatureLevelName
+	//if _featureLevelName is provided but not matched then p_fallbackMaterial is tried, until a functional
 	//material is found or no fallback is provided
 	HogBoxMaterial* GetFunctionalMaterial();
 
@@ -272,39 +272,39 @@ protected:
 	virtual ~HogBoxMaterial(void);
 	
 	//the osg stateset this material is wrapping
-	osg::ref_ptr<osg::StateSet> m_stateset; 
+	osg::ref_ptr<osg::StateSet> _stateset; 
 	
 	//the mapping mask for the material to describe to auto shader gen how to handle the textures etc
-	MappingMask m_mappingMask;
+	MappingMask _mappingMask;
 	
 	//the light style for shader gen
-	LightingMode m_lightingMode;
+	LightingMode _lightingMode;
 	
 	//the detail/precision level of the shader gen
-	ShaderDetail m_shaderDetailLevel;
+	ShaderDetail _shaderDetailLevel;
 
 	//hogbox material handles to the various osg stateset values used to describe a hogboxmaterial
 	
 	//is the material affected by lights
-	bool m_isLit;
+	bool _isLit;
 
 	//basic gl material
-	osg::ref_ptr<osg::Material> m_material; 
-	osg::Vec3 m_ambientColour;
-	osg::Vec3 m_diffuseColor;
-	osg::Vec3 m_specularColour;
-	double m_shininess;
+	osg::ref_ptr<osg::Material> _material; 
+	osg::Vec3 _ambientColour;
+	osg::Vec3 _diffuseColor;
+	osg::Vec3 _specularColour;
+	double _shininess;
 
 	//Alpha
-	bool m_alphaUsed;
-	double m_alpha;
+	bool _alphaUsed;
+	double _alpha;
 
 	//Back face lighting
-	bool m_backFaceLit;
-	osg::Material::Face m_lightFace;  
+	bool _backFaceLit;
+	osg::Material::Face _lightFace;  
 	
-	int m_binNumber;
-	int m_binMode;
+	int _binNumber;
+	int _binMode;
 	
 
 //Textures
@@ -326,40 +326,40 @@ protected:
 	
 	//the list of texture units applied to the material mapped
 	//by their channel
-	TextureChannelMap m_textureList;
+	TextureChannelMap _textureList;
 
 
 //shaders
 
 	//list of uniforms used by the material
-	UniformPtrVector m_uniforms;
+	UniformPtrVector _uniforms;
 	
 	//Is there a shader applied and currently active
-	bool m_isShaderMaterial;
+	bool _isShaderMaterial;
 
 	//The program is created as soon as the first shader
 	//is attached to our material
-	osg::ref_ptr<osg::Program> m_program;
+	osg::ref_ptr<osg::Program> _program;
 
 	//the list of shaders attached to the material
-	ShaderPtrVector m_shaders;
+	ShaderPtrVector _shaders;
 
 	//flags if the shaders requires tangent and binormal vectors, these are currently bound to channels 12 and 13
-	bool m_useTangentSpace;
+	bool _useTangentSpace;
 
 	//flags if we are trying to use skinning by binding the expected boneWeight attributes and adding the default
 	//vertex shader functions used for skinning
-	bool m_useSkinning;
+	bool _useSkinning;
 
 	//the built in uniforms provided by hogbox material to replace gl_material etc in gles2 shaders
-	osg::ref_ptr<osg::Uniform> m_ambientColourUni;
-	osg::ref_ptr<osg::Uniform> m_diffuseColourUni;
-	osg::ref_ptr<osg::Uniform> m_specularColourUni;
-	osg::ref_ptr<osg::Uniform> m_specularExpUni;
+	osg::ref_ptr<osg::Uniform> _ambientColourUni;
+	osg::ref_ptr<osg::Uniform> _diffuseColourUni;
+	osg::ref_ptr<osg::Uniform> _specularColourUni;
+	osg::ref_ptr<osg::Uniform> _specularExpUni;
 	
-	osg::ref_ptr<osg::Uniform> m_alphaUni;
+	osg::ref_ptr<osg::Uniform> _alphaUni;
 	
-	osg::ref_ptr<osg::Uniform> m_twoSidedUni;
+	osg::ref_ptr<osg::Uniform> _twoSidedUni;
 
 //Fallback system
 
@@ -368,9 +368,9 @@ protected:
 	//material from a shader based one if shaders aren't supported
 
 	//the SystemFeatureLevel required for the material
-	SystemFeatureLevelPtr m_featureLevel;
+	SystemFeatureLevelPtr _featureLevel;
 
-	//pointer to a material to fallback on if this materials m_featureLevelName is higher then
+	//pointer to a material to fallback on if this materials _featureLevelName is higher then
 	//the sytems feature level
 	osg::ref_ptr<HogBoxMaterial> p_fallbackMaterial;
 

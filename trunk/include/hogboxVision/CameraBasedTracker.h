@@ -32,7 +32,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	CameraBasedTracker(const CameraBasedTracker&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision, CameraBasedTracker);
+	META_Object(hogboxVision, CameraBasedTracker);
 
 
 	//
@@ -42,7 +42,7 @@ public:
 
 	//update the tracker then call base update which calls update tracker
 	//if the image modified count is different to ours
-	virtual void Update(hogbox::ImagePtr image);
+	virtual void Update(osg::ImagePtr image);
 	
 	//should be pure virtual but it complains?
 	virtual void UpdateTracking(){}
@@ -58,19 +58,19 @@ protected:
 protected:
 
 	//dimensions of image being input
-	int m_videoWidth;
-	int m_videoHeight;
+	int _videoWidth;
+	int _videoHeight;
 
 	//pointer to the image from the camera currently being tracked
 	osg::ref_ptr<osg::Image> p_image;
 	
 	//camera tracker keeps track of p_images previous
 	//modified count so we know if we need to update the marker detection
-	int m_modifiedCount;
+	int _modifiedCount;
 
 	//all child camera based trackers are expected to allocate and initalise
 	//their own implmentation of a CameraCalibration structure
-	CameraCalibrationPtr m_cc;
+	CameraCalibrationPtr _cc;
 
 };
 

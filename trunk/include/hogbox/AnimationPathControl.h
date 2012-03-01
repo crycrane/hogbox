@@ -42,7 +42,7 @@ class SplitAni : public osg::Object
 public:
 	SplitAni(void) 
 		: osg::Object(),
-		m_currentAnimation(-1)
+		_currentAnimation(-1)
 	{
 	}
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -50,36 +50,36 @@ public:
 		: osg::Object(split, copyop)
 	{
 	}
-	META_Box(hogbox,SplitAni);
+	META_Object(hogbox,SplitAni);
 
 	//?
-	void AddSplitAni(osg::ref_ptr<osg::AnimationPath> ani){m_splitAnis.push_back(ani);}
-	void AddSplitAni(){m_splitAnis.push_back(new osg::AnimationPath());}  
+	void AddSplitAni(osg::ref_ptr<osg::AnimationPath> ani){_splitAnis.push_back(ani);}
+	void AddSplitAni(){_splitAnis.push_back(new osg::AnimationPath());}  
 	
-	int GetNumSplitAnis(){return m_splitAnis.size();} 
+	int GetNumSplitAnis(){return _splitAnis.size();} 
 	osg::AnimationPath* GetSplitAni(unsigned int index)
 	{	
 		//check index is inbounds
-		if( (index < 0) || (index >= m_splitAnis.size()) )
-		{	return m_originalAni.get();}
+		if((index >= _splitAnis.size()) )
+		{	return _originalAni.get();}
 
-		m_currentAnimation=index;
-		return m_splitAnis[index].get();
+		_currentAnimation=index;
+		return _splitAnis[index].get();
 	}
 
 	//set all the paths animation modes i.e. lopp, single swing
 	void SetAnimationType(osg::AnimationPath::LoopMode mode)
 	{	
-		int size=m_splitAnis.size();
+		int size=_splitAnis.size();
 		for(int i=0; i<size; i++)
-		{m_splitAnis[i]->setLoopMode( mode );}
+		{_splitAnis[i]->setLoopMode( mode );}
 	}
 
-	void SetOriginal(osg::AnimationPath* ani, int fps){m_originalAni=ani;m_fps=fps;}
-	osg::AnimationPath* GetOriginal(){return m_originalAni.get();}
+	void SetOriginal(osg::AnimationPath* ani, int fps){_originalAni=ani;_fps=fps;}
+	osg::AnimationPath* GetOriginal(){return _originalAni.get();}
 
-	const unsigned int GetTotalSplitAnimations(){return m_splitAnis.size();}
-	const unsigned int GetCurrentAnimation(){return m_currentAnimation;}
+	const unsigned int GetTotalSplitAnimations(){return _splitAnis.size();}
+	const unsigned int GetCurrentAnimation(){return _currentAnimation;}
 
 	//re set the frames of the sub path subID using frames from-to of originalPath
 	void ReSampleSubAni(int subID, int from, int to);
@@ -89,26 +89,26 @@ protected:
 	virtual ~SplitAni(void)
 	{
 		//original loaded animation
-		m_originalAni = NULL;
-		m_fps=30;
+		_originalAni = NULL;
+		_fps=30;
 
 		//original animation split into sub anis
-		for(unsigned int i=0; i<m_splitAnis.size(); i++)
+		for(unsigned int i=0; i<_splitAnis.size(); i++)
 		{
-			m_splitAnis[i] = NULL;
+			_splitAnis[i] = NULL;
 		}
-		m_splitAnis.clear();
+		_splitAnis.clear();
 	}
 protected:
 
 	//original loaded animation
-	osg::ref_ptr<osg::AnimationPath> m_originalAni;
-	int m_fps;
+	osg::ref_ptr<osg::AnimationPath> _originalAni;
+	int _fps;
 
 	//original animation split into sub anis
-	std::vector< osg::ref_ptr<osg::AnimationPath> > m_splitAnis; 
+	std::vector< osg::ref_ptr<osg::AnimationPath> > _splitAnis; 
 
-	unsigned int m_currentAnimation; //-1 == original
+	unsigned int _currentAnimation; //-1 == original
 
 };
 
@@ -140,7 +140,7 @@ public:
 		: osg::Object(control, copyop)
 	{
 	}
-	META_Box(hogbox,AnimationPathControl);
+	META_Object(hogbox,AnimationPathControl);
 
 	//
 	//pass the  model to have it's aniation controlled
@@ -173,9 +173,9 @@ public:
 	double GetAnimationLength();
 
 	//return the number of node animations being controled
-	int GetTotalAnimatedNodes(){return m_splitAnis.size();}
+	int GetTotalAnimatedNodes(){return _splitAnis.size();}
 	//return the number of sub animations being used
-	int GetNumSubAnimations(){return m_splitAnis[0]->GetNumSplitAnis();} 
+	int GetNumSubAnimations(){return _splitAnis[0]->GetNumSplitAnis();} 
 
 	//resample the exisit subAnimation sub id to consist
 	//of from-to frames of the original animation
@@ -252,23 +252,23 @@ public:
 protected:
 
 	//the node that has had the controller applied
-	osg::Node* m_animatedNode;
+	osg::Node* _animatedNode;
 
-	//list of the all the AnimationPathEventCallbacks we have attached to the nodes in m_animatedNode
-	std::vector< osg::ref_ptr<AnimationPathEventCallback> > m_aniCallbacks; 
+	//list of the all the AnimationPathEventCallbacks we have attached to the nodes in _animatedNode
+	std::vector< osg::ref_ptr<AnimationPathEventCallback> > _aniCallbacks; 
 
 	//the list of friendly names that relate to the
-	std::vector<std::string> m_animationNames;
+	std::vector<std::string> _animationNames;
 
 	//the split paths for each node containing the orignal
 	//paths and the new sub sampled versions
-	std::vector<SplitAniPtr> m_splitAnis;
+	std::vector<SplitAniPtr> _splitAnis;
 
-	//the frames per second of the original animations of m_animatedNode
-	int m_fps;
+	//the frames per second of the original animations of _animatedNode
+	int _fps;
 
 	//is the animation paused
-	bool m_paused;
+	bool _paused;
 
 };
 

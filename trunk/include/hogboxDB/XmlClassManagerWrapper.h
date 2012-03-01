@@ -28,7 +28,7 @@ class HOGBOXDB_EXPORT XmlClassManagerWrapper : public osg::Object
 public:
 	XmlClassManagerWrapper(hogboxDB::XmlClassManager* proto)
 		: osg::Object(),
-		m_prototype(proto)
+		_prototype(proto)
 	{
 	}
 
@@ -38,24 +38,24 @@ public:
 
 	}
 
-    virtual osg::Object* cloneType() const { return new XmlClassManagerWrapper (m_prototype); }
+    virtual osg::Object* cloneType() const { return new XmlClassManagerWrapper (_prototype); }
     virtual osg::Object* clone(const osg::CopyOp& copyop) const { return new XmlClassManagerWrapper (*this,copyop); }
     bool isSameKindAs(const osg::Object* obj) const { return dynamic_cast<const XmlClassManagerWrapper*>(obj)!=NULL; }
-    const char* className() const { return m_prototype->className(); }
+    const char* className() const { return _prototype->className(); }
 	const char* libraryName() const { return "hogboxDB"; }
 	
-	XmlClassManager* GetPrototype(){return m_prototype;}
+	XmlClassManager* GetPrototype(){return _prototype;}
 	
 protected:
 
 	virtual ~XmlClassManagerWrapper(void)
 	{
-		m_prototype = NULL;
+		_prototype = NULL;
 	}
 
 protected:
 
-	osg::ref_ptr<XmlClassManager> m_prototype;	
+	osg::ref_ptr<XmlClassManager> _prototype;	
 };
 
 typedef osg::ref_ptr<XmlClassManagerWrapper> XmlClassManagerWrapperPtr;

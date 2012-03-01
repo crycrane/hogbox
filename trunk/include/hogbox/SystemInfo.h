@@ -28,6 +28,21 @@
 #include <iostream>
 
 namespace hogbox {
+    
+//device strings
+#define IPHONE_SIM_STR	"i386"	 //480×320 res
+#define IPHONE_BASE_STR "iPhone1,1"	//480×320 res
+#define IPHONE_3G_STR	"iPhone1,2"	//480×320 res
+#define IPHONE_3GS_STR  "iPhone2,1"	//480×320 res
+#define IPHONE_4G_STR	"iPhone3,1"	//960×640 res (retina display)
+#define IPHONE_4S_STR	"iPhone4,1"	//960×640 res (retina display)
+#define IPOD_GEN1_STR	"iPod1,1"	 //480×320 res
+#define IPOD_GEN2_STR	"iPod2,1"	 //480×320 res
+#define IPOD_GEN3_STR	"iPod3,1"	 //480×320 res
+#define IPOD_GEN4_STR	"iPod4,1"	 //960×640 res (retina display)
+#define IPAD1_STR	    "iPad1,1"	 //1024×768 res (hd)
+#define IPAD2_WIFI_STR  "iPad2,1"
+#define IPAD2_STR	    "iPad2,3"	 //1024×768 res (hd)
 	
 //Need to define GL_STENCIL and GL_STEREO an IPhone
 #if defined( __APPLE__ )
@@ -47,9 +62,9 @@ class GPUMemoryCallback : public osg::Camera::DrawCallback
 public:
 	GPUMemoryCallback()
 		: osg::Camera::DrawCallback(),
-		m_totalDedicatedVideoMemory(0),
-		m_avavliableMemory(0),
-		m_avavliableDedicatedVideoMemory(0)
+		_totalDedicatedVideoMemory(0),
+		_avavliableMemory(0),
+		_avavliableDedicatedVideoMemory(0)
 	{
 	}
 
@@ -65,9 +80,9 @@ public:
 		if(nvidiaMemoryInfoSupport)
 		{
 			//try calling the nvidia versions ( http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt)
-			//GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          0x9047
+			//GPU_MEMORY_INFO_DEDICATED_VIDME_NVX          0x9047
 			//GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX    0x9048
-			//GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX  0x9049
+			//GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDME_NVX  0x9049
 			//GPU_MEMORY_INFO_EVICTION_COUNT_NVX            0x904A
 			//GPU_MEMORY_INFO_EVICTED_MEMORY_NVX            0x904B
 			int dedVideoMem=0,totalAvailableMem=0, curAvailableMem=0, evictionCount=0, evictedMem=0;
@@ -77,9 +92,9 @@ public:
 			glGetIntegerv(0x904A, &evictionCount);
 			glGetIntegerv(0x904B, &evictedMem);
 
-			m_totalDedicatedVideoMemory = dedVideoMem;
-			m_avavliableMemory = totalAvailableMem;
-			m_avavliableDedicatedVideoMemory = curAvailableMem;
+			_totalDedicatedVideoMemory = dedVideoMem;
+			_avavliableMemory = totalAvailableMem;
+			_avavliableDedicatedVideoMemory = curAvailableMem;
 		
 		}else{
 
@@ -95,33 +110,33 @@ public:
 				GLint textureFreeMemoryInfo[4];
 				glGetIntegerv(0x87FC, textureFreeMemoryInfo);
 
-				m_totalDedicatedVideoMemory = textureFreeMemoryInfo[2]; //total auxiliary memory free (close :) )
-				m_avavliableMemory = m_totalDedicatedVideoMemory;
-				m_avavliableDedicatedVideoMemory = textureFreeMemoryInfo[0]; //total memory free in the pool
+				_totalDedicatedVideoMemory = textureFreeMemoryInfo[2]; //total auxiliary memory free (close :) )
+				_avavliableMemory = _totalDedicatedVideoMemory;
+				_avavliableDedicatedVideoMemory = textureFreeMemoryInfo[0]; //total memory free in the pool
 			}
 		}
 	}
 
 	//total memory on the card kb
-	const int totalDedicatedVideoMemory(){return m_totalDedicatedVideoMemory;}
+	const int totalDedicatedVideoMemory(){return _totalDedicatedVideoMemory;}
 
 	//total memory avaliable including ram kb
-	const int avaliableMemory(){return m_avavliableMemory;}
+	const int avaliableMemory(){return _avavliableMemory;}
 
 	//total memory avaliable on the card kb 
-	const int avaliableDedicatedVideoMemory(){return m_avavliableDedicatedVideoMemory;}
+	const int avaliableDedicatedVideoMemory(){return _avavliableDedicatedVideoMemory;}
 
 protected:
     mutable OpenThreads::Mutex  _mutex;
 
 	//total memory on the card kb
-	mutable int m_totalDedicatedVideoMemory;
+	mutable int _totalDedicatedVideoMemory;
 
 	//total memory avaliable including ram kb
-	mutable int m_avavliableMemory;
+	mutable int _avavliableMemory;
 
 	//total memory avaliable on the card kb 
-	mutable int m_avavliableDedicatedVideoMemory;
+	mutable int _avavliableDedicatedVideoMemory;
 };
 
 
@@ -143,12 +158,12 @@ public:
 			_gpuShader4Supported(false),
 			_vertexShadersSupported(false),
 			_fragmentShadersSupported(false),
-			_supportsNPOTTexture(false),
 			_maxTex2DSize(0),
 			_texRectangleSupported(false),
+            _supportsNPOTTexture(false),
 			_maxTextureUnits(0),
-			_maxFragmentTextureUnits(0),
 			_maxVertexTextureUnits(0),
+            _maxFragmentTextureUnits(0),
 			_maxGeometryTextureUnits(0),
 			_totalTextureUnits(0),
 			_maxTextureCoordUnits(0),
@@ -394,7 +409,7 @@ public:
 		: osg::Object(level,copyop)
 	{}
 
-	META_Box(hogbox, SystemFeatureLevel);
+	META_Object(hogbox, SystemFeatureLevel);
 
 protected:
 
@@ -433,13 +448,20 @@ public:
 	{
 		FULL, //perfrom all gathers incuding the physical tests of the contexts
 		GL_GATHER, //gather info with glGetString etc using the GLSupportCallback (will launch a viewer for a single frame)
-		CONFIG, //use an external config file to set the system info (not implemented, will just become defaults)
+		CONFIG, //use an external config file to set the system info
 		DEFAULTS //nothing is gathered from the system and some reasonable defaults are set targeting gl 1.x and intel cards
 	};
 	
+    //screen density used for loading diferent asset resolutions
+    enum ScreenDensity{
+        LOW_DENSITY = 0, //480x320
+        MEDIUM_DENSITY =  1, //960X640
+        HIGH_DENSITY = 2, //1080p
+    };
+    
 	//friend hogbox::Singleton<SystemInfo>;
 
-	static SystemInfo* Instance(GatherLevel level = FULL, bool erase = false);
+	static SystemInfo* Inst(GatherLevel level = FULL, bool erase = false);
 		
 	//
 	//Creates a gl context from the current info settings
@@ -455,6 +477,10 @@ public:
 
 	const double getScreenAspectRatio(unsigned int screenID=0);
 
+    //get the screens density/res group, used for loading different assets on different displays
+    ScreenDensity getScreenDensity();
+    
+    //Seting or screen resolution is supported on some platforms
 	bool setScreenResolution(osg::Vec2 pixels, unsigned int screenID=0);
 	bool setScreenRefreshRate(double hz, unsigned int screenID=0);
 	bool setScreenColorDepth(unsigned int depth, unsigned int screenID=0);
@@ -468,19 +494,19 @@ public:
 	const std::string getVendorName(){return _vendorName;}
 
 	//Buffer Support
-    const bool doubleBufferSupported(){ return m_maxTestedBuffers >= 2;}
+    const bool doubleBufferSupported(){ return _maxTestedBuffers>= 2;}
 
-	const bool quadBufferedStereoSupported(){ return _quadBufferedStereoSupported && m_maxTestedBuffers == 4;}
+	const bool quadBufferedStereoSupported(){ return _quadBufferedStereoSupported && _maxTestedBuffers== 4;}
 
-	const bool depthBufferSupported(){return m_maxTestedDepthBits > 0;} //TODO
-	const unsigned int maxDepthBufferBits(){ return m_maxTestedDepthBits;}
+	const bool depthBufferSupported(){return _maxTestedDepthBits> 0;} //TODO
+	const unsigned int maxDepthBufferBits(){ return _maxTestedDepthBits;}
 
-	const bool stencilBufferSupported(){return _bStencilBufferedSupported && m_maxTestedStencilBits > 0;}
-	const unsigned int& maxStencilBitsSupported(){return m_maxTestedStencilBits;}
+	const bool stencilBufferSupported(){return _bStencilBufferedSupported && _maxTestedStencilBits> 0;}
+	const unsigned int& maxStencilBitsSupported(){return _maxTestedStencilBits;}
 
 	//multispampling uses a combination of gl info and actual test data
-	const bool multiSamplingSupported(){ return _multiSamplingSupported && m_maxTestedMultiSamples > 0;}
-	const int  maxMultiSamplesSupported(){return m_maxTestedMultiSamples;}
+	const bool multiSamplingSupported(){ return _multiSamplingSupported && _maxTestedMultiSamples> 0;}
+	const int  maxMultiSamplesSupported(){return _maxTestedMultiSamples;}
 
 	//shader support
 
@@ -553,6 +579,14 @@ public:
 	//compare one of the stored feature levels
 	bool IsFeatureLevelSupported(const std::string& name);
 
+    
+    //determine device type
+    
+    //
+    //Return the device id string
+    const std::string GetDeviceString();
+
+    
 	//
 	void PrintReportToLog();
 
@@ -563,7 +597,7 @@ protected:
 	~SystemInfo(void);
 
 	virtual void destruct(){
-		m_renderSupportInfo = NULL;
+		_renderSupportInfo = NULL;
 	}
 
 	//
@@ -621,6 +655,11 @@ private:
 	std::string _rendererName;
 	std::string _vendorName;
 	
+    //for platforms like android a manual screen size 
+    //can be set, otherwise this is set to -1,-1 to indicate
+    //that osg windowsysteminterface should be used to get screen size
+    osg::Vec2 _manualScreenSize;
+    
 	//buffers
 	
 	bool _quadBufferedStereoSupported;
@@ -661,13 +700,13 @@ private:
 
 	//these represent the max bits achived in a real world
 	//test (via the FindGoodContext function)
-	unsigned int m_maxTestedBuffers;
-	unsigned int m_maxTestedStencilBits;
-	unsigned int m_maxTestedDepthBits;
-	unsigned int m_maxTestedMultiSamples;
+	unsigned int _maxTestedBuffers;
+	unsigned int _maxTestedStencilBits;
+	unsigned int _maxTestedDepthBits;
+	unsigned int _maxTestedMultiSamples;
 
 	//callback attched to a render viewer camera to gather gl info
-	osg::ref_ptr<GLSupportCallback> m_renderSupportInfo;
+	osg::ref_ptr<GLSupportCallback> _renderSupportInfo;
 
 	
 	//gl memory info
@@ -675,12 +714,12 @@ private:
 	int _avaliableGLMemory;
 	int _avliableDedicatedGLMemory;
 	
-	osg::ref_ptr<GPUMemoryCallback> m_glMemoryInfo;
+	osg::ref_ptr<GPUMemoryCallback> _glMemoryInfo;
 
 	//the store map of registered SystemFeatureLevels to their friendly names. 
 	//The friendly name/uniqueID can then be used by material etc to describe the
 	//features they need
-	std::map<std::string, SystemFeatureLevelPtr> m_featureLevels;
+	std::map<std::string, SystemFeatureLevelPtr> _featureLevels;
 };
 
 

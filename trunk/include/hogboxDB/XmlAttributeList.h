@@ -69,30 +69,30 @@ namespace hogboxDB {
 	
 		TypedXmlAttributeList(L* list = 0) 
 			: XmlAttribute(),			
-			m_list(list) 
+			_list(list) 
 		{
 		}
 		
 		//get the value at a particular index in the list
 		virtual T get(unsigned int index) const { 
 			//check against list bounds
-			if(index < 0 || index >=m_list->size()){return T();}
-			return m_list->at(index); 
+			if(index >=_list->size()){return T();}
+			return _list->at(index); 
 		}
 		
 		//set a value at a particular index in the list
 		virtual void set(unsigned int index, const T& value) {	
 			//check against list bounds
-			if(index < 0 || index >=m_list->size())
+			if(index >=_list->size())
 			{return;}
-			m_list->at(index) = value;
+			_list->at(index) = value;
 		}
 		//write to nodes contents
 		virtual bool serialize(osgDB::XmlNode* out) {
 			//std::stringstream ss;
-			//ss << *m_value;
+			//ss << *_value;
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 
@@ -135,7 +135,7 @@ namespace hogboxDB {
 
 			//allocate the list
 			T empty;
-			m_list->assign(count, empty);
+			_list->assign(count, empty);
 
 			//now get the contents, deserialise individual values
 			//and push_back onto our list
@@ -164,16 +164,16 @@ namespace hogboxDB {
 	protected:
 				
 		TypedXmlAttributeList<L,T>& operator = (const L& list) {
-			*m_list = list;		
+			*_list = list;		
 			return *this;
 		}
 		//void operator = (const TypedXmlAttributeList<L,T>& list) {
-		//	*m_list = list.get();		
+		//	*_list = list.get();		
 		//}
 		
 		//the pointer to the member list
 		//should be an stl container of some sort
-		L* m_list;
+		L* _list;
 	};
 
 	//
@@ -190,11 +190,11 @@ namespace hogboxDB {
 		typedef void (C::* SetListHandler)(const L&);
 								
 		CallbackXmlAttributeList(C *object, 
-			GetListHandler ghandler = 0,
-			SetListHandler shandler = 0) : 
-			mp_object(object),
-			f_getlisthandler(ghandler),			
-			f_setlisthandler(shandler)
+                                 GetListHandler ghandler = 0,
+                                 SetListHandler shandler = 0) 
+            : f_getlisthandler(ghandler),			
+			f_setlisthandler(shandler),
+			mp_object(object)
 		{
 		}
 		
@@ -220,7 +220,7 @@ namespace hogboxDB {
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
-			//out << *m_value;
+			//out << *_value;
 			return true;
 		}
 

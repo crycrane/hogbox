@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5 FATAL_ERROR)
+CMAKE_MINIMU_REQUIRED(VERSION 2.4.5 FATAL_ERROR)
 
 if(COMMAND cmake_policy)
     # Works around warnings libraries linked against that don't
@@ -21,12 +21,12 @@ endif()
 # Trying to get CMake to generate an XCode IPhone project, current efforts are to get iphoneos sdk 3.1 working
 # Added option which needs manually setting to select the IPhone SDK for building. We can only have one of the below 
 # set to true. Should realy have an OSG_BUILD_PLATFORM variable that we set to our desired platform
-OPTION(OSG_BUILD_PLATFORM_IPHONE "Enable IPhoneSDK Device support" ON)
-OPTION(OSG_BUILD_PLATFORM_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" OFF)
-IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
+OPTION(OSG_BUILD_PLATFOR_IPHONE "Enable IPhoneSDK Device support" ON)
+OPTION(OSG_BUILD_PLATFOR_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" OFF)
+IF(OSG_BUILD_PLATFOR_IPHONE OR OSG_BUILD_PLATFOR_IPHONE_SIMULATOR)
   
   #you need to manually set the default sdk version here
-  SET (IPHONE_SDKVER "4.3")
+  SET (IPHONE_SDKVER "4.1")
   #the below is taken from ogre, it states the gcc stuff needs to happen before PROJECT() is called. I've no clue if we even need it
   # Force gcc <= 4.2 on iPhone
   include(CMakeForceCompiler)
@@ -35,7 +35,7 @@ IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
   SET(GCC_THUMB_SUPPORT NO)
 
   #set either the device sdk or the simulator sdk. Can't find away to separate these in the same project
-  IF(OSG_BUILD_PLATFORM_IPHONE)
+  IF(OSG_BUILD_PLATFOR_IPHONE)
     SET (IPHONE_DEVROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
     SET (IPHONE_SDKROOT "${IPHONE_DEVROOT}/SDKs/iPhoneOS${IPHONE_SDKVER}.sdk")
   ELSE()
@@ -183,47 +183,10 @@ IF(WIN32)
 ENDIF(WIN32)
 
 
-################################################################################
-# Create bin and lib directories if required
-
-IF("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-   FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/lib ${CMAKE_BINARY_DIR}/lib/${OSG_PLUGINS})
-ENDIF()
-
-
-################################################################################
-# Installation stuff
-
-SET(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
-SET(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
-SET(CMAKE_RELWITHDEBINFO_POSTFIX "rd" CACHE STRING "add a postfix, usually empty on windows")
-SET(CMAKE_MINSIZEREL_POSTFIX "s" CACHE STRING "add a postfix, usually empty on windows")
-
-IF(UNIX AND NOT WIN32)
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
-ENDIF()
-
-IF(CYGWIN)
-  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
-  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D_DEBUG")
-ENDIF()
-
-IF(UNIX AND NOT WIN32 AND NOT APPLE)
-  IF(CMAKE_SIZEOF_VOID_P MATCHES "8")
-      SET(LIB_POSTFIX "64" CACHE STRING "suffix for 32/64 dir placement")
-      MARK_AS_ADVANCED(LIB_POSTFIX)
-  ENDIF()
-ENDIF()
-IF(NOT DEFINED LIB_POSTFIX)
-    SET(LIB_POSTFIX "")
-ENDIF()
-
-
 # Here we apparantly do some funky stuff with making the bin/ and lib/
 # folders which is probably needed to work around a very old CMake bug?
 
-#SET(OUTPUT_BINDIR ${PROJECT_BINARY_DIR}/bin/${CMAKE_SYSTEM_NAME})
+#SET(OUTPUT_BINDIR ${PROJECT_BINARY_DIR}/bin/${CMAKE_SYSTE_NAME})
 SET(OUTPUT_BINDIR ${PROJECT_BINARY_DIR}/bin)
 MAKE_DIRECTORY(${OUTPUT_BINDIR})
 IF(MSVC AND NOT MSVC_IDE)
@@ -231,7 +194,7 @@ IF(MSVC AND NOT MSVC_IDE)
     MAKE_DIRECTORY(${OUTPUT_BINDIR}/${hogboxVis_PLUGINS})
 ENDIF(MSVC AND NOT MSVC_IDE)
 
-#SET(OUTPUT_LIBDIR ${PROJECT_BINARY_DIR}/lib/${CMAKE_SYSTEM_NAME})
+#SET(OUTPUT_LIBDIR ${PROJECT_BINARY_DIR}/lib/${CMAKE_SYSTE_NAME})
 SET(OUTPUT_LIBDIR ${PROJECT_BINARY_DIR}/lib)
 MAKE_DIRECTORY(${OUTPUT_LIBDIR})
 IF(NOT MSVC OR MSVC_IDE)
@@ -312,19 +275,19 @@ IF (hogbox_MAINTAINER)
     ENDIF(hogbox_RELEASE_CANDIDATE EQUAL 0)
 
 
-    ADD_CUSTOM_TARGET(tag-test
+    ADD_CUSTO_TARGET(tag-test
         COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
     )
 
-    ADD_CUSTOM_TARGET(tag-run
+    ADD_CUSTO_TARGET(tag-run
         COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
     )
 
-    ADD_CUSTOM_TARGET(branch-test
+    ADD_CUSTO_TARGET(branch-test
         COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${hogbox_BRANCH} -m "Branch ${hogbox_BRANCH}"
     )
 
-    ADD_CUSTOM_TARGET(branch-run
+    ADD_CUSTO_TARGET(branch-run
         COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${hogbox_BRANCH} -m "Branch ${hogbox_BRANCH}"
     )
 
@@ -333,7 +296,7 @@ IF (hogbox_MAINTAINER)
     #
     SET(GENERATELOGS svn2cl)
 
-    ADD_CUSTOM_TARGET(ChangeLog
+    ADD_CUSTO_TARGET(ChangeLog
         COMMAND ${SVNCOMMAND} update
         #COMMAND ${SVNCOMMAND} up
         #COMMAND ${GENERATELOGS}
@@ -379,10 +342,10 @@ ADD_SUBDIRECTORY(examples)
 
 # IPHONE_PORT@tom
 #Here we check if the user specified IPhone SDK
-IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
+IF(OSG_BUILD_PLATFOR_IPHONE OR OSG_BUILD_PLATFOR_IPHONE_SIMULATOR)
 	
 	#set iphone arch and flags taken from http://sites.google.com/site/michaelsafyan/coding/resources/how-to-guides/cross-compile-for-the-iphone/how-to-cross-compile-for-the-iphone-using-cmake
-	IF(OSG_BUILD_PLATFORM_IPHONE)
+	IF(OSG_BUILD_PLATFOR_IPHONE)
 		SET(CMAKE_OSX_ARCHITECTURES "armv6;armv7" CACHE STRING "Build architectures for iOS" FORCE)
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -miphoneos-version-min=3.1 -mno-thumb -arch armv6 -pipe -no-cpp-precomp" CACHE STRING "Flags used by the compiler during all build types." FORCE)
 	ELSE()
@@ -422,5 +385,5 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/cmake_uninstall.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
-ADD_CUSTOM_TARGET(uninstall
+ADD_CUSTO_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")

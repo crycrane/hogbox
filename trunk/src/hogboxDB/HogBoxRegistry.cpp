@@ -41,8 +41,8 @@ HogBoxRegistry::HogBoxRegistry(void)
 HogBoxRegistry::~HogBoxRegistry(void)
 {
     OSG_NOTICE << "Deallocating HogBoxRegistry:." << std::endl;
-	m_xmlNodeManagers.clear();
-	m_dlList.clear();
+	_xmlNodeManagers.clear();
+	_dlList.clear();
 }
 
 //
@@ -54,7 +54,7 @@ void HogBoxRegistry::AddXmlNodeManagerToRegistry(XmlClassManagerWrapper* object)
 	XmlClassManager* existing = GetXmlClassManager(object->className());
 	if(existing){return;}
 
-	m_xmlNodeManagers.push_back(object);
+	_xmlNodeManagers.push_back(object);
 }
 
 //
@@ -62,10 +62,10 @@ void HogBoxRegistry::AddXmlNodeManagerToRegistry(XmlClassManagerWrapper* object)
 //
 XmlClassManager* HogBoxRegistry::GetXmlClassManager(const std::string& managerName)
 {
-	for(unsigned int i=0; i<m_xmlNodeManagers.size(); i++)
+	for(unsigned int i=0; i<_xmlNodeManagers.size(); i++)
 	{
-		if(m_xmlNodeManagers[i]->className() == managerName)
-		{return m_xmlNodeManagers[i]->GetPrototype();}
+		if(_xmlNodeManagers[i]->className() == managerName)
+		{return _xmlNodeManagers[i]->GetPrototype();}
 	}
 	return NULL;
 }
@@ -73,14 +73,14 @@ XmlClassManager* HogBoxRegistry::GetXmlClassManager(const std::string& managerNa
 XmlClassManager* HogBoxRegistry::GetXmlClassManagerForClassType(const std::string& classType)
 {
 	//check already loaded managers
-	for(unsigned int i=0; i<m_xmlNodeManagers.size(); i++)
+	for(unsigned int i=0; i<_xmlNodeManagers.size(); i++)
 	{
 		//check the wrapper contains a valid manager prototype
-		if(m_xmlNodeManagers[i].valid()){
-			if(m_xmlNodeManagers[i]->GetPrototype()){
+		if(_xmlNodeManagers[i].valid()){
+			if(_xmlNodeManagers[i]->GetPrototype()){
 				//does the classmanager accept the class type 
-				if(m_xmlNodeManagers[i]->GetPrototype()->AcceptsClassType(classType))
-				{return m_xmlNodeManagers[i]->GetPrototype();}
+				if(_xmlNodeManagers[i]->GetPrototype()->AcceptsClassType(classType))
+				{return _xmlNodeManagers[i]->GetPrototype();}
 			}
 		}
 	}
@@ -95,17 +95,17 @@ XmlClassManager* HogBoxRegistry::GetXmlClassManagerForClassType(const std::strin
 		
 		if(result == osgDB::Registry::LOADED)
 		{
-			osg::notify(osg::INFO) << "XML Plugin INFO: Plugin '" << libraryName << "', was loaded successfully." << std::endl;
+			OSG_INFO << "XML Plugin INFO: Plugin '" << libraryName << "', was loaded successfully." << std::endl;
 			//now a library claiming to handle the type has been loaded, try to read again
 			return GetXmlClassManagerForClassType(classType);
 
 		}else if(result == osgDB::Registry::PREVIOUSLY_LOADED) {
 
-			osg::notify(osg::WARN) << "XML Plugin WARN: Library '" << libraryName << "' has already been loaded, but isn't accepting ClassType '" << classType << "'." << std::endl; 
+			OSG_WARN << "XML Plugin WARN: Library '" << libraryName << "' has already been loaded, but isn't accepting ClassType '" << classType << "'." << std::endl; 
 			return NULL;
 		}else{
 			//failed to load the libray
-			osg::notify(osg::WARN) << "XML Plugin WARN: Failed to load Library '" << libraryName << "' ClassType '" << classType << "' will not be handled." << std::endl; 
+			OSG_WARN << "XML Plugin WARN: Failed to load Library '" << libraryName << "' ClassType '" << classType << "' will not be handled." << std::endl; 
 			return NULL;
 		}
 	}	
@@ -116,7 +116,7 @@ XmlClassManager* HogBoxRegistry::GetXmlClassManagerForClassType(const std::strin
 //Add an alias for a classtype to the library that will load it
 void HogBoxRegistry::AddClassTypeAlias(const std::string mapClassType, const std::string toLibraryName)
 {
-    m_classTypeAliasMap[mapClassType] = toLibraryName;
+    _classTypeAliasMap[mapClassType] = toLibraryName;
 }
 
 //
@@ -134,8 +134,8 @@ std::string HogBoxRegistry::CreateXmlLibraryNameForClassType(const std::string& 
     }
 
 	//see if the requested classtype is mapped to another class name
-    ClassTypeAliasMap::iterator itr=m_classTypeAliasMap.find(lowercase_classtype);
-    if (itr!=m_classTypeAliasMap.end() && classtype != itr->second) return CreateXmlLibraryNameForClassType(itr->second);
+    ClassTypeAliasMap::iterator itr=_classTypeAliasMap.find(lowercase_classtype);
+    if (itr!=_classTypeAliasMap.end() && classtype != itr->second) return CreateXmlLibraryNameForClassType(itr->second);
 
 	//set folder prepend
 #if defined(OSG_JAVA_BUILD)
@@ -168,12 +168,12 @@ std::string HogBoxRegistry::CreateXmlLibraryNameForClassType(const std::string& 
 
 HogBoxRegistry::DynamicLibraryList::iterator HogBoxRegistry::GetLibraryItr(const std::string& fileName)
 {
-    DynamicLibraryList::iterator ditr = m_dlList.begin();
-    for(;ditr!=m_dlList.end();++ditr)
+    DynamicLibraryList::iterator ditr = _dlList.begin();
+    for(;ditr!=_dlList.end();++ditr)
     {
         if ((*ditr)->getName()==fileName) return ditr;
     }
-    return m_dlList.end();
+    return _dlList.end();
 }
 
 //
@@ -184,7 +184,7 @@ osgDB::Registry::LoadStatus HogBoxRegistry::LoadLibrary(const std::string& fileN
    // OpenThreads::ScopedLock<OpenThreads::ReentrantMutex> lock(_pluginMutex);
 
     DynamicLibraryList::iterator ditr = GetLibraryItr(fileName);
-	if (ditr!=m_dlList.end()) return osgDB::Registry::PREVIOUSLY_LOADED;
+	if (ditr!=_dlList.end()) return osgDB::Registry::PREVIOUSLY_LOADED;
 
     //_openingLibrary=true;
 
@@ -194,7 +194,7 @@ osgDB::Registry::LoadStatus HogBoxRegistry::LoadLibrary(const std::string& fileN
 
     if (dl)
     {
-        m_dlList.push_back(dl);
+        _dlList.push_back(dl);
         return osgDB::Registry::LOADED;
     }
     return osgDB::Registry::NOT_LOADED;

@@ -147,27 +147,27 @@ protected:
 	const std::string GetPluginExtension();
 
 	virtual void destruct(){
-		m_videoFileStreamTypes.clear();
+		_videoFileStreamTypes.clear();
 	}
 
 protected:
 	
 	//Map class types to particular library names
-	ClassTypeAliasMap m_classTypeAliasMap;
+	ClassTypeAliasMap _classTypeAliasMap;
 
 	
 	//List of registered videofilestream types
-	std::vector<VideoFileStreamWrapperPtr> m_videoFileStreamTypes;
+	std::vector<VideoFileStreamWrapperPtr> _videoFileStreamTypes;
 
 	//List of registered webcamstream types
-	std::vector<WebCamStreamWrapperPtr> m_webcamStreamTypes;
+	std::vector<WebCamStreamWrapperPtr> _webcamStreamTypes;
 
 	//List of registered camerabased tracker types
-	std::vector<CameraBaseTrackerWrapperPtr> m_cameraBaseTrackerTypes;
+	std::vector<CameraBaseTrackerWrapperPtr> _cameraBaseTrackerTypes;
 
 
 	//list of loaded libraries
-	DynamicLibraryList m_dlList;
+	DynamicLibraryList _dlList;
 
 };
 
@@ -245,14 +245,14 @@ static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_video_##ext);
 	static hogboxVision::VideoFileStreamRegistryProxy g_proxy_##ext(new classname, #ext );
 
 
-#define USE_VISION_WEBCAM_PLUGIN(ext) \
-extern "C" void hogboxvision_webcam_##ext(void); \
-static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_webcam_##ext);
+#define USE_VISION_WEBCA_PLUGIN(ext) \
+extern "C" void hogboxvision_webca_##ext(void); \
+static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxvision_webca_##ext);
 
 //
 //Register a new videofilestream type plugin 
-#define REGISTER_VISION_WEBCAM_PLUGIN(ext, classname) \
-	extern "C" void hogboxvision_webcam_##ext(void) {} \
+#define REGISTER_VISION_WEBCA_PLUGIN(ext, classname) \
+	extern "C" void hogboxvision_webca_##ext(void) {} \
 	static hogboxVision::WebCamStreamRegistryProxy g_proxy_##ext(new classname, #ext );
 
 	

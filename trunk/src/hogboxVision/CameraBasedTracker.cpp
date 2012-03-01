@@ -4,13 +4,13 @@ using namespace hogboxVision;
 
 CameraBasedTracker::CameraBasedTracker(void) 
 	: HogTracker(),
-	m_modifiedCount(-1)
+	_modifiedCount(-1)
 {
 }
 
 CameraBasedTracker::~CameraBasedTracker(void)
 {
-	m_cc = NULL;
+	_cc = NULL;
 	p_image = NULL;
 }
 
@@ -25,8 +25,8 @@ CameraBasedTracker::CameraBasedTracker(const CameraBasedTracker& tracker,const o
 //image used as input
 bool CameraBasedTracker::InitTracker(int width, int height, const std::string& cameraCalibrationFile)
 {
-	m_videoWidth = width;
-	m_videoHeight = height;
+	_videoWidth = width;
+	_videoHeight = height;
 
 	if(!LoadCalibrationFromFile(cameraCalibrationFile))
 	{return false;}
@@ -37,17 +37,17 @@ bool CameraBasedTracker::InitTracker(int width, int height, const std::string& c
 //
 //update the tracker then call base update which calls update tracker
 //
-void CameraBasedTracker::Update(hogbox::ImagePtr image)
+void CameraBasedTracker::Update(osg::ImagePtr image)
 {
 	//clear our old image pointer
 	p_image = NULL;
 	//set new
 	p_image = image;
 
-	if(m_modifiedCount != p_image->getModifiedCount())
+	if(_modifiedCount != p_image->getModifiedCount())
 	{
 		//call base to trigger detection and tracking of new image
 		HogTracker::Update();
-		m_modifiedCount = p_image->getModifiedCount();
+		_modifiedCount = p_image->getModifiedCount();
 	}
 }

@@ -30,44 +30,9 @@ class HogBoxLightXmlWrapper : public hogboxDB::XmlClassWrapper
 public:
 
 	//pass HogBoxObject to be wrapped
-	HogBoxLightXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "HogBoxLight")
+	HogBoxLightXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("HogBoxLight")
 	{
-		
-		//All lights require a unique lightID propertey to be passed to the contructor
-		int lightID;
-		if(!hogboxDB::getXmlPropertyValue(node, "lightID", lightID))
-		{
-			osg::notify(osg::WARN)	<< "XML ERROR: Nodes of classtype '" << node->name << "' should have a lightID property." <<std::endl 
-			<< "                    i.e. <" << node->name << " lightID='0'>" << std::endl
-			<< "                          The lightID is expected to be unique and start from 0" << std::endl;
-			//return;
-		}
-		
-		//allocate the HogBoxObject
-		hogbox::HogBoxLight* hogboxLight = new hogbox::HogBoxLight(lightID);
-		if(!hogboxLight){return;}
-
-		//add the attributes required to exposue the HogBoxObjects members to the xml wrapper
-
-		//Position attribute Vec3
-		m_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
-																	&hogbox::HogBoxLight::GetPosition,
-																	&hogbox::HogBoxLight::SetPosition);
-
-		//Colors
-		m_xmlAttributes["Diffuse"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
-																	&hogbox::HogBoxLight::GetDiffuse,
-																	&hogbox::HogBoxLight::SetDiffuse);
-		m_xmlAttributes["Ambient"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
-																	&hogbox::HogBoxLight::GetAmbient,
-																	&hogbox::HogBoxLight::SetAmbient);
-		m_xmlAttributes["Specular"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
-																	&hogbox::HogBoxLight::GetSpecular,
-																	&hogbox::HogBoxLight::SetSpecular);
-
-		//store the hogboxobject as the wrapped object
-		p_wrappedObject = hogboxLight;
 	}
 
 	//overload deserialise to look for the required lightID property
@@ -85,13 +50,41 @@ public:
 		return true;
 	}
 
+    //
+    virtual osg::Object* allocateClassType(){return new hogbox::HogBoxLight();}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new HogBoxLightXmlWrapper();}
 
 protected:
 
 	virtual ~HogBoxLightXmlWrapper(void){}
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+ 
+        hogbox::HogBoxLight* hogboxLight = dynamic_cast<hogbox::HogBoxLight*>(p_wrappedObject.get());
+        
+		//Position attribute Vec3
+		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+                                                                                                       &hogbox::HogBoxLight::GetPosition,
+                                                                                                       &hogbox::HogBoxLight::SetPosition);
+        
+		//Colors
+		_xmlAttributes["Diffuse"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+                                                                                                      &hogbox::HogBoxLight::GetDiffuse,
+                                                                                                      &hogbox::HogBoxLight::SetDiffuse);
+		_xmlAttributes["Ambient"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+                                                                                                      &hogbox::HogBoxLight::GetAmbient,
+                                                                                                      &hogbox::HogBoxLight::SetAmbient);
+		_xmlAttributes["Specular"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+                                                                                                       &hogbox::HogBoxLight::GetSpecular,
+                                                                                                       &hogbox::HogBoxLight::SetSpecular);
+    }
 
 };
 
-typedef osg::ref_ptr<HogBoxLightXmlWrapper> HogBoxObjectXmlWrapperPtr;
+typedef osg::ref_ptr<HogBoxLightXmlWrapper> HogBoxLightXmlWrapperPtr;
 
 

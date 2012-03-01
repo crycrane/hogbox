@@ -17,22 +17,44 @@
 #include <osgDB/FileUtils>
 #include <osgDB/FileNameUtils>
 
+#define USE_ASSETMANAGER 0
+
+#if USE_ASSETMANAGER
+#include <hogbox/AssetManager.h>
+#endif
+
 namespace hogboxDB {
     
     //
     //Helper to open an xml file and then try to find and return the specified node
     //if the node does not exist or the file doesn't open null is returned.
-    static osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName)
+    static inline osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName)
     {
-        std::string foundFile = osgDB::findDataFile(fileName);
-        if (!foundFile.empty())
-        {
-            osg::notify(osg::WARN) << "hogboxDB: openXmlFileAndReturnNode: ERROR: Could Not Find File '" << fileName << "'." << std::endl;
+#if USE_ASSETMANAGER
+        OSG_FATAL << "here" << std::endl;
+        hogbox::XmlInputObjectPtr xmlObject = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
+        if(!xmlObject.get()){
+            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Read XML File '" << fileName << "'." << std::endl;
+            return NULL;            
+        }
+        
+
+        if(!xmlObject->GetInput()){
+            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << fileName << "'." << std::endl;
             return NULL;
         }
         
-        //allocate the document node
-        //osgDB::XmlNode* root = 0;
+        //read the file into out document
+        osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
+        root->read(xmlObject->GetInput());
+#else
+         OSG_FATAL << "there" << std::endl;
+        std::string foundFile = osgDB::findDataFile(fileName);
+        if (foundFile.empty())
+        {
+            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Could Not Find File '" << fileName << "'." << std::endl;
+            return NULL;
+        }
         
         //open the file with xmlinput
         osgDB::XmlNode::Input input;
@@ -40,26 +62,32 @@ namespace hogboxDB {
         input.readAllDataIntoBuffer();
         
         if(!input){
-            osg::notify(osg::WARN) << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << foundFile << "'." << std::endl;
+            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << foundFile << "'." << std::endl;
             return NULL;
         }
         
         //read the file into out document
         osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
-        root->read(input);
-        
+        if(!root->read(input)){
+            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Opened XMLInput but failed to read node for file '" << fileName << "'." << std::endl;
+            return NULL;
+        }
+#endif
+        OSG_FATAL << "find root name '" << rootNodeName << "', in node named '" << root->name << "'." << std::endl;
         //iterate over the document nodes and try and find a HogBoxDatabase node to
         //use as a root
         for(osgDB::XmlNode::Children::iterator itr = root->children.begin();
             itr != root->children.end() && !root;
             ++itr)
         {
+            OSG_FATAL << "check '" << (*itr)->name << "'." << std::endl;
             if ((*itr)->name==rootNodeName){
                 osg::ref_ptr<osgDB::XmlNode> temp=(*itr);
+                OSG_FATAL << "good" << std::endl;
                 return temp;
             }
         }
-        
+        OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to find xml node '" << rootNodeName << "'. In xml file '" << fileName << "'."  << std::endl;
         return NULL;       
         
     }
@@ -73,7 +101,7 @@ namespace hogboxDB {
 	//
 	//Return the next word in a stringstream, checking for exception
 	//shifting the stringstream onto the next
-	static const bool getNextStringStreamWord(std::stringstream& input, std::string& result, bool errorOnEndStream=false)
+	static inline const bool getNextStringStreamWord(std::stringstream& input, std::string& result, bool errorOnEndStream=false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
@@ -93,7 +121,7 @@ namespace hogboxDB {
 	//
 	//convert the next word of the string stream to the result type
 	//moving the position in the passed stream on to the next word
-	static const bool stringStreamToType(std::stringstream& input, std::string& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, std::string& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
@@ -110,7 +138,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, bool& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, bool& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
@@ -127,7 +155,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, int& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, int& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask = std::stringstream::eofbit | std::stringstream::failbit | std::stringstream::badbit;}
@@ -144,7 +172,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, unsigned int& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, unsigned int& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask = std::stringstream::eofbit | std::stringstream::failbit | std::stringstream::badbit;}
@@ -160,7 +188,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, float& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, float& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
@@ -179,7 +207,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, double& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, double& result, bool errorOnEndStream = false)
 	{
 		std::ios_base::iostate exceptionMask = std::stringstream::failbit | std::stringstream::badbit;
 		if(errorOnEndStream){exceptionMask |= std::stringstream::eofbit;}
@@ -198,7 +226,7 @@ namespace hogboxDB {
 		//}
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, osg::Vec2& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, osg::Vec2& result, bool errorOnEndStream = false)
 	{
 		float x,y=0.0f;
 		if(!hogboxDB::stringStreamToType(input, x,true)){return false;}
@@ -206,7 +234,7 @@ namespace hogboxDB {
 		result.set(x,y);
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, osg::Vec3& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, osg::Vec3& result, bool errorOnEndStream = false)
 	{
 		float x,y,z=0.0f;
 		if(!hogboxDB::stringStreamToType(input, x,true)){return false;}
@@ -215,7 +243,7 @@ namespace hogboxDB {
 		result.set(x,y,z);
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, osg::Vec4& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, osg::Vec4& result, bool errorOnEndStream = false)
 	{
 		float x,y,z,w=0.0f;
 		if(!hogboxDB::stringStreamToType(input, x,true)){return false;}
@@ -225,7 +253,7 @@ namespace hogboxDB {
 		result.set(x,y,z,w);
 		return true;
 	}
-	static const bool stringStreamToType(std::stringstream& input, osg::Matrix& result, bool errorOnEndStream = false)
+	static inline const bool stringStreamToType(std::stringstream& input, osg::Matrix& result, bool errorOnEndStream = false)
 	{
 		float e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,e11,e12,e13,e14,e15,e16=0.0f;
 		if(!hogboxDB::stringStreamToType(input, e1,true)){return false;}
@@ -250,27 +278,27 @@ namespace hogboxDB {
 
 	//
 	//convert and return the input string as the result type
-	static const bool asciiToType(const std::string& input, bool& result)
+	static inline const bool asciiToType(const std::string& input, bool& result)
 	{
 		std::stringstream boolStr(input);
 		return hogboxDB::stringStreamToType(boolStr, result);
 	}
-	static const bool asciiToType(const std::string& input, int& result)
+	static inline const bool asciiToType(const std::string& input, int& result)
 	{
 		std::stringstream intStr(input);
 		return hogboxDB::stringStreamToType(intStr, result);
 	}
-	static const bool asciiToType(const std::string& input, unsigned int& result)
+	static inline const bool asciiToType(const std::string& input, unsigned int& result)
 	{
 		std::stringstream intStr(input);
 		return hogboxDB::stringStreamToType(intStr, result);
 	}
-	static const bool asciiToType(const std::string& input, float& result)
+	static inline const bool asciiToType(const std::string& input, float& result)
 	{
 		std::stringstream floatStr(input);
 		return hogboxDB::stringStreamToType(floatStr, result);
 	}
-	static const bool asciiToType(const std::string& input, double& result)
+	static inline const bool asciiToType(const std::string& input, double& result)
 	{
 		std::stringstream doubleStr(input);
 		return hogboxDB::stringStreamToType(doubleStr, result);
@@ -280,22 +308,22 @@ namespace hogboxDB {
 	//Read each values of an ascii vec2 into a seperate string then use
 	//osg::asciiToDouble to convert each value to a double to set on the
 	//vec2
-	static const bool asciiToType(const std::string& input, osg::Vec2& result)
+	static inline const bool asciiToType(const std::string& input, osg::Vec2& result)
 	{
 		std::stringstream vecStr(input);
 		return hogboxDB::stringStreamToType(vecStr, result);
 	}
-	static const bool asciiToType(const std::string& input, osg::Vec3& result)
+	static inline const bool asciiToType(const std::string& input, osg::Vec3& result)
 	{
 		std::stringstream vecStr(input);
 		return hogboxDB::stringStreamToType(vecStr, result);
 	}
-	static const bool asciiToType(const std::string& input, osg::Vec4& result)
+	static inline const bool asciiToType(const std::string& input, osg::Vec4& result)
 	{
 		std::stringstream vecStr(input);
 		return hogboxDB::stringStreamToType(vecStr, result);
 	}
-	static const bool asciiToType(const std::string& input, osg::Matrix& result)
+	static inline const bool asciiToType(const std::string& input, osg::Matrix& result)
 	{
 		std::stringstream matrixStr(input);
 		return hogboxDB::stringStreamToType(matrixStr, result);
@@ -306,7 +334,7 @@ namespace hogboxDB {
 	//return the value of an xml property as the passed type, returns false if propery does not exist
 	//
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, std::string& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, std::string& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -317,7 +345,7 @@ namespace hogboxDB {
 		return false;
 	}
 	
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, bool& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, bool& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -327,7 +355,7 @@ namespace hogboxDB {
 		return false;
 	}
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, int& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, int& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -337,7 +365,7 @@ namespace hogboxDB {
 		return false;
 	}
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, unsigned int& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, unsigned int& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -347,7 +375,7 @@ namespace hogboxDB {
 		return false;
 	}
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, float& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, float& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -356,17 +384,7 @@ namespace hogboxDB {
 		}
 		return false;
 	}
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, double& result)
-	{
-		if(!xmlNode){return false;}
-		if(xmlNode->properties.count(propertyName) > 0)
-		{
-			return hogboxDB::asciiToType(xmlNode->properties[propertyName], result);
-		}
-		return false;
-	}
-
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec2& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, double& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -376,7 +394,7 @@ namespace hogboxDB {
 		return false;
 	}
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec3& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec2& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -386,7 +404,7 @@ namespace hogboxDB {
 		return false;
 	}
 
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec4& result)
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec3& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -395,7 +413,17 @@ namespace hogboxDB {
 		}
 		return false;
 	}
-	static const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Matrix& result)
+
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Vec4& result)
+	{
+		if(!xmlNode){return false;}
+		if(xmlNode->properties.count(propertyName) > 0)
+		{
+			return hogboxDB::asciiToType(xmlNode->properties[propertyName], result);
+		}
+		return false;
+	}
+	static inline const bool getXmlPropertyValue(osgDB::XmlNode* xmlNode, const std::string& propertyName, osg::Matrix& result)
 	{
 		if(!xmlNode){return false;}
 		if(xmlNode->properties.count(propertyName) > 0)
@@ -407,53 +435,53 @@ namespace hogboxDB {
 
 
 	//Read the content of a node as a certain type
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, std::string& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, std::string& result)
 	{
 		if(!xmlNode){return false;}
 		result = xmlNode->contents;
 		return true;
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, bool& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, bool& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, int& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, int& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, unsigned int& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, unsigned int& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, float& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, float& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, double& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, double& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec2& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec2& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec3& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec3& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec4& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Vec4& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);
 	}
-	static const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Matrix& result)
+	static inline const bool getXmlContents(osgDB::XmlNode* xmlNode, osg::Matrix& result)
 	{
 		if(!xmlNode){return false;}
 		return hogboxDB::asciiToType(xmlNode->contents, result);

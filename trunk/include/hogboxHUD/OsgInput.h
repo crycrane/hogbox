@@ -62,7 +62,7 @@ public:
 	//
 	//
 	HudInputEvent* GetCurrentEvent()
-	{return m_inputState.get();}
+	{return _inputState.get();}
 
 	//
 	//normal mesh picked (i,e, model not part of the basic hud)
@@ -87,14 +87,14 @@ public:
 		UnPickableNode unPickableNode;
 		unPickableNode._node = node;
 		unPickableNode._prevMask = node->getNodeMask();
-		m_vUnPickableNodes.push_back(unPickableNode);
+		_vUnPickableNodes.push_back(unPickableNode);
 	}
 
 	//
 	//remove all nodes from the unpickable list
 	void RemoveUnPickableNodes()
 	{
-		m_vUnPickableNodes.clear();
+		_vUnPickableNodes.clear();
 	}
 	
 	
@@ -111,10 +111,10 @@ protected:
     osg::observer_ptr<osgViewer::Viewer> _sceneView;
     
 	//dimensions of hud
-	osg::Vec2 m_hudDimensions;
+	osg::Vec2 _hudDimensions;
 
 	//current input event state
-	osg::ref_ptr<HudInputEvent> m_inputState;
+	osg::ref_ptr<HudInputEvent> _inputState;
 	
 	//the current hud region with focus (need to implement default root region, for now null till mouse click)
 	HudRegion* p_focusRegion;
@@ -124,7 +124,7 @@ protected:
 	osg::ref_ptr<osg::Node>  p_clickObject;
 
 	//the list of unpickable nodes, disabled during picking
-	std::vector<UnPickableNode> m_vUnPickableNodes;
+	std::vector<UnPickableNode> _vUnPickableNodes;
 };
 
 };

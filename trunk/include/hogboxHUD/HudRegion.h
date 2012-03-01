@@ -151,7 +151,7 @@ public:
     const RegionPlane& GetRotationPlane() const{return _rotatePlane;}
     
     //set the size of this region in hud coords 
-    //via the m_scale matrix, any children will be resize using the
+    //via the _scale matrix, any children will be resize using the
     //percentage difference of the passed in and previous sizes
     //resize is virtual so different type cans handle special situations
     virtual void SetSize(const osg::Vec2& size);
@@ -398,7 +398,7 @@ protected:
     
     //
     //Unload assest, deleting bae/rollover textures and any children
-    //of m_region
+    //of _region
     virtual bool UnLoadAssests();
     
     //
@@ -433,12 +433,12 @@ protected:
     osg::ref_ptr<osg::MatrixTransform> _scale;
     
     //child mount attached to rotate, child nodes are resized
-    //individually so m_scale matrix does not affect them
+    //individually so _scale matrix does not affect them
     osg::ref_ptr<osg::MatrixTransform> _childMount;
     
     //region node attached to scale, contains the actual geometry
     //or drawable representation of the region which should be 1x1
-    //m_scale will then make it our desired size
+    //_scale will then make it our desired size
     osg::ref_ptr<osg::Geode> _region; 
     
     //size in hud coords
@@ -581,7 +581,7 @@ public:
     HudRegionUpdateCallback(HudRegion* region) 
     : osg::NodeCallback(),
     p_updateRegion(region),
-    m_prevTick(0.0f)
+    _prevTick(0.0f)
     {
     }
     
@@ -596,9 +596,9 @@ public:
         {
             //get the time passed since last update
             double time = nv->getFrameStamp()->getReferenceTime();
-            if(m_prevTick==0.0f){m_prevTick = time;}
-            //float timePassed = time - m_prevTick;
-            m_prevTick = time;
+            if(_prevTick==0.0f){_prevTick = time;}
+            //float timePassed = time - _prevTick;
+            _prevTick = time;
             
             p_updateRegion->Update(time);
         }
@@ -612,7 +612,7 @@ protected:
 protected:
     
     HudRegion* p_updateRegion;
-    float m_prevTick;
+    float _prevTick;
 };
     
 }; //end hogboxhud namespace

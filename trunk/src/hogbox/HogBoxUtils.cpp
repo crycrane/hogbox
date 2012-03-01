@@ -42,6 +42,24 @@ osg::Node* hogbox::FindNodeByName(osg::Node* node, const std::string name)
 	return NULL;
 }
 
+//
+//Camera helpers
+//
+
+osg::Matrix hogbox::ComputeLookAtMatrixForNodeBounds(osg::Node* scene, float distance, osg::Vec3 forwardAxis, osg::Vec3 upAxis)
+{
+    if(!scene){
+        return osg::Matrix::identity();
+    }
+    forwardAxis.normalize();
+    osg::BoundingSphere bounds = scene->computeBound();
+    osg::Vec3 lookAt = bounds.center();
+    osg::Vec3 camPos = lookAt + (-forwardAxis * (bounds.radius()*distance));
+    osg::Vec3 up = upAxis;
+    up.normalize();
+    
+    return osg::Matrix::lookAt(camPos, lookAt, up);
+}
 
 osg::Image* hogbox::CreateSubImage(int sCol, int sRow, int width, int height, osg::Image* source)
 {
@@ -148,7 +166,7 @@ osg::Texture2D* hogbox::LoadTexture2D(const std::string& fileName)
 		tex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 		tex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 		tex->setImage(image);
-		//m_imageDataBase.push_back(image);
+		//_imageDataBase.push_back(image);
 		return tex;
 	}
 
@@ -452,8 +470,7 @@ osg::Image* hogbox::LoadImageDialog()
 //
 bool hogbox::RelocateTextureImage(std::string savePath, osg::Image* image, bool local)
 {
-	if( (image == NULL) )
-	{return false;}
+	if(image == NULL){return false;}
 	//osg::Image* scaledImg = hogbox::CreateSubImage(0,0, GetImageWidth(image), GetImageHeight(image), image);
 
 	//scaledImg->scaleImage(
@@ -606,34 +623,34 @@ osg::Texture1D*  hogbox::make1DSineTexture( int texSize )
 //
 osg::Geometry* hogbox::BuildXYQuad(osg::Vec2 size, osg::Vec4 color, float depth)
 {
-	osg::Geometry* m_baseLayer = new osg::Geometry();
+	osg::Geometry* _baseLayer = new osg::Geometry();
 	osg::Vec3Array* vertices = new osg::Vec3Array;
 	vertices->push_back(osg::Vec3(0.0f,		0.0f,		depth));
 	vertices->push_back(osg::Vec3(size.x(),	0.0f,		depth));
 	vertices->push_back(osg::Vec3(size.x(),	size.y(),	depth));
 	vertices->push_back(osg::Vec3(0.0f,		size.y(),	depth));
-	m_baseLayer->setVertexArray(vertices);
+	_baseLayer->setVertexArray(vertices);
 
 	osg::Vec3Array* normals = new osg::Vec3Array;
 	normals->push_back(osg::Vec3(0.0f,0.0f,1.0f));
-	m_baseLayer->setNormalArray(normals);
-	m_baseLayer->setNormalBinding(osg::Geometry::BIND_OVERALL);
+	_baseLayer->setNormalArray(normals);
+	_baseLayer->setNormalBinding(osg::Geometry::BIND_OVERALL);
 
-	osg::Vec4Array* m_baseColors = new osg::Vec4Array;
-	m_baseColors->push_back(osg::Vec4(1,1,1,1));
-	m_baseLayer->setColorArray(m_baseColors);
-	m_baseLayer->setColorBinding(osg::Geometry::BIND_OVERALL);
+	osg::Vec4Array* _baseColors = new osg::Vec4Array;
+	_baseColors->push_back(osg::Vec4(1,1,1,1));
+	_baseLayer->setColorArray(_baseColors);
+	_baseLayer->setColorBinding(osg::Geometry::BIND_OVERALL);
 
 	osg::Vec2Array* texCoords = new osg::Vec2Array;
 	texCoords->push_back(osg::Vec2(0.0f,0.0f));
 	texCoords->push_back(osg::Vec2(1.0f,0.0f));
 	texCoords->push_back(osg::Vec2(1.0f,1.0f));
 	texCoords->push_back(osg::Vec2(0.0f,1.0f));
-	m_baseLayer->setTexCoordArray(0, texCoords);
+	_baseLayer->setTexCoordArray(0, texCoords);
 
-	m_baseLayer->addPrimitiveSet(new osg::DrawArrays(GL_QUADS,0,4));
+	_baseLayer->addPrimitiveSet(new osg::DrawArrays(GL_QUADS,0,4));
 
-	return m_baseLayer;
+	return _baseLayer;
 }
 /*
 //

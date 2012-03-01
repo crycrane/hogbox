@@ -32,7 +32,7 @@ namespace hogbox {
 	
 //
 //Redirects notify stream to a html file adding html color formating etc
-//for each notify level. If we fail to create the m_outputFile stream then
+//for each notify level. If we fail to create the _outputFile stream then
 //the StandardNotifyHandler handler is used
 class HOGBOX_EXPORT HogBoxNotifyHandler : public PlatformNotifyHandler
 {
@@ -64,10 +64,10 @@ protected:
 	typedef std::map<osg::NotifySeverity, HtmlStyle> NotifySeverityToHtmlStyleMap;
 	typedef std::pair<osg::NotifySeverity, HtmlStyle> NotifySeverityToHtmlStylePair;
 
-	NotifySeverityToHtmlStyleMap m_levelToHtmlStyleList;
+	NotifySeverityToHtmlStyleMap _levelToHtmlStyleList;
 
 	//our file output stream
-	std::ofstream m_outputFile;
+	std::ofstream _outputFile;
 };
 
 }; //end hogbox namespace

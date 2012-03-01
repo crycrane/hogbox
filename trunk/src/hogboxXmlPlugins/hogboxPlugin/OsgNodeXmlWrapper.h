@@ -41,8 +41,8 @@ public:
 
 
 	//pass node representing the texture object
-	OsgNodeXmlWrapper(osgDB::XmlNode* node) 
-			: hogboxDB::XmlClassWrapper(node, "Node")
+	OsgNodeXmlWrapper() 
+			: hogboxDB::XmlClassWrapper("Node")
 	{
 
 		//allocate Group to repesent any loaded nodes
@@ -50,10 +50,16 @@ public:
 		group->setName("OsgNodeRoot");
 
 		//add the temporary wrapper attributes
-		m_xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
+		_xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
 
 		p_wrappedObject = group;
 	}
+    
+    //
+    virtual osg::Object* allocateClassType(){return new osg::Group();}
+    
+    //
+    virtual XmlClassWrapper* cloneType(){return new OsgNodeXmlWrapper();}
 
 
 	//overload deserialise
@@ -71,29 +77,21 @@ public:
 		if(!_fileName.empty())
 		{
 			//load the file name using osgDB readNode
-			osg::Node* fileNode = osgDB::readNodeFile(_fileName);
+			osg::Node* fileNode = hogbox::AssetManager::Inst()->GetOrLoadNode(_fileName);
 
 			//check it loaded ok
 			if(!fileNode)
 			{
 				//if not try using findDataFile
-				osg::notify(osg::WARN) << "XML ERROR: Loading node file '" << _fileName << "', for Node '" << group->getName() << "'." << std::endl;
-				std::string tryFileName = osgDB::findDataFile( _fileName );
-				
-				if(!tryFileName.empty()){
-					osg::notify(osg::WARN) << "           Found Alternative file'" << tryFileName << "', attempting to load," << std::endl;
-					fileNode = osgDB::readNodeFile(tryFileName);
-					if(!fileNode){return false;}
-					_fileName = tryFileName;
-				}else{
-					return false;
-				}
-				
-				//
-				OSG_NOTICE << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
+				OSG_FATAL << "XML ERROR: Loading node file '" << _fileName << "', for Node '" << group->getName() << "'." << std::endl;
+                return false;
 			}
+            //
+            OSG_FATAL << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
+            
 			//add the node to our base group
 			group->addChild(fileNode);
+            group->setName("osgNode_"+_fileName);
 		}
 		return true;
 	}
@@ -108,6 +106,13 @@ public:
 protected:
 
 	virtual ~OsgNodeXmlWrapper(void){}
+    
+    //
+    //Bind the xml attributes for the wrapped object
+    virtual void bindXmlAttributes(){
+        //osg::Group* node = dynamic_cast<osg::Group*>(p_wrappedObject.get());
+        _xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
+    }
 
 };
 

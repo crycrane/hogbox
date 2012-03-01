@@ -30,12 +30,12 @@ public:
 	CaptureFormat() : osg::Referenced()
 	{}
 
-	bool isValid(){return m_isValid;}
+	bool isValid(){return _isValid;}
 
-	int GetWidth(){return m_width;}
-	int GetHeight(){ return m_height;}
-	float GetFPS(){return m_fps;}
-	int GetBitRate(){return m_bitRate;}
+	int GetWidth(){return _width;}
+	int GetHeight(){ return _height;}
+	float GetFPS(){return _fps;}
+	int GetBitRate(){return _bitRate;}
 
 
 	//
@@ -47,7 +47,7 @@ public:
 
 	//
 	//Return a string representation of the format
-	std::string GetFormatDescription()const{return m_formatDescription;}
+	std::string GetFormatDescription()const{return _formatDescription;}
 
 	//
 	//helper function to compare a desired format to this one the
@@ -56,7 +56,7 @@ public:
 	float CompareFormat(int targetWidth, int targetHeight, int targetFPS)
 	{
 		float targetPixels = targetWidth * targetHeight;
-		float thisPixels = m_width * m_height;
+		float thisPixels = _width * _height;
 
 		//calc difference in number of pixels
 		float pixelDifference = fabs(thisPixels-targetPixels);
@@ -72,23 +72,23 @@ protected:
 protected:
 
 	//is it a valid format for capturing
-	bool m_isValid;
+	bool _isValid;
 
 	//friendly name string for the format
-	std::string m_formatDescription;
+	std::string _formatDescription;
 
 	//width and height of the captured images
-	int m_width;
-	int m_height;
+	int _width;
+	int _height;
 
-	int m_bitRate;
+	int _bitRate;
 	
 	//frames per second for the format
-	float m_fps;
+	float _fps;
 
 	//some implementation can return a min and max frame rate for the format type
-	float m_minFps;
-	float m_maxFps;
+	float _minFps;
+	float _maxFps;
 };
 
 typedef osg::ref_ptr<CaptureFormat> CaptureFormatPtr;
@@ -106,21 +106,21 @@ public:
 	//can be used to identify the device
 	CaptureDevice(const std::string& deviceName, const std::string& uniqueID) 
 			: osg::Referenced(),
-			m_deviceName(deviceName),
-			m_uniqueID(uniqueID),
-			m_connectedFormat(NULL)
+			_deviceName(deviceName),
+			_uniqueID(uniqueID),
+			_connectedFormat(NULL)
 	{}
 
 	//
-	std::string GetDeviceName()const{return m_deviceName;}
-	std::string GetUniqueID()const{return m_uniqueID;}
+	std::string GetDeviceName()const{return _deviceName;}
+	std::string GetUniqueID()const{return _uniqueID;}
 
 	//
 	//return the list of formats supported by the device
 	std::vector<CaptureFormatPtr> GetFormats(){
 		//if the formats list is empty try to fill it
-		if(m_formats.empty()){this->CreateFormatsListImplementation();}
-		return m_formats;
+		if(_formats.empty()){this->CreateFormatsListImplementation();}
+		return _formats;
 	}
 
 	//apply the format, making it the connected format
@@ -128,41 +128,41 @@ public:
 
 	//apply format by index in format list
 	bool ApplyFormat(const unsigned int& index){
-		if(index < 0 || index > m_formats.size())
+		if(index > _formats.size())
 		{return false;}
-		return ApplyFormat(m_formats[index]);
+		return ApplyFormat(_formats[index]);
 	}
 
 	//get the current connected format
 	CaptureFormat* GetConnectedFormat(){
-		return m_connectedFormat;
+		return _connectedFormat;
 	}
 
 protected:
 	virtual ~CaptureDevice(){
-		m_formats.clear();
-		m_connectedFormat=NULL;
+		_formats.clear();
+		_connectedFormat=NULL;
 	}
 	
 	//
-	//Fill the m_formats structure, the device  should
+	//Fill the _formats structure, the device  should
 	//be connected by the WebCamStream implementation
 	virtual bool CreateFormatsListImplementation() = 0;
 
 protected:
 	//friendly name for the device
-	std::string m_deviceName;
+	std::string _deviceName;
 
 	//the unique id for the device stored as a string (in dshow this is the clsid)
 	//this is needed as two of the same cmaera will have the same friendly name
-	std::string m_uniqueID;
+	std::string _uniqueID;
 
 	//the list of supported formats, should be filled by the
 	//concrete imps contructor
-	std::vector<CaptureFormatPtr> m_formats;
+	std::vector<CaptureFormatPtr> _formats;
 
 	//the currently connected format, null if not connected
-	CaptureFormatPtr m_connectedFormat;
+	CaptureFormatPtr _connectedFormat;
 };
 typedef osg::ref_ptr<CaptureDevice> CaptureDevicePtr;
 
@@ -183,7 +183,7 @@ class HOGBOXVIS_EXPORT WebCamStream : public VideoStream
 {
 public:
 	WebCamStream() : VideoStream(),
-					m_captureDevice(NULL)
+					_captureDevice(NULL)
 	{
 	}
 	
@@ -243,31 +243,31 @@ public:
 
 		//if we're still not connected it's game over. There are no functioning devices attached
 		//to the machine
-		if(!connected || !m_captureDevice){
+		if(!connected || !_captureDevice){
 			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to connect a capture device." << std::endl; 	
 			return false;
 		}
 
 		//we're connected to a device, deviceIndex should tell us which one in the list worked
-		OSG_NOTICE << "WebCamStream::CreateWebCamStream: Connected to capture device '" << m_captureDevice->GetDeviceName() << "'." << std::endl;
+		OSG_NOTICE << "WebCamStream::CreateWebCamStream: Connected to capture device '" << _captureDevice->GetDeviceName() << "'." << std::endl;
 
 		//set name of stream to device name
-		this->setName(m_captureDevice->GetDeviceName());
+		this->setName(_captureDevice->GetDeviceName());
 
 		//we're connected to a device, now try to find the format closest to
 		//our target width, height and fps
 
 		//first create the format list for the connected device
-		std::vector<CaptureFormatPtr> formats = m_captureDevice->GetFormats();
+		std::vector<CaptureFormatPtr> formats = _captureDevice->GetFormats();
 
 		if(formats.empty())
 		{
-			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to find any avaliable formats for capture device '" << m_captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
+			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to find any avaliable formats for capture device '" << _captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
 			return false;
 		}
 
 		//now loop the formats and use the format compare func to find the closest to our target
-		float closestCompareDist = FLT_MAX;
+		float closestCompareDist = 999999999.0f;//FLT_MAX;
 		int closestCompareIndex = -1;
 		for(unsigned int i=0; i< formats.size(); i++)
 		{
@@ -311,7 +311,7 @@ public:
 	//
 	//Return the device we are actually connected to
 	CaptureDevicePtr GetCaptureDevice(){
-		return m_captureDevice;
+		return _captureDevice;
 	}
 
 	//apply a new format to the connected device
@@ -319,7 +319,7 @@ public:
 	bool ApplyFormat(CaptureFormat* format)
 	{
 		if(!format){return false;}
-		if(!m_captureDevice)
+		if(!_captureDevice)
 		{
 			OSG_WARN << "WebCamStream: CreateStream: ERROR: Can not apply format '" << format->GetFormatDescription() << "', the WebCamStream is not connected to a valid capture device." << std::endl;
 			return false;
@@ -329,11 +329,11 @@ public:
 		this->pause();
 		
 		//inform of format change
-		OSG_NOTICE << "WebCamStream: CreateStream: Attempting to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'." << std::endl;
+		OSG_NOTICE << "WebCamStream: CreateStream: Attempting to change format of device '" << _captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'." << std::endl;
 		
 		if(!ApplyFormatImplementation(format))
 		{
-			OSG_WARN << "WebCamStream: CreateStream: ERROR: failed to change format of device '" << m_captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'," << std::endl
+			OSG_WARN << "WebCamStream: CreateStream: ERROR: failed to change format of device '" << _captureDevice->GetDeviceName() << "', to '" << format->GetFormatDescription() << "'," << std::endl
 									 << "                                                         The device will not be restarted." << std::endl;
 			return false;
 		}
@@ -347,7 +347,7 @@ public:
 protected:
 
 	virtual ~WebCamStream(void){
-		m_captureDevice = NULL;
+		_captureDevice = NULL;
 	}
 
 	//perform implementation specific showing of props
@@ -365,7 +365,7 @@ protected:
 protected:
 
 	//the device we are capturing from
-	CaptureDevicePtr m_captureDevice;
+	CaptureDevicePtr _captureDevice;
 
 };
 

@@ -8,14 +8,14 @@
 
 
 #include <hogboxVision/VisionRegistry.h>
-REGISTER_VISION_WEBCAM_PLUGIN( iphone, IPhoneWebCamStream )
+REGISTER_VISION_WEBCA_PLUGIN( iphone, IPhoneWebCamStream )
 
 
 //
 //hogboxVision Capture device implementation
 
 //
-//fill the m_formats list with data from our connected
+//fill the _formats list with data from our connected
 //device filter
 bool IPhoneCaptureDevice::CreateFormatsListImplementation()
 {
@@ -27,37 +27,37 @@ bool IPhoneCaptureDevice::CreateFormatsListImplementation()
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::VGA_640X480, AVCaptureSessionPreset640x480);
-			m_formats.push_back(format);
+			_formats.push_back(format);
 		}
 		supports = [p_captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPresetPhoto];
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::PHOTO, AVCaptureSessionPresetPhoto);
-			//m_formats.push_back(format);
+			//_formats.push_back(format);
 		}
 		supports = [p_captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPresetHigh];
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::HIGH, AVCaptureSessionPresetHigh);
-			m_formats.push_back(format);
+			_formats.push_back(format);
 		}
 		supports = [p_captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPresetMedium];
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::MEDIUM, AVCaptureSessionPresetMedium);
-			m_formats.push_back(format);
+			_formats.push_back(format);
 		}
 		supports = [p_captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPresetLow];
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::LOW, AVCaptureSessionPresetLow);
-			m_formats.push_back(format);
+			_formats.push_back(format);
 		}
 		supports = [p_captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPreset1280x720];
 		if(supports)
 		{
 			IPhoneCaptureFormatPtr format = new IPhoneCaptureFormat(IPhoneCaptureFormat::HD_720P, AVCaptureSessionPreset1280x720);
-			m_formats.push_back(format);
+			_formats.push_back(format);
 		}
 		return true;
 	}
@@ -102,7 +102,7 @@ bool IPhoneCaptureDevice::ApplyFormat(hogboxVision::CaptureFormat* format)
 //
 IPhoneWebCamStream::IPhoneWebCamStream() 
 	: hogboxVision::WebCamStream(),
-	m_iphoneCameraController(nil)
+	_iphoneCameraController(nil)
 {
 }
 
@@ -111,8 +111,8 @@ IPhoneWebCamStream::~IPhoneWebCamStream(void)
 {
 	OSG_DEBUG << "Destruct IPhoneWebCamStream" << std::endl;
 
-	if(m_iphoneCameraController)
-	{[m_iphoneCameraController release];}
+	if(_iphoneCameraController)
+	{[_iphoneCameraController release];}
 }
 
 IPhoneWebCamStream::IPhoneWebCamStream(const IPhoneWebCamStream& image,const osg::CopyOp& copyop)
@@ -136,34 +136,34 @@ bool IPhoneWebCamStream::CreateWebCamStream(const std::string& config, int targe
 
 	//check final dimensions
 
-	//this->_s = m_osgRenderer->GetMediaWidth();
-	//this->_t = m_osgRenderer->GetMediaHeight();  
+	//this->_s = _osgRenderer->GetMediaWidth();
+	//this->_t = _osgRenderer->GetMediaHeight();  
 
 
-	[m_iphoneCameraController mirrorOutput];
+	[_iphoneCameraController mirrorOutput];
 	
 	//start capture
 
 	//is valid
-	m_isValid=true;
+	_isValid=true;
 
 	return true;
 }
 
 void IPhoneWebCamStream::PlayImplementation()
 {
-	if(m_iphoneCameraController)
+	if(_iphoneCameraController)
 	{
-		[m_iphoneCameraController play];
+		[_iphoneCameraController play];
 	}
 }
 
 /// Stop stream at current position.
 void IPhoneWebCamStream::PauseImplementation() 
 { 
-	if(m_iphoneCameraController)
+	if(_iphoneCameraController)
 	{
-		[m_iphoneCameraController pause];
+		[_iphoneCameraController pause];
 	}
 }
 
@@ -188,7 +188,7 @@ void IPhoneWebCamStream::QuitImplementation()
 bool IPhoneWebCamStream::ShowPropertiesDialogImplementation()
 {
 	//cast capture device to dshow
-	IPhoneCaptureDevice* iphoneDevice = dynamic_cast<IPhoneCaptureDevice*>(m_captureDevice.get());
+	IPhoneCaptureDevice* iphoneDevice = dynamic_cast<IPhoneCaptureDevice*>(_captureDevice.get());
 	if(!iphoneDevice){return false;}
 
 	return true;
@@ -242,12 +242,12 @@ bool IPhoneWebCamStream::ConnectToDeviceImplementation(hogboxVision::CaptureDevi
 	if(!iphoneDevice){return false;}
 
 	//allocate the iphonecameracontroller
-	if(m_iphoneCameraController)
+	if(_iphoneCameraController)
 	{
 		pause();
-		[m_iphoneCameraController release];
+		[_iphoneCameraController release];
 	}
-	m_iphoneCameraController = [[IPhoneCameraController alloc] init];
+	_iphoneCameraController = [[IPhoneCameraController alloc] init];
 
 	//get the device default format
 	std::vector<hogboxVision::CaptureFormatPtr> formats = iphoneDevice->GetFormats();
@@ -262,24 +262,24 @@ bool IPhoneWebCamStream::ConnectToDeviceImplementation(hogboxVision::CaptureDevi
 	IPhoneCaptureFormat* iphoneDefaultFormat = dynamic_cast<IPhoneCaptureFormat*> (formats[0].get());
 	
 	//init the capture
-	[m_iphoneCameraController initCapture:this :iphoneDevice :iphoneDefaultFormat: m_hFlip: m_vFlip];
+	[_iphoneCameraController initCapture:this :iphoneDevice :iphoneDefaultFormat: _hFlip: _vFlip];
 	
 	//now we're connected set the devices AVCaptureSession pointer to ours
-	iphoneDevice->SetAVCaptureSession([m_iphoneCameraController captureSession]);
+	iphoneDevice->SetAVCaptureSession([_iphoneCameraController captureSession]);
 	
 	//set the pointer to the connected device
-	m_captureDevice = iphoneDevice;
+	_captureDevice = iphoneDevice;
 
 	
 	//now try a basic connection to the device using the first format (this seems to be the only way to tell
 	//if the capture pin is in use)
-	//@TOM_001, Applying format twice could cause errors with rebuilding the renderer
+	//@TO_001, Applying format twice could cause errors with rebuilding the renderer
 	//needs testing
 	
 	/*if(formats.size()>0)
 	{
 		if(!this->ApplyFormat(formats[0]))
-		{m_captureDevice = NULL; return false;}
+		{_captureDevice = NULL; return false;}
 	}*/
 
 	return true;
@@ -291,19 +291,19 @@ bool IPhoneWebCamStream::ConnectToDeviceImplementation(hogboxVision::CaptureDevi
 bool IPhoneWebCamStream::ApplyFormatImplementation(hogboxVision::CaptureFormat* format)
 {
 	//check we have a device
-	if(!m_captureDevice){return false;}
+	if(!_captureDevice){return false;}
 
 	//we should now be connected to valid capture device, cast it to dshowdevice
-	IPhoneCaptureDevice* iphoneDevice = dynamic_cast<IPhoneCaptureDevice*>(m_captureDevice.get());
+	IPhoneCaptureDevice* iphoneDevice = dynamic_cast<IPhoneCaptureDevice*>(_captureDevice.get());
 	if(!iphoneDevice){return false;}
 
-	if(m_iphoneCameraController)
+	if(_iphoneCameraController)
 	{
-		[m_iphoneCameraController setFormat:format];
+		[_iphoneCameraController setFormat:format];
 	}
 	/*
 	//try and apply the new format to the device
-	if(!m_captureDevice->ApplyFormat(format))
+	if(!_captureDevice->ApplyFormat(format))
 	{
 		OSG_WARN << "IPhoneWebCamStream::ApplyFormatImplementation: ERROR: Failed to apply IPhone format, " << std::endl
 		<<	"													   " << format->GetFormatDescription() << std::endl;

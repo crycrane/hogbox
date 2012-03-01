@@ -12,7 +12,7 @@ HogTracker::HogTracker(void)
 
 HogTracker::~HogTracker(void)
 {
-	m_trackedObjects.clear();
+	_trackedObjects.clear();
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -45,5 +45,5 @@ void HogTracker::Update()
 void HogTracker::AddTrackedObject(TrackedObjectPtr object)
 {
 	if(!object.get()){return;}
-	m_trackedObjects.push_back(object);
+	_trackedObjects.push_back(object);
 }

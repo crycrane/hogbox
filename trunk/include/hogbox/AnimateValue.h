@@ -15,7 +15,6 @@
 
 #include <osg/MatrixTransform>
 #include <osgAnimation/EaseMotion>
-#include <hogbox/HogBoxBase.h>
 #include <deque>
 
 namespace hogbox 
@@ -33,26 +32,26 @@ namespace hogbox
         
         AnimateValue()
 		: osg::Object(),
-		m_keyFrameQueue(new KeyFrameQueue())
+		_keyFrameQueue(new KeyFrameQueue())
         {
         }
         AnimateValue(const T& value)
 		: osg::Object(),
-		m_value(value),
-		m_start(value),
-		m_keyFrameQueue(new KeyFrameQueue())
+		_value(value),
+		_start(value),
+		_keyFrameQueue(new KeyFrameQueue())
         {
         }
         
         /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
         AnimateValue(const AnimateValue& value,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
 		: osg::Object(value, copyop),
-		m_value(value.m_value),
-		m_start(value.m_start)
+		_value(value._value),
+		_start(value._start)
         {
         }
         
-        META_Box(hogbox,AnimateValue);
+        META_Object(hogbox,AnimateValue);
         
         class KeyFrame{
         public:
@@ -79,20 +78,20 @@ namespace hogbox
         public:
             KeyFrameQueue()
 			: osg::Object(),
-			m_isPlaying(true),
-			m_currentKeyIndex(0)
+			_isPlaying(true),
+			_currentKeyIndex(0)
             {
             }
             /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
             KeyFrameQueue(const KeyFrameQueue& queue,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
 			: osg::Object(queue, copyop),
-			m_isPlaying(queue.m_isPlaying),
-			m_keyFrameQueue(queue.m_keyFrameQueue),
-			m_currentKeyIndex(queue.m_currentKeyIndex)
+			_isPlaying(queue._isPlaying),
+			_keyFrameQueue(queue._keyFrameQueue),
+			_currentKeyIndex(queue._currentKeyIndex)
             {
             }
             
-            META_Box(hogbox,KeyFrameQueue);
+            META_Object(hogbox,KeyFrameQueue);
             
             //adds a key to the queue, once the the key is reached
             //we smooth from current value to pos over duration seconds,
@@ -104,37 +103,37 @@ namespace hogbox
                 frame.end = pos;
                 frame.duration = duration;
                 frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
-                m_keyFrameQueue.push_back(frame);
+                _keyFrameQueue.push_back(frame);
                 
-                //if this is the first key ensure m_start is set to current value
+                //if this is the first key ensure _start is set to current value
                 return this->GetNumKeys()>0;
             }
             
             //return a pointer to a specific key in the queue,
             //if the key does not exist then NULL is returned
             KeyFrame* GetKey(const unsigned int& index){
-                if(index<0 || index >= m_keyFrameQueue.size()){return NULL;}
-                typename std::deque<KeyFrame>::iterator itr = m_keyFrameQueue.begin();
+                if(index<0 || index >= _keyFrameQueue.size()){return NULL;}
+                typename std::deque<KeyFrame>::iterator itr = _keyFrameQueue.begin();
                 itr += index;
                 return &(*itr);
             }
             //return the current front of the queue
             KeyFrame* GetCurrentKey(){
-                return GetKey(m_currentKeyIndex);
+                return GetKey(_currentKeyIndex);
             }
             //return the current number of keys in the queue
             const unsigned int GetNumKeys(){ 
-                return m_keyFrameQueue.size();
+                return _keyFrameQueue.size();
             }
             
             //remove a key from the queue
             bool RemoveKey(const unsigned int& index){
                 //check it's in range
-                if(index < 0 || index >= m_keyFrameQueue.size()){return false;}
-                if(m_keyFrameQueue.size() == 1){
+                if(index < 0 || index >= _keyFrameQueue.size()){return false;}
+                if(_keyFrameQueue.size() == 1){
                     _finalFrame = KeyFrame(*this->GetKey(0));
                 }
-                m_keyFrameQueue.erase(m_keyFrameQueue.begin()+index);
+                _keyFrameQueue.erase(_keyFrameQueue.begin()+index);
                 return true;
             }
             
@@ -153,7 +152,7 @@ namespace hogbox
             //3=end of queue
             int Update(const float& timePassed)
             {
-                if(m_isPlaying)
+                if(_isPlaying)
                 {
                     //get current key frame
                     KeyFrame* key = this->GetCurrentKey();
@@ -194,23 +193,23 @@ namespace hogbox
                 //if(key){key->motion->reset();}
                 
                 //
-                this->RemoveKey(m_currentKeyIndex);
+                this->RemoveKey(_currentKeyIndex);
                 
                 //move forward a key (need transport direction here)
-                //m_currentKeyIndex++;
-                unsigned int size = m_keyFrameQueue.size();
-                //if we reach the end reset m_currentKey to 0 and return false
-                if(m_currentKeyIndex >= size){m_currentKeyIndex = 0; return false;}
+                //_currentKeyIndex++;
+                unsigned int size = _keyFrameQueue.size();
+                //if we reach the end reset _currentKey to 0 and return false
+                if(_currentKeyIndex >= size){_currentKeyIndex = 0; return false;}
                 return true;
             }
             
         protected:
             
             //play state of the queue
-            bool m_isPlaying;
+            bool _isPlaying;
             
-            std::deque<KeyFrame> m_keyFrameQueue;
-            unsigned int m_currentKeyIndex;
+            std::deque<KeyFrame> _keyFrameQueue;
+            unsigned int _currentKeyIndex;
             
             //copy the final key (before it empties)
             KeyFrame _finalFrame;
@@ -221,7 +220,7 @@ namespace hogbox
         
         //
         //adds a key to one of our animation queues (by animationName), once the the key is reached
-        //we smooth from current m_value to pos over duration seconds,
+        //we smooth from current _value to pos over duration seconds,
         //the template M is used to define the osgAnimation motion type
         template <typename M>
         void AddKey(const T& pos, const float& duration, const std::string& animationName="DEFAULT"){
@@ -229,17 +228,17 @@ namespace hogbox
             //frame.end = pos;
             //frame.duration = duration;
             //frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
-            m_keyFrameQueue->AddKey<M>(pos,duration);
+            _keyFrameQueue->AddKey<M>(pos,duration);
             
-            //if this is the first key ensure m_start is set to current value
+            //if this is the first key ensure _start is set to current value
             if(this->GetNumKeys() == 1)
-            {m_start = m_value;}
+            {_start = _value;}
         }
         
         //return a pointer to a specific key in the queue,
         //if the key does not exist then NULL is returned
         KeyFrame* GetKey(const unsigned int& index, const std::string& animationName="DEFAULT"){
-            return m_keyFrameQueue->GetKey(index);
+            return _keyFrameQueue->GetKey(index);
         }
         //return the current front of the queue
         KeyFrame* GetCurrentKey(const std::string& animationName="DEFAULT"){
@@ -247,18 +246,18 @@ namespace hogbox
         }
         //return the current number of keys in the queue
         const unsigned int GetNumKeys(const std::string& animationName="DEFAULT"){ 
-            return m_keyFrameQueue->GetNumKeys();
+            return _keyFrameQueue->GetNumKeys();
         }
         
         //remove a key from the queue
         bool RemoveKey(const unsigned int& index, const std::string& animationName="DEFAULT"){
-            return m_keyFrameQueue->RemoveKey(index);
+            return _keyFrameQueue->RemoveKey(index);
         }
         
         //return the current actual value
-        T GetValue(){return m_value;}
+        T GetValue(){return _value;}
         //directly set the current value
-        void SetValue(T value){m_value = value;m_start = value;}
+        void SetValue(T value){_value = value;_start = value;}
         
         //
         //update toward the current keys end value by updating the osgAnimation
@@ -267,18 +266,18 @@ namespace hogbox
         //false is returned,
         bool Update(const float& timePassed){
             
-            int aniStatus = m_keyFrameQueue->Update(timePassed);
+            int aniStatus = _keyFrameQueue->Update(timePassed);
             
             //if we changed key or reached the end
             if(aniStatus == 2){// || aniStatus == 3){
-                m_start = m_value;
+                _start = _value;
             }
             
             
             //get current key frame
-            KeyFrame* key = m_keyFrameQueue->GetCurrentKey();
+            KeyFrame* key = _keyFrameQueue->GetCurrentKey();
             //little hackey, but if it is the fianl frame get final key
-            if(aniStatus == 3){key = m_keyFrameQueue->GetFinalKey();}
+            if(aniStatus == 3){key = _keyFrameQueue->GetFinalKey();}
             if(key)
             {	
                 //update the motions time
@@ -287,8 +286,8 @@ namespace hogbox
                 float t = key->motion->getValue();
                 
                 //interpolate from current start value to keys end value based on t
-                T between = key->end - m_start;
-                m_value = m_start + (between * t);
+                T between = key->end - _start;
+                _value = _start + (between * t);
                 
             }else{
                 return false;
@@ -303,11 +302,11 @@ namespace hogbox
         //pops the current key from the front, returns false
         //if there are no more keys in the queue 
         bool ChangeToNextKey(){
-            /*m_keyFrameQueue->ChangeToNextKey();//pop_front();
+            /*_keyFrameQueue->ChangeToNextKey();//pop_front();
              //set the new start value to the current value
-             m_start = m_value;
+             _start = _value;
              //check the new size
-             unsigned int size = m_keyFrameQueue->GetNumKeys();
+             unsigned int size = _keyFrameQueue->GetNumKeys();
              if(size > 0){return true;}*/
             return false;
         }
@@ -316,18 +315,18 @@ namespace hogbox
         
         //a map of pointers to the currently used animations/KeyFrameQueues
         //and their current weighting in te final Update value. 
-        osg::ref_ptr<KeyFrameQueue> m_keyFrameQueue;
+        osg::ref_ptr<KeyFrameQueue> _keyFrameQueue;
         
         //the lists of animation KeyFrameQueues index by a name string
         //the animation name "DEFAULT" is always added in the contructor to ensure
         //we have at least on animation to play on Update
-        AnimationMap m_animations;
+        AnimationMap _animations;
         
         //the value at the start of the key
-        T m_start;
+        T _start;
         
         //the current value
-        T m_value;
+        T _value;
     };
 	
     //define all the common animate value types

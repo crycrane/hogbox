@@ -3,9 +3,11 @@
 using namespace hogboxVision;
 
 TrackedObject::TrackedObject(TrackedDimensions dimensions) 
-			: m_trackingDimensions( dimensions ),
-			m_isEnabled(true), m_poseMatrix(), m_isDetected(false),
-			m_confidence(0.0f)
+    : _trackingDimensions( dimensions ),
+    _poseMatrix(),
+    _isDetected(false),
+    _isEnabled(true),
+    _confidence(0.0f)
 {
 }
 
@@ -30,12 +32,12 @@ bool TrackedObject::Init(const std::string& config)
 //
 void TrackedObject::SetEnabled(const bool& enabled)
 {
-	m_isEnabled=enabled;
+	_isEnabled=enabled;
 }
 
 const bool& TrackedObject::GetEnabled()const
 {
-	return m_isEnabled;
+	return _isEnabled;
 }
 
 //
@@ -45,7 +47,7 @@ const bool& TrackedObject::GetEnabled()const
 //
 bool TrackedObject::UpdateMarker(bool isDetected, osg::Matrix pose)
 {
-	m_isDetected = isDetected;
-	m_poseMatrix = pose;
+	_isDetected = isDetected;
+	_poseMatrix = pose;
 	return true;
 }

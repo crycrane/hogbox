@@ -34,7 +34,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HogTracker(const HogTracker&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision, HogTracker);
+	META_Object(hogboxVision, HogTracker);
 
 	//init the tracker 
 	virtual bool InitTracker();
@@ -56,7 +56,7 @@ protected:
 protected:
 
 	//the list of objects being tracked by the tracker
-	std::vector<TrackedObjectPtr> m_trackedObjects;
+	std::vector<TrackedObjectPtr> _trackedObjects;
 
 };
 

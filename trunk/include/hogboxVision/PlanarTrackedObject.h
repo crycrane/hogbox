@@ -31,15 +31,15 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	PlanarTrackedObject(const PlanarTrackedObject&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxVision, PlanarTrackedObject);
+	META_Object(hogboxVision, PlanarTrackedObject);
 
 	//set by implementations
-	std::vector<osg::Vec2> GetCorners(){return m_corners;}
-	int GetDirection(){return m_direction;}
+	std::vector<osg::Vec2> GetCorners(){return _corners;}
+	int GetDirection(){return _direction;}
 
 	//get set the width
-	float GetWidth(){return m_width;}
-	void SetWidth(float width){m_width = width;}
+	float GetWidth(){return _width;}
+	void SetWidth(float width){_width = width;}
 	
 protected:
 
@@ -47,11 +47,11 @@ protected:
 
 protected:
 
-	std::vector<osg::Vec2> m_corners;
-	int m_direction; //which side is local up/y
+	std::vector<osg::Vec2> _corners;
+	int _direction; //which side is local up/y
 	
 	//width of planar quad in mm
-	float m_width;
+	float _width;
 
 };
 

@@ -164,13 +164,13 @@ bool MeshMappingVisitor::ApplyMappingParams(osg::Geode* geode)
 MeshMapping::MeshMapping() 
 	: osg::Object()
 {
-	m_visitor = new MeshMappingVisitor();
+	_visitor = new MeshMappingVisitor();
 }
 
 MeshMapping::MeshMapping(const std::string& name, HogBoxMaterial* mat, bool vis, bool checkGeoms) 
 	: osg::Object()
 {
-	m_visitor = new MeshMappingVisitor(name, mat, vis, checkGeoms);
+	_visitor = new MeshMappingVisitor(name, mat, vis, checkGeoms);
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -181,5 +181,5 @@ MeshMapping::MeshMapping(const MeshMapping& mesh,const osg::CopyOp& copyop)
 
 MeshMapping::~MeshMapping(){
 	OSG_NOTICE << "    Deallocating MeshMapping: Name '" << this->getName() << "'." << std::endl;
-	m_visitor = NULL;
+	_visitor = NULL;
 }

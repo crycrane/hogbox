@@ -49,14 +49,14 @@ public:
 	HogBoxViewerResizedCallback(osgViewer::Viewer* viewer,int x, int y, int width, int height)
 	{
 		p_viewer = viewer;
-		m_winSize = osg::Vec2(width,height);
-		m_winCorner = osg::Vec2(x,y);
+		_winSize = osg::Vec2(width,height);
+		_winCorner = osg::Vec2(x,y);
 	}
 	
 	virtual void resizedImplementation(osg::GraphicsContext* gc, int x, int y, int width, int height)
 	{
-		m_winSize = osg::Vec2(width,height);
-		m_winCorner = osg::Vec2(x,y);
+		_winSize = osg::Vec2(width,height);
+		_winCorner = osg::Vec2(x,y);
 
 		p_viewer->getCamera()->getViewport()->setViewport(0,0,width,height);
 
@@ -68,8 +68,8 @@ public:
 		gc->resizedImplementation(x,y,width, height);
 	}
 	
-	osg::Vec2 GetWinSize(){return m_winSize;}
-	osg::Vec2 GetWinCorner(){return m_winCorner;}
+	osg::Vec2 GetWinSize(){return _winSize;}
+	osg::Vec2 GetWinCorner(){return _winCorner;}
 
 protected:
 
@@ -80,8 +80,8 @@ protected:
 protected:
 
 	osgViewer::Viewer* p_viewer;
-	osg::Vec2 m_winSize;
-	osg::Vec2 m_winCorner;
+	osg::Vec2 _winSize;
+	osg::Vec2 _winCorner;
 };
 
 
@@ -108,7 +108,7 @@ public:
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	HogBoxViewer(const HogBoxViewer&,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY){}
-	META_Box(hogbox,HogBoxViewer);
+	META_Object(hogbox,HogBoxViewer);
 	
 
 	//init contructing window and viewer, optionaly passing in render mode args
@@ -181,7 +181,7 @@ public:
 	void SetAccumulationBits(const unsigned int& bits);
 	const unsigned int& GetAcculationBits()const;
 
-	//set fullscreen resizing to m_sSize, must be set by init()
+	//set fullscreen resizing to _sSize, must be set by init()
 	void SetFullScreen(const bool& fullScreen);
 	const bool& isFullScreen()const;
 
@@ -233,6 +233,14 @@ public:
 
 	void SetCameraViewMatrix(const osg::Matrix& viewMatrix);
 	const osg::Matrix& GetCameraViewMatrix()const;
+    
+	//
+	// Set the home lookat vectors
+	void SetCameraViewMatrixFromLookAt(osg::Vec3 camPos, osg::Vec3 lookAtPos, osg::Vec3 upVec);
+    
+    //
+    // Compute a good camera view matrix for the current scene
+    void SetCameraViewMatrixFromSceneBounds(osg::Vec3 axis = osg::Y_AXIS, osg::Vec3 upAxis = osg::Z_AXIS);
 
 	void SetCameraViewDistance(const float& distance);
 	const float& GetCameraViewDistance()const;
@@ -247,6 +255,9 @@ public:
 	//Helper to set a lookat using a trackball (captures the current state of the track ball as lookat vectors)
 	bool SetHomeLookAtVectorsFromTrackBall(osgGA::TrackballManipulator* trackBall);
 
+    //
+    //Set camera view matrix to home position
+    void SetCameraViewMatrixToHomePosition();
 
 	void SetCameraFOV(const double& fov);
 	const double& GetCameraFOV()const ;
@@ -267,113 +278,114 @@ protected:
 protected:
 
     //pointer to the system info singleton
-    SystemInfo* m_glSystemInfo;
+    SystemInfo* _glSystemInfo;
 
 //window and viewer system
 
 	//the screen we wish to setup our viewer on
-	unsigned int m_screenID;
+	unsigned int _screenID;
 
-	osg::ref_ptr<osgViewer::Viewer> m_viewer;
-	//osg::ref_ptr<osg::GraphicsContext::Traits> m_graphicsTraits;
+	osg::ref_ptr<osgViewer::Viewer> _viewer;
+	//osg::ref_ptr<osg::GraphicsContext::Traits> _graphicsTraits;
 
 	//handle to any external window we are attached to 
-	HWND m_hwnd;
+	HWND _hwnd;
 
 	//single context to attach to the viewers camera also used as pixel buffer object
 	//if renderOffScreenImage = true is passed to create app window
-	osg::ref_ptr<osg::GraphicsContext> m_graphicsContext;
+	osg::ref_ptr<osg::GraphicsContext> _graphicsContext;
 
 	//handle to the context window for manipulaing fullscreen etc
-	osgViewer::GraphicsWindow* m_graphicsWindow;
+	osgViewer::GraphicsWindow* _graphicsWindow;
 	
 	//resize callback handle adjusting viewport and projection when
 	//the window is resized
-	osg::ref_ptr<HogBoxViewerResizedCallback> m_resizeCallback;
+	osg::ref_ptr<HogBoxViewerResizedCallback> _resizeCallback;
 
 //exterior application data (scene/actionadaptors
 
 	//store the config file for saving to later
-	std::string m_viewerSettingsFile;
+	std::string _viewerSettingsFile;
 
 	//pointer to the application scene
-	osg::ref_ptr<osg::Node> m_p_scene;
+	osg::ref_ptr<osg::Node> _scene;
 
 	//list of pointers to app event handlers, stored for if a rebuild of the
 	//osgViewer is required
 	typedef osg::observer_ptr<osgGA::GUIEventHandler> EventHandlerObserver;
-	std::vector<EventHandlerObserver> m_p_appEventHandlers;
+	std::vector<EventHandlerObserver> _appEventHandlers;
 
-	bool m_requestReset;
+    //the osg viewer needs rebuilding (e.g. changed stereo mode)
+	bool _requestReset;
 
 
 //Window buffer res
 
 	//window size in pixels
-	osg::Vec2 m_winSize;
-	osg::Vec2 m_prevWinSize;
+	osg::Vec2 _winSize;
+	osg::Vec2 _prevWinSize;
 
 	//window corner in pixels (MS Windows top left is 0,0)
-	osg::Vec2 m_winCorner;
-	osg::Vec2 m_prevWinCorner; //used to store windowed corner while we are in fullScreen mode
+	osg::Vec2 _winCorner;
+	osg::Vec2 _prevWinCorner; //used to store windowed corner while we are in fullScreen mode
 
 	//
-	bool m_doubleBuffer;
-	bool m_vSync;
+	bool _doubleBuffer;
+	bool _vSync;
 
-	unsigned int m_colorBits;
-	unsigned int m_depthBits;
-	unsigned int m_alphaBits;
-	unsigned int m_stencilBits;
-	unsigned int m_accumulationBits;
+	unsigned int _colorBits;
+	unsigned int _depthBits;
+	unsigned int _alphaBits;
+	unsigned int _stencilBits;
+	unsigned int _accumulationBits;
 
 	//is app in fullscreen mode
-	bool m_bIsFullScreen;
+	bool _bIsFullScreen;
 
 	//tracked for rebuilds
-	bool m_bUsingBoarder;
+	bool _bUsingBoarder;
 
 	//title/name of window
-	std::string m_windowName;
+	std::string _windowName;
 
 	//using cursor
-	bool m_usingCursor;
+	bool _usingCursor;
 
 //stereo
 	//are we using stereo
-	bool m_bStereoEnabled;
+	bool _bStereoEnabled;
 	//current eyeseperation
-	float m_fStereoSep;
+	float _fStereoSep;
 	//flip eyes
-	bool m_swapEyes;
+	bool _swapEyes;
 	//current convergence distance from camera
-	float m_fStereoConv;
+	float _fStereoConv;
 	//type of stereo display
-	int m_iStereoMode; //anaglyph
+	int _iStereoMode; //anaglyph
 
 //rendering
 
-	osg::Vec4 m_clearColor;
+	osg::Vec4 _clearColor;
 
 	//antialiasing samples
-	int m_aaSamples;
+	int _aaSamples;
 
 //view/camera
 
 	//field of view of camera
-	double m_vfov;
+	double _vfov;
 
-	osg::Matrix m_cameraViewMatrix;
-	float m_viewDistance; //used for saving trackball distances
-	//osg::Matrix m_cameraHomeMatrix;
-	osg::Vec3 m_cameraHomePos;
-	osg::Vec3 m_cameraHomeLookAt;
-	osg::Vec3 m_cameraHomeUp;
-	//float m_homeDistance;
+	osg::Matrix _cameraViewMatrix;
+	float _viewDistance; //used for saving trackball distances
+	//osg::Matrix _cameraHomeMatrix;
+	osg::Vec3 _cameraHomePos;
+	osg::Vec3 _cameraHomeLookAt;
+	osg::Vec3 _cameraHomeUp;
+	//float _homeDistance;
 
 //render offscreen
 	
-	bool m_bRenderOffscreen;
+	bool _bRenderOffscreen;
 	//rendered image used when in offscreen render mode
 	osg::ref_ptr<osg::Image> _frameBufferImage;
 

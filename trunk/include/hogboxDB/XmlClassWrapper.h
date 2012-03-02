@@ -15,6 +15,7 @@
 
 #include <hogboxDB/XmlAttribute.h>
 #include <hogboxDB/XmlAttributeList.h>
+#include <hogboxDB/XmlAttributeEnum.h>
 #include <hogboxDB/XmlAttributePtr.h>
 #include <hogboxDB/XmlAttributeMap.h>
 

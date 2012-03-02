@@ -44,6 +44,7 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/XmlAttribute.h
 	${HEADER_PATH}/XmlAttributeList.h
 	${HEADER_PATH}/XmlAttributeMap.h
+    ${HEADER_PATH}/XmlAttributeEnum.h
 	${HEADER_PATH}/XmlAttributePtr.h
 	${HEADER_PATH}/XmlClassManager.h
 	${HEADER_PATH}/XmlClassManagerWrapper.h

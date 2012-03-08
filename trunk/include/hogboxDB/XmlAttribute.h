@@ -16,6 +16,7 @@
 #include <map>
 #include <iostream>
 #include <osgDB/XmlParser>
+#include <hogbox/HogBoxBase.h>
 
 #include <hogboxDB/XmlUtils.h>
 
@@ -48,17 +49,21 @@ namespace hogboxDB {
 	//
 	//Base XmlAttribute class provides interface for deserialisation
 	//of XmlNodes
-	class XmlAttribute : public osg::Referenced {		
+	class XmlAttribute : public osg::Referenced {	
 	public:
-		XmlAttribute() : osg::Referenced(){}
+		XmlAttribute(const std::string& name)
+            : osg::Referenced(),
+            _name(name)
+        {
+        }
 		
 		inline virtual void operator = (const XmlAttribute&){}
 		
 		//write into passed names contents
-		inline virtual bool serialize(osgDB::XmlNode*) 
-		{return false;}
+		inline virtual osgDB::XmlNodePtr serialize()
+		{return NULL;}
 		//read from the passed contents
-		inline virtual bool deserialize(osgDB::XmlNode*) 
+		inline virtual bool deserialize(osgDB::XmlNode*)
 		{return false;}
 
 		//
@@ -68,11 +73,17 @@ namespace hogboxDB {
 			return true;
 		}
 	
+        //
+        const std::string& getName(){return _name;}
+        
 	protected:
 		XmlAttribute(const XmlAttribute& copy) : osg::Referenced(copy){}
 
 		virtual ~XmlAttribute(){}
-	};	
+    protected:
+        //name in xml of the attribute/node
+        std::string _name;
+	};
 
 	//Map an Attribute name to its XmlAttribute
 	typedef std::map<std::string, osg::ref_ptr<XmlAttribute> > XmlAttributeMap;
@@ -84,13 +95,13 @@ namespace hogboxDB {
 	//member is passed to the constructor, which should be the smae type as T.
 	//Basic value types are handled in de/serialisation see hogboxDB::getXmlContents
 	//for supported types
-	template <typename T> class TypedXmlAttribute: public XmlAttribute 
+	template <typename T> class TypedXmlAttribute: public XmlAttribute
 	{
 	public:
 	
-		TypedXmlAttribute(T* value = 0) 
-			: XmlAttribute(),			
-			_value(value) 
+		TypedXmlAttribute(const std::string& name, T* value = 0) 
+			: XmlAttribute(name),			
+			_value(value)
 		{
 		}
 		
@@ -99,13 +110,18 @@ namespace hogboxDB {
 		virtual void set(const T& value) {			
 			*_value = value;
 		}
-		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) {
-			//std::stringstream ss;
-			//ss << *_value;
-			//out->contents = ss.str();
-			//out << *_value;
-			return true;
+        
+        //
+		//write a single node with the content as a string version of the type value
+		virtual osgDB::XmlNodePtr serialize() {
+            OSG_FATAL << "Serialize Attribute" << std::endl;
+            //OSG_FATAL << "    Value: " << this->get() << std::endl;
+            osgDB::XmlNodePtr attNode = new osgDB::XmlNode();
+            attNode->name = this->getName();
+            attNode->type = osgDB::XmlNode::NODE;
+            hogboxDB::setXmlContents(attNode.get(), this->get());
+            
+			return attNode;
 		}
 
 		virtual bool deserialize(osgDB::XmlNode* in) 
@@ -155,9 +171,10 @@ namespace hogboxDB {
 		typedef const T& (C::* GetHandler)() const;  //get value function definition
 		typedef void (C::* SetHandler)(const T&); //set value function definition
 								
-		CallbackXmlAttribute(C *object, 
-			GetHandler ghandler = 0,
-			SetHandler shandler = 0) : 
+		CallbackXmlAttribute(const std::string& name, C *object, 
+                            GetHandler ghandler = 0,
+                            SetHandler shandler = 0) 
+            : TypedXmlAttribute<T>(name), 
 			f_gethandler(ghandler),			
 			f_sethandler(shandler),
             mp_object(object)

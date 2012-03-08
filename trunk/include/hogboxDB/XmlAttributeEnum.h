@@ -66,7 +66,9 @@ namespace hogboxDB {
     class EnumXmlAttribute : public XmlAttribute
     {
     public:
-        EnumXmlAttribute() : XmlAttribute() {
+        EnumXmlAttribute(const std::string& name) 
+            : XmlAttribute(name)
+        {
         }
         
         //
@@ -86,9 +88,9 @@ namespace hogboxDB {
 	{
 	public:
         
-		EnumTypedXmlAttribute(T* value = 0) 
-        : EnumXmlAttribute(),			
-        _value(value) 
+		EnumTypedXmlAttribute(const std::string& name, T* value = 0) 
+            : EnumXmlAttribute(name),			
+            _value(value) 
 		{
 		}
 		
@@ -98,12 +100,20 @@ namespace hogboxDB {
 			*_value = value;
 		}
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) {
-			//std::stringstream ss;
-			//ss << *_value;
-			//out->contents = ss.str();
-			//out << *_value;
-			return true;
+		virtual osgDB::XmlNodePtr serialize() {
+            OSG_FATAL << "Serialize EnumAttribute" << std::endl;
+            //OSG_FATAL << "    Value: " << this->get() << std::endl;
+            osgDB::XmlNodePtr attNode = new osgDB::XmlNode();
+            attNode->name = this->getName();
+            attNode->type = osgDB::XmlNode::NODE;
+            
+            //get string rep of the enum
+            std::string enumStr;
+            if(_lookup.getName(this->get(), enumStr)){
+                hogboxDB::setXmlContents(attNode.get(), enumStr);
+                return attNode;
+            }
+            return NULL;
 		}
         
 		virtual bool deserialize(osgDB::XmlNode* in) 
@@ -155,12 +165,13 @@ namespace hogboxDB {
 		typedef const T& (C::* GetHandler)() const;  //get value function definition
 		typedef void (C::* SetHandler)(const T&); //set value function definition
         
-		EnumCallbackXmlAttribute(C *object, 
-                             GetHandler ghandler = 0,
-                             SetHandler shandler = 0) : 
-        f_gethandler(ghandler),			
-        f_sethandler(shandler),
-        mp_object(object)
+		EnumCallbackXmlAttribute(const std::string& name, C *object, 
+                                 GetHandler ghandler = 0,
+                                 SetHandler shandler = 0) 
+            : EnumTypedXmlAttribute<T>(name), 
+            f_gethandler(ghandler),			
+            f_sethandler(shandler),
+            mp_object(object)
 		{
 		}
 		

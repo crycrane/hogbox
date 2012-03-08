@@ -67,18 +67,18 @@ protected:
         hogbox::HogBoxLight* hogboxLight = dynamic_cast<hogbox::HogBoxLight*>(p_wrappedObject.get());
         
 		//Position attribute Vec3
-		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>("Position", hogboxLight,
                                                                                                        &hogbox::HogBoxLight::GetPosition,
                                                                                                        &hogbox::HogBoxLight::SetPosition);
         
 		//Colors
-		_xmlAttributes["Diffuse"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+		_xmlAttributes["Diffuse"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>("Diffuse", hogboxLight,
                                                                                                       &hogbox::HogBoxLight::GetDiffuse,
                                                                                                       &hogbox::HogBoxLight::SetDiffuse);
-		_xmlAttributes["Ambient"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+		_xmlAttributes["Ambient"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>("Ambient", hogboxLight,
                                                                                                       &hogbox::HogBoxLight::GetAmbient,
                                                                                                       &hogbox::HogBoxLight::SetAmbient);
-		_xmlAttributes["Specular"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>(hogboxLight,
+		_xmlAttributes["Specular"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxLight,osg::Vec4>("Specular", hogboxLight,
                                                                                                        &hogbox::HogBoxLight::GetSpecular,
                                                                                                        &hogbox::HogBoxLight::SetSpecular);
     }

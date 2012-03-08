@@ -50,7 +50,7 @@ public:
 		group->setName("OsgNodeRoot");
 
 		//add the temporary wrapper attributes
-		_xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
+		_xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>("File", &_fileName);
 
 		p_wrappedObject = group;
 	}
@@ -111,7 +111,7 @@ protected:
     //Bind the xml attributes for the wrapped object
     virtual void bindXmlAttributes(){
         //osg::Group* node = dynamic_cast<osg::Group*>(p_wrappedObject.get());
-        _xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>(&_fileName);
+        _xmlAttributes["File"] = new hogboxDB::TypedXmlAttribute<std::string>("File", &_fileName);
     }
 
 };

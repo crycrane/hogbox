@@ -60,19 +60,19 @@ protected:
     virtual void bindXmlAttributes(){
         hogbox::SystemFeatureLevel* featureLevel = dynamic_cast<hogbox::SystemFeatureLevel*>(p_wrappedObject.get());
         
-		_xmlAttributes["GLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glVersion);
+		_xmlAttributes["GLVersion"] = new hogboxDB::TypedXmlAttribute<float>("GLVersion", &featureLevel->glVersion);
         
-		_xmlAttributes["GLSLVersion"] = new hogboxDB::TypedXmlAttribute<float>(&featureLevel->glslVersion);
+		_xmlAttributes["GLSLVersion"] = new hogboxDB::TypedXmlAttribute<float>("GLSLVersion", &featureLevel->glslVersion);
         
-		_xmlAttributes["TextureUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureUnits);
+		_xmlAttributes["TextureUnits"] = new hogboxDB::TypedXmlAttribute<int>("TextureUnits", &featureLevel->textureUnits);
         
-		_xmlAttributes["TextureCoordUnits"] = new hogboxDB::TypedXmlAttribute<int>(&featureLevel->textureCoordUnits);
+		_xmlAttributes["TextureCoordUnits"] = new hogboxDB::TypedXmlAttribute<int>("TextureCoordUnits", &featureLevel->textureCoordUnits);
         
-		_xmlAttributes["VertexAndFragmentShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->vertexAndFragmentShaders);
+		_xmlAttributes["VertexAndFragmentShader"] = new hogboxDB::TypedXmlAttribute<bool>("VertexAndFragmentShader", &featureLevel->vertexAndFragmentShaders);
         
-		_xmlAttributes["GeometryShader"] = new hogboxDB::TypedXmlAttribute<bool>(&featureLevel->geometryShaders);
+		_xmlAttributes["GeometryShader"] = new hogboxDB::TypedXmlAttribute<bool>("GeometryShader", &featureLevel->geometryShaders);
         
-		_xmlAttributes["ScreenResolution"] = new hogboxDB::TypedXmlAttribute<osg::Vec2>(&featureLevel->screenRes);
+		_xmlAttributes["ScreenResolution"] = new hogboxDB::TypedXmlAttribute<osg::Vec2>("ScreenResolution", &featureLevel->screenRes);
     }
 };
 

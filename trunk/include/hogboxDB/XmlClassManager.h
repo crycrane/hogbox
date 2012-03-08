@@ -26,7 +26,6 @@
 
 namespace hogboxDB {
 
-typedef osg::ref_ptr<osgDB::XmlNode> XmlNodePtr;
 
 //forward delcare XmlClassWrapper base type
 class XmlClassWrapper;
@@ -71,6 +70,10 @@ public:
 	//Find the node if it's already been loaded
 	osg::ObjectPtr GetNodeObjectByID(const std::string& uniqueID);
 
+    //
+    //Write an object to an xmlnode using one of the xmlclasswrappers
+    osgDB::XmlNodePtr WriteXmlNode(osg::ObjectPtr object);
+    
 	//
 	//Release the node object if it has already been loaded
 	bool ReleaseNodeByID(const std::string& uniqueID);
@@ -97,6 +100,15 @@ protected:
 	//Allocates the relevant wrapper type then deserialize the node with it
     //the wrapper is then returned an should contain the correct type
     virtual XmlClassWrapperPtr readObjectFromXmlNode(osgDB::XmlNode* xmlNode);
+    
+    //
+    //will allocate the relevant xmlclasswrapper for the object
+    //then use it to serialize the object to a new xml node
+    virtual osgDB::XmlNodePtr writeObjectToXmlNode(osg::ObjectPtr object);
+    
+    //
+    //Serialize the passed XmlClassWrapper into a new xml node and return
+    virtual osgDB::XmlNodePtr writeObjectToXmlNode(XmlClassWrapperPtr xmlWrapper);
 
 protected:
 
@@ -108,8 +120,8 @@ protected:
 	ClassTypeWrapperMap _supportedClassTypes;
 
 	//map the xml node to the object it created
-	typedef std::map<XmlNodePtr, XmlClassWrapperPtr> XmlNodeToObjectMap;
-	typedef std::pair<XmlNodePtr, XmlClassWrapperPtr> XmlNodeToObjectPair;//hogbox::ObjectPtr
+	typedef std::map<osgDB::XmlNodePtr, XmlClassWrapperPtr> XmlNodeToObjectMap;
+	typedef std::pair<osgDB::XmlNodePtr, XmlClassWrapperPtr> XmlNodeToObjectPair;//hogbox::ObjectPtr
 
 	XmlNodeToObjectMap _objectList;
 

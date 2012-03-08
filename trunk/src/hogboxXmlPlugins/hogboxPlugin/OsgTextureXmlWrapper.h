@@ -139,17 +139,17 @@ protected:
     virtual void bindXmlAttributes(){
         //osg::Texture* texture = dynamic_cast<osg::Texture*>(p_wrappedObject.get());
 		//use helper variables to load the texture wrap modes
-		_xmlAttributes["WrapU"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapU);
-		_xmlAttributes["WrapV"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapV);
-		_xmlAttributes["WrapW"] = new hogboxDB::TypedXmlAttribute<std::string>(&_wrapW);
+		_xmlAttributes["WrapU"] = new hogboxDB::TypedXmlAttribute<std::string>("WrapU", &_wrapU);
+		_xmlAttributes["WrapV"] = new hogboxDB::TypedXmlAttribute<std::string>("WrapV", &_wrapV);
+		_xmlAttributes["WrapW"] = new hogboxDB::TypedXmlAttribute<std::string>("WrapW", &_wrapW);
         
-		_xmlAttributes["MinFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_minFilter);
-		_xmlAttributes["MagFilter"] = new hogboxDB::TypedXmlAttribute<std::string>(&_magFilter);
+		_xmlAttributes["MinFilter"] = new hogboxDB::TypedXmlAttribute<std::string>("MinFilter", &_minFilter);
+		_xmlAttributes["MagFilter"] = new hogboxDB::TypedXmlAttribute<std::string>("MagFilter", &_magFilter);
         
-		_xmlAttributes["GenMipMaps"] = new hogboxDB::TypedXmlAttribute<bool>(&_autoGenMipMaps);
-		_xmlAttributes["ResizeNPOT"] = new hogboxDB::TypedXmlAttribute<bool>(&_resizeNPOT);
+		_xmlAttributes["GenMipMaps"] = new hogboxDB::TypedXmlAttribute<bool>("GenMipMaps", &_autoGenMipMaps);
+		_xmlAttributes["ResizeNPOT"] = new hogboxDB::TypedXmlAttribute<bool>("ResizeNPOT", &_resizeNPOT);
         
-		_xmlAttributes["MaxAnisotropy"] = new hogboxDB::TypedXmlAttribute<float>(&_maxAnisotropic);
+		_xmlAttributes["MaxAnisotropy"] = new hogboxDB::TypedXmlAttribute<float>("MaxAnisotropy", &_maxAnisotropic);
     }
 
 };

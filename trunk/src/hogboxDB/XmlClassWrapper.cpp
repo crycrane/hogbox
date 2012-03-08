@@ -47,6 +47,18 @@ osg::Object* XmlClassWrapper::getWrappedObject()
 	return p_wrappedObject;
 }
 
+//
+//Manually set an existing object to wrap
+//
+void XmlClassWrapper::setWrappedObject(osg::Object* object)
+{
+    //
+    p_wrappedObject = object;
+    //clear any existing attributes
+    _xmlAttributes.clear();
+    this->bindXmlAttributes();
+}
+
 
 //
 //Return the attribute with the name provided, the attribute
@@ -151,6 +163,37 @@ bool XmlClassWrapper::deserialize(osgDB::XmlNode* in)
 	return true;
 }
 
+//
+//Write the wrapped object into an xmlNode
+//
+osgDB::XmlNodePtr XmlClassWrapper::serialize()
+{
+    //check we have a wrapped object to write
+    if(!p_wrappedObject.get()){
+        return NULL;
+    }
+    
+    //allocate the xmlnode
+    osgDB::XmlNodePtr xmlNode = new osgDB::XmlNode();
+    xmlNode->name = p_wrappedObject->className();
+    xmlNode->type = osgDB::XmlNode::GROUP;
+    
+    //set the unique id property
+    hogboxDB::setXmlPropertyValue(xmlNode.get(), "uniqueID", p_wrappedObject->getName());
+    
+    //iterate the xmlattributes and serialize each to an xmlnode attached as a child of this xmlnode
+    XmlAttributeMap::iterator attItr = _xmlAttributes.begin();
+    for( ; attItr!=_xmlAttributes.end(); attItr++){
+        XmlAttribute* att = (*attItr).second;
+        //now try to serialise the attribute
+        osgDB::XmlNodePtr attNode = att->serialize();
+        if(attNode.valid()){
+            //successfull serialized, add the node as child of this
+            xmlNode->children.push_back(attNode.get());
+        }
+    }
+    return xmlNode;
+}
 
 //
 //Return the class name from an xml node, default is the nodes name,

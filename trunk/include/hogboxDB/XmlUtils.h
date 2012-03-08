@@ -536,60 +536,60 @@ namespace hogboxDB {
     }
     static inline const bool typeToStringStream(const osg::Vec2& input, std::stringstream& result)
 	{
-        if(!typeToStringStream(input.x(), result)){return false;}
+        if(!typeToStringStream(input.x(), result)){return false;}result << " ";
         if(!typeToStringStream(input.y(), result)){return false;}
         return true;
     }
     static inline const bool typeToStringStream(const osg::Vec3& input, std::stringstream& result)
 	{
-        if(!typeToStringStream(input.x(), result)){return false;}
-        if(!typeToStringStream(input.y(), result)){return false;}
+        if(!typeToStringStream(input.x(), result)){return false;}result << " ";
+        if(!typeToStringStream(input.y(), result)){return false;}result << " ";
         if(!typeToStringStream(input.z(), result)){return false;}
         return true;
     }
     static inline const bool typeToStringStream(const osg::Vec4& input, std::stringstream& result)
 	{
-        if(!typeToStringStream(input.x(), result)){return false;}
-        if(!typeToStringStream(input.y(), result)){return false;}
-        if(!typeToStringStream(input.z(), result)){return false;}
+        if(!typeToStringStream(input.x(), result)){return false;}result << " ";
+        if(!typeToStringStream(input.y(), result)){return false;}result << " ";
+        if(!typeToStringStream(input.z(), result)){return false;}result << " ";
         if(!typeToStringStream(input.w(), result)){return false;}
         return true;
     }
     static inline const bool typeToStringStream(const osg::Quat& input, std::stringstream& result)
 	{
-        if(!typeToStringStream(input.x(), result)){return false;}
-        if(!typeToStringStream(input.y(), result)){return false;}
-        if(!typeToStringStream(input.z(), result)){return false;}
+        if(!typeToStringStream(input.x(), result)){return false;}result << " ";
+        if(!typeToStringStream(input.y(), result)){return false;}result << " ";
+        if(!typeToStringStream(input.z(), result)){return false;}result << " ";
         if(!typeToStringStream(input.w(), result)){return false;}
         return true;
     }
     static inline const bool typeToStringStream(const osg::Matrix& input, std::stringstream& result)
 	{
-        if(!typeToStringStream(input(0,0), result)){return false;}
-        if(!typeToStringStream(input(0,1), result)){return false;}
-        if(!typeToStringStream(input(0,2), result)){return false;}
-        if(!typeToStringStream(input(0,3), result)){return false;}
+        if(!typeToStringStream(input(0,0), result)){return false;}result << " ";
+        if(!typeToStringStream(input(0,1), result)){return false;}result << " ";
+        if(!typeToStringStream(input(0,2), result)){return false;}result << " ";
+        if(!typeToStringStream(input(0,3), result)){return false;}result << " ";
         
-        if(!typeToStringStream(input(1,0), result)){return false;}
-        if(!typeToStringStream(input(1,1), result)){return false;}
-        if(!typeToStringStream(input(1,2), result)){return false;}
-        if(!typeToStringStream(input(1,3), result)){return false;}
+        if(!typeToStringStream(input(1,0), result)){return false;}result << " ";
+        if(!typeToStringStream(input(1,1), result)){return false;}result << " ";
+        if(!typeToStringStream(input(1,2), result)){return false;}result << " ";
+        if(!typeToStringStream(input(1,3), result)){return false;}result << " ";
         
-        if(!typeToStringStream(input(2,0), result)){return false;}
-        if(!typeToStringStream(input(2,1), result)){return false;}
-        if(!typeToStringStream(input(2,2), result)){return false;}
-        if(!typeToStringStream(input(2,3), result)){return false;}
+        if(!typeToStringStream(input(2,0), result)){return false;}result << " ";
+        if(!typeToStringStream(input(2,1), result)){return false;}result << " ";
+        if(!typeToStringStream(input(2,2), result)){return false;}result << " ";
+        if(!typeToStringStream(input(2,3), result)){return false;}result << " ";
         
-        if(!typeToStringStream(input(3,0), result)){return false;}
-        if(!typeToStringStream(input(3,1), result)){return false;}
-        if(!typeToStringStream(input(3,2), result)){return false;}
+        if(!typeToStringStream(input(3,0), result)){return false;}result << " ";
+        if(!typeToStringStream(input(3,1), result)){return false;}result << " ";
+        if(!typeToStringStream(input(3,2), result)){return false;}result << " ";
         if(!typeToStringStream(input(3,3), result)){return false;}
         return true;
     }
 
     static inline const std::string typeToAscii(const std::string& input)
 	{
-		std::stringstream ss;
+		std::stringstream ss("");
 		hogboxDB::typeToStringStream(input, ss);
         return ss.str();
 	}

@@ -902,6 +902,22 @@ const std::string SystemInfo::GetDeviceString()
 #endif
 }
 
+//
+//Return the device id string
+//
+const std::string GetDeviceString()
+{
+#ifdef TARGET_OS_IPHONE
+    //ensure a player data file exists in documents folder
+    NSArray     *docsPathList = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString    *docsPath     = [docsPathList  objectAtIndex:0];
+    const char* docsPathChar  = [docsPath UTF8String];
+    return std::string(docsPathChar);
+#else
+    return "Documents;
+#endif
+}
+
 
 void SystemInfo::PrintReportToLog()
 {

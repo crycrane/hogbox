@@ -39,7 +39,7 @@ VisionRegistry::VisionRegistry(void) : osg::Referenced()
 {
 	//add the aliases for the standard osg and hogbox 
 	//types to the multi purpose hogbox xml plugin which 
-	//should always be avaliable
+	//should always be available
 	AddClassTypeAlias("node", "hogbox");
 
 }
@@ -186,7 +186,7 @@ void VisionRegistry::AddClassTypeAlias(const std::string mapClassType, const std
 }
 
 //
-//Load all avaliable plugins in the hogboxVisionPlugins folder matching the
+//Load all available plugins in the hogboxVisionPlugins folder matching the
 //VideoFileStreamPluginPrepend. Returns the number of plugins loaded
 //
 int VisionRegistry::LoadVideoFileStreamPlugin(const std::string plugin)
@@ -276,7 +276,7 @@ const std::string VisionRegistry::FindVideoFileLibraryName(int index)
 
 //
 //Return a videostream plugin prototype based on it's name
-//if no name is passed the first avaliable plugin is returned
+//if no name is passed the first available plugin is returned
 //
 VideoFileStreamWrapperPtr VisionRegistry::GetVideoFileStreamPluginProto(const std::string& plugin)
 {
@@ -390,7 +390,7 @@ const std::string VisionRegistry::FindWebCamLibraryName(int index)
 
 //
 //Return a videostream plugin prototype based on it's name
-//if no name is passed the first avaliable plugin is returned
+//if no name is passed the first available plugin is returned
 //
 WebCamStreamWrapperPtr VisionRegistry::GetWebCamStreamPluginProto(const std::string& plugin)
 {

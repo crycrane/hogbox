@@ -56,7 +56,7 @@ protected:
         hogbox::HogBoxObject* hogboxObject = dynamic_cast<hogbox::HogBoxObject*>(p_wrappedObject.get());
         
 		//Position attribute Vec3
-		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
+		_xmlAttributes["Position"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>("Position", hogboxObject,
                                                                                                         &hogbox::HogBoxObject::GetLocalTranslation,
                                                                                                         &hogbox::HogBoxObject::SetLocalTranslation);
 		//RotationRadians attribute Vec3 in radians
@@ -64,11 +64,11 @@ protected:
 		//															&hogbox::HogBoxObject::GetRotationRadians,
 		//															&hogbox::HogBoxObject::SetRotationRadians);
 		//RotationDegrees attribute Vec3 in degrees
-		_xmlAttributes["Rotation"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
+		_xmlAttributes["Rotation"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>("Rotation", hogboxObject,
                                                                                                         &hogbox::HogBoxObject::GetLocalRotation,
                                                                                                         &hogbox::HogBoxObject::SetLocalRotation);
 		//scale Vec3
-		_xmlAttributes["Scale"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>(hogboxObject,
+		_xmlAttributes["Scale"] = new hogboxDB::CallbackXmlAttribute<hogbox::HogBoxObject,osg::Vec3>("Scale",hogboxObject,
                                                                                                      &hogbox::HogBoxObject::GetLocalScale,
                                                                                                      &hogbox::HogBoxObject::SetLocalScale);
         
@@ -76,12 +76,12 @@ protected:
 		//via AddNodeToObject. The xml reader will read the list of nodes, directly
 		//into _wrappededNodes. Once reading is complete the list is passed trough 
 		//AddNodeToObject so that child nodes etc can be wrapped
-		_xmlAttributes["ModelNodes"] = new hogboxDB::CallbackXmlClassPointerList<hogbox::HogBoxObject,osg::NodePtrVector, osg::Node>(hogboxObject,
+		_xmlAttributes["ModelNodes"] = new hogboxDB::CallbackXmlClassPointerList<hogbox::HogBoxObject,osg::NodePtrVector, osg::Node>("ModelNodes", hogboxObject,
                                                                                                                                     &hogbox::HogBoxObject::GetWrappedNodes,
                                                                                                                                     &hogbox::HogBoxObject::SetWrappedNodes);
         
 		//the list of meshmappings
-		_xmlAttributes["MeshMappings"] = new hogboxDB::CallbackXmlClassPointerList<hogbox::HogBoxObject,hogbox::MeshMappingPtrVector, hogbox::MeshMapping>(hogboxObject,
+		_xmlAttributes["MeshMappings"] = new hogboxDB::CallbackXmlClassPointerList<hogbox::HogBoxObject,hogbox::MeshMappingPtrVector, hogbox::MeshMapping>("MeshMappings", hogboxObject,
                                                                                                                                     &hogbox::HogBoxObject::GetMeshMappings,
                                                                                                                                     &hogbox::HogBoxObject::SetMeshMappings);
     }

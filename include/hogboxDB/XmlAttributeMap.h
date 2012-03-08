@@ -57,10 +57,11 @@ namespace hogboxDB {
 		typedef T* (C::* GetValueByKeyHandler)(const K&);
 		typedef void (C::* SetValueByKeyHandler)(const K&, T*);
 								
-		CallbackXmlClassPointerMap(C *object, 
+		CallbackXmlClassPointerMap(const std::string& name, C *object, 
                                    GetValueByKeyHandler ghandler = 0,
                                    SetValueByKeyHandler shandler = 0) 
-            : f_getvaluebykeyhandler(ghandler),			
+            : XmlAttribute(name),
+            f_getvaluebykeyhandler(ghandler),			
 			f_setvaluebykeyhandler(shandler),
 			mp_object(object)
 		{
@@ -82,13 +83,13 @@ namespace hogboxDB {
 		}
 
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) 
+		virtual osgDB::XmlNodePtr serialize() 
 		{
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
 			//out << *_value;
-			return true;
+			return NULL;
 		}
 
 		//

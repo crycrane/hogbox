@@ -46,21 +46,21 @@ protected:
         hogbox::MeshMapping* mapping = dynamic_cast<hogbox::MeshMapping*>(p_wrappedObject.get());
         
 		_xmlAttributes["MapToList"] = new hogboxDB::CallbackXmlAttributeList<hogbox::MeshMappingVisitor, std::vector<std::string>, std::string>
-                                                                            (mapping->_visitor, &hogbox::MeshMappingVisitor::GetMapToList, 
+                                                                            ("MapToList", mapping->_visitor, &hogbox::MeshMappingVisitor::GetMapToList, 
                                                                              &hogbox::MeshMappingVisitor::SetMapToList);
         
         
 		_xmlAttributes["AssignedMaterial"] = new hogboxDB::CallbackXmlClassPointer<hogbox::MeshMappingVisitor, hogbox::HogBoxMaterial>
-                                                                                (mapping->_visitor, &hogbox::MeshMappingVisitor::GetMaterial,
+                                                                                ("AssignedMaterial", mapping->_visitor, &hogbox::MeshMappingVisitor::GetMaterial,
                                                                                 &hogbox::MeshMappingVisitor::SetMaterial);
         
 		_xmlAttributes["Visible"] = new hogboxDB::CallbackXmlAttribute<hogbox::MeshMappingVisitor, bool>
-                                                                        (mapping->_visitor,&hogbox::MeshMappingVisitor::GetVisible,
+                                                                        ("Visible", mapping->_visitor,&hogbox::MeshMappingVisitor::GetVisible,
                                                                         &hogbox::MeshMappingVisitor::SetVisible);
         
 		//Flag use of skinning
 		_xmlAttributes["UseSkinning"] = new hogboxDB::CallbackXmlAttribute<hogbox::MeshMappingVisitor,bool>
-                                                                        (mapping->_visitor, &hogbox::MeshMappingVisitor::IsUsingSkinning,
+                                                                        ("UseSkinning", mapping->_visitor, &hogbox::MeshMappingVisitor::IsUsingSkinning,
                                                                         &hogbox::MeshMappingVisitor::UseSkinning);
 
     }

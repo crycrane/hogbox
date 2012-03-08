@@ -639,7 +639,7 @@ bool HogBoxMaterial::RemoveShader(osg::Shader* shader)
 //
 osg::Shader* HogBoxMaterial::GetShader(const unsigned int index)
 {
-	if(index < 0 || index >= _shaders.size()){return NULL;}
+	if(index >= _shaders.size()){return NULL;}
 	return _shaders[index];
 }
 

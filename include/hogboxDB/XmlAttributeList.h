@@ -36,12 +36,15 @@ namespace hogboxDB {
 	//base interface for list types
 	class XmlAttributeList : public XmlAttribute {		
 	public:
-		XmlAttributeList(){}
+		XmlAttributeList(const std::string& name)
+            : XmlAttribute(name)
+        {
+        }
 		
 		//write into passed names contents
-		inline virtual bool serialize(osgDB::XmlNode*) 
+		inline virtual osgDB::XmlNodePtr serialize() 
 		{
-			return false;
+			return NULL;
 		}
 		//read from the passed contents
 		inline virtual bool deserialize(osgDB::XmlNode*) 
@@ -50,8 +53,6 @@ namespace hogboxDB {
 		}
 	
 	protected:
-
-		XmlAttributeList(const XmlAttributeList&){}
 
 		virtual ~XmlAttributeList(){}
 	};	
@@ -63,12 +64,12 @@ namespace hogboxDB {
 	//The template requires two types, L the list type and T the type the
 	//list contains. The list type should be an stl container of some sort
 	//i.e. std::vector, std::deque etc
-	template <typename L, typename T> class TypedXmlAttributeList: public XmlAttribute 
+	template <typename L, typename T> class TypedXmlAttributeList : public XmlAttribute 
 	{
 	public:
 	
-		TypedXmlAttributeList(L* list = 0) 
-			: XmlAttribute(),			
+		TypedXmlAttributeList(const std::string& name, L* list = 0) 
+			: XmlAttribute(name),			
 			_list(list) 
 		{
 		}
@@ -88,12 +89,27 @@ namespace hogboxDB {
 			_list->at(index) = value;
 		}
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) {
-			//std::stringstream ss;
-			//ss << *_value;
-			//out->contents = ss.str();
-			//out << *_value;
-			return true;
+		virtual osgDB::XmlNodePtr serialize() {
+            
+            //
+            if(!_list){return NULL;}
+            
+			//create the head node which will provide the count as a property
+            osgDB::XmlNodePtr listNode = new osgDB::XmlNode();
+            listNode->name = this->getName();
+            listNode->type = osgDB::XmlNode::GROUP;
+            
+            //set the count property
+            hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)_list->size());
+            
+            //now loop each item of the list and write it to a stringstream
+            std::stringstream listss;
+            for(int i=0; i<_list->size(); i++){
+                hogboxDB::typeToStringStream(this->get(i), listss);
+                listss << " ";
+            }
+            listNode->contents = listss.str();
+            return listNode;
 		}
 
 		//
@@ -189,10 +205,11 @@ namespace hogboxDB {
 		typedef const L& (C::* GetListHandler)() const;
 		typedef void (C::* SetListHandler)(const L&);
 								
-		CallbackXmlAttributeList(C *object, 
+		CallbackXmlAttributeList(const std::string& name, C *object, 
                                  GetListHandler ghandler = 0,
                                  SetListHandler shandler = 0) 
-            : f_getlisthandler(ghandler),			
+            : TypedXmlAttributeList<L, T>(name),
+            f_getlisthandler(ghandler),			
 			f_setlisthandler(shandler),
 			mp_object(object)
 		{
@@ -214,14 +231,29 @@ namespace hogboxDB {
 		}
 
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) {
+		virtual osgDB::XmlNodePtr serialize() {
 
-			//
-			//std::stringstream ss;
-			//ss << this->get();
-			//out->contents = ss.str();
-			//out << *_value;
-			return true;
+            if(!mp_object){return NULL;}
+            
+			//create the head node which will provide the count as a property
+            osgDB::XmlNodePtr listNode = new osgDB::XmlNode();
+            listNode->name = this->getName();
+            listNode->type = osgDB::XmlNode::GROUP;
+
+            //get local ref to the objects list 
+            L list = this->get();
+            
+            //set the count property
+            hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)list.size());
+                                          
+            //now loop each item of the list and write it to a stringstream
+            std::stringstream listss;
+            for(int i=0; i<list.size(); i++){
+                hogboxDB::typeToStringStream(list.at(i), listss);
+                listss << " ";
+            }
+            listNode->contents = listss.str();
+            return listNode;
 		}
 
 		//
@@ -238,7 +270,7 @@ namespace hogboxDB {
 			if(!hogboxDB::getXmlPropertyValue(in, "count", count))
 			{
 				osg::notify(osg::WARN) << "XML ERROR: Parsing list attribute '" << in->name << "'," << std::endl
-									   << "                      List nodes must contain a 'count' property. For example <" << in->name << " count='2>" << std::endl;
+									   << "                      List nodes must contain a 'count' property. For example <" << in->name << " count='2'>" << std::endl;
 
 				return false;
 			}
@@ -275,7 +307,7 @@ namespace hogboxDB {
 				}
 			}
 
-			//set the new list via the set callbaxk
+			//set the new list via the set callback
 			this->set(list);
 			return true;
 		}

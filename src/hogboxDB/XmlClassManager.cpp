@@ -100,7 +100,9 @@ osg::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xmlNo
 	return NULL;
 }
 
+//
 //Find the node if it's already been loaded
+//
 osg::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID)
 {
 	for(XmlNodeToObjectMap::iterator itr=_objectList.begin();
@@ -114,6 +116,16 @@ osg::ObjectPtr XmlClassManager::GetNodeObjectByID(const std::string& uniqueID)
 	return NULL;//not found
 }
 
+//
+//Write an object to an xmlnode using one of the xmlclasswrappers
+//
+osgDB::XmlNodePtr XmlClassManager::WriteXmlNode(osg::ObjectPtr object)
+{
+    //check we can load this class of node
+	if(!this->AcceptsClassType(object->className())){return NULL;}
+    
+    return this->writeObjectToXmlNode(object);
+}
 
 //
 //Release the node object if it has already been loaded
@@ -202,6 +214,36 @@ hogboxDB::XmlClassWrapperPtr XmlClassManager::readObjectFromXmlNode(osgDB::XmlNo
     }
 
     return xmlWrapper;
+}
+
+//
+//will allocate the relevant xmlclasswrapper for the object
+//then use it to serialize the object to a new xml node
+//
+osgDB::XmlNodePtr XmlClassManager::writeObjectToXmlNode(osg::ObjectPtr object)
+{
+    if(!object.get()){
+        OSG_FATAL << "XmlClassManager::writeObjectToXmlNode: ERROR: Invalid Object." << std::endl;
+        return NULL;
+    }
+    //create the xrapper for the object
+    hogboxDB::XmlClassWrapperPtr xmlWrapper = this->allocateXmlClassWrapperForType(object->className());
+    if(!xmlWrapper.get()){
+        OSG_FATAL << "XmlClassManager::writeObjectToXmlNode: ERROR: Failed to allocate XmlWrapper for node '" << object->className() << "'" << std::endl;
+        return NULL;
+    }
+    xmlWrapper->setWrappedObject(object.get());
+    
+    return this->writeObjectToXmlNode(xmlWrapper);
+}
+
+//
+//Serialize the passed XmlClassWrapper into a new xml node and return
+//
+osgDB::XmlNodePtr XmlClassManager::writeObjectToXmlNode(XmlClassWrapperPtr xmlWrapper)
+{
+    osgDB::XmlNodePtr writeNode = xmlWrapper->serialize();
+    return writeNode;
 }
 
 

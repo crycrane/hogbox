@@ -100,6 +100,11 @@ public:
     //Get node if it has already been loaded, won't load the node
     osg::Object* GetNodeByID(const std::string& uniqueID);
 
+    //
+    //Write an object to xmlnode, this function is recursive
+    //as the object may store a class
+    osgDB::XmlNodePtr WriteXmlNode(osg::ObjectPtr object);
+    
 	//
 	//Release a node from the database by name
 	bool ReleaseNodeByID(const std::string& uniqueID);

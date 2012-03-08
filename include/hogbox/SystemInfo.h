@@ -586,6 +586,9 @@ public:
     //Return the device id string
     const std::string GetDeviceString();
 
+    //
+    //File path helpers
+    const std::string GetDocumentPath();
     
 	//
 	void PrintReportToLog();

@@ -63,7 +63,7 @@ protected:
         osg::TextureRectangle* texture = dynamic_cast<osg::TextureRectangle*>(p_wrappedObject.get());
         
         //The image used by the texture2D
-        _xmlAttributes["TextureImage"] = new hogboxDB::CallbackXmlClassPointer<osg::TextureRectangle,osg::Image>(texture,
+        _xmlAttributes["TextureImage"] = new hogboxDB::CallbackXmlClassPointer<osg::TextureRectangle,osg::Image>("TextureImage", texture,
                                                                                                           &osg::TextureRectangle::getImage,
                                                                                                           &osg::TextureRectangle::setImage);
     }

@@ -105,7 +105,7 @@ osg::ObjectPtr HogBoxManager::ReadNodeByID(const std::string& uniqueID)
 //for an XmlClassManager capable of reading the node. If an XmlClassManager
 //is found that states it can read the classtype then the node is passed to
 //the XmlNodeManagers GetOrLoadNode function returning the result
-//If n oXmlNodeManager is found then NULL is returned
+//If no XmlNodeManager is found then NULL is returned
 //
 osg::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 {
@@ -125,7 +125,7 @@ osg::ObjectPtr HogBoxManager::ReadNode(osgDB::XmlNode* inNode)
 	}
 
 	//use the requested class name to query the hogbox registry for an xmlnodemanager that is
-	//cabale of loading the class type
+	//capable of loading the class type
 
 	XmlClassManager* readManager = hogboxDB::HogBoxRegistry::Inst()->GetXmlClassManagerForClassType(requestedClass);
 	if(readManager)
@@ -158,6 +158,21 @@ osg::Object* HogBoxManager::GetNodeByID(const std::string& uniqueID)
 	{
         osg::ObjectPtr obj = readManager->GetNodeObjectByID(uniqueID);
         return obj.get();
+    }
+    return NULL;
+}
+
+//
+//Write an object to xmlnode, this function is recursive
+//as the object may store a class
+//
+osgDB::XmlNodePtr HogBoxManager::WriteXmlNode(osg::ObjectPtr object)
+{
+    //find a reader/writer that 
+    XmlClassManager* writeManager = hogboxDB::HogBoxRegistry::Inst()->GetXmlClassManagerForClassType(object->className());
+	if(writeManager)
+	{
+        return writeManager->WriteXmlNode(object);
     }
     return NULL;
 }

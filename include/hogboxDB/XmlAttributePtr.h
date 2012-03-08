@@ -60,10 +60,11 @@ namespace hogboxDB {
 		//object = class containing the pointer and get set methods
 		//ghandler = pointer to the classes get funtion
 		//shandler = pointer to the classes set function
-		CallbackXmlClassPointer(C *object, 
+		CallbackXmlClassPointer(const std::string& name, C *object, 
 								GetPtrHandler ghandler = 0,
 								SetPtrHandler shandler = 0) 
-			: f_getptrhandler(ghandler),			
+			: XmlAttribute(name),
+            f_getptrhandler(ghandler),			
 			f_setptrhandler(shandler),
             mp_object(object)
 		{
@@ -97,12 +98,18 @@ namespace hogboxDB {
 		}
 
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) {
-			//std::stringstream ss;
-			//ss << this->get();
-			//out->contents = ss.str();
-			//out << *_value;
-			return true;
+		virtual osgDB::XmlNodePtr serialize() {
+			//create the head node which just wraps the xmlclass node
+            osgDB::XmlNodePtr attNode = new osgDB::XmlNode();
+            attNode->name = this->getName();
+            attNode->type = osgDB::XmlNode::GROUP;
+            
+            osgDB::XmlNodePtr classNode = hogboxDB::HogBoxManager::Inst()->WriteXmlNode(this->get());
+            if(classNode.get()){
+                attNode->children.push_back(classNode.get());
+                return attNode;
+            }
+            return NULL;
 		}
 
 		//
@@ -190,10 +197,11 @@ namespace hogboxDB {
 		
 		//typedef L::iterator ListIter;
 								
-		CallbackXmlClassPointerList(C *object, 
+		CallbackXmlClassPointerList(const std::string& name, C *object, 
                                     GetPtrListHandler ghandler = 0,
                                     SetPtrListHandler shandler = 0) 
-            : f_getptrlisthandler(ghandler),			
+            : XmlAttribute(name),
+            f_getptrlisthandler(ghandler),			
 			f_setptrlisthandler(shandler),
             mp_object(object)
 		{
@@ -234,13 +242,13 @@ namespace hogboxDB {
 		}
 
 		//write to nodes contents
-		virtual bool serialize(osgDB::XmlNode* out) 
+		virtual osgDB::XmlNodePtr serialize() 
 		{
 			//std::stringstream ss;
 			//ss << this->get();
 			//out->contents = ss.str();
 			//out << *_value;
-			return true;
+			return NULL;
 		}
 
 		//

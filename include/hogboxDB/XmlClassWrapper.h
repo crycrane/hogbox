@@ -104,11 +104,18 @@ public:
 	//
 	//return the wrapped object pointer, 
 	osg::Object* getWrappedObject();
+    
+    //
+    //Manually set an existing object to wrap
+    void setWrappedObject(osg::Object* object);
 
 	//
 	//Read the xmlNode into our wrapped object.
-	//Would probably be the same node used as in contructor
 	virtual bool deserialize(osgDB::XmlNode* in);
+    
+    //
+    //Write the wrapped object into an xmlNode
+    virtual osgDB::XmlNodePtr serialize();
 	
 	//
 	//Return the attribute with the name provided, the attribute

@@ -22,7 +22,9 @@
 #include <osg/Uniform>
 #include <osg/Shader>
 #include <osg/Program>
+#include <osgDB/XmlParser>
 #include <osgText/Font>
+
 
 
 namespace hogbox
@@ -58,6 +60,10 @@ typedef std::vector<UniformPtr> UniformPtrVector;
 typedef osg::ref_ptr<osg::Shader> ShaderPtr;
 typedef std::vector<ShaderPtr> ShaderPtrVector;
 typedef osg::ref_ptr<osg::Program> ProgramPtr;
+};
+
+namespace osgDB {
+typedef osg::ref_ptr<osgDB::XmlNode> XmlNodePtr;
 };
 
 namespace osgText

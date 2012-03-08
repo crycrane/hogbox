@@ -129,7 +129,7 @@ public:
 	virtual void setObjectNameFromUniqueID(const std::string& name);
 
 	//
-	//print the xml avaliable attributes etc of the wrapped class
+	//print the xml available attributes etc of the wrapped class
 	void printXmlInterface();
 
 protected:

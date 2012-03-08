@@ -29,7 +29,7 @@ namespace hogboxDB {
 //
 //HogBoxManager
 //Used to load an Xml Database then read write nodes from it
-//using any avaliable xmlManagers in the hogboxRegistry
+//using any available xmlManagers in the hogboxRegistry
 //
 class HOGBOXDB_EXPORT HogBoxManager : public osg::Referenced //, public hogbox::Singleton<HogBoxManager>
 {

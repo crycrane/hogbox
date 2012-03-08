@@ -195,7 +195,7 @@ bool IPhoneWebCamStream::ShowPropertiesDialogImplementation()
 }
 
 //
-//return a list of capture devices avaliable to the implementation
+//return a list of capture devices available to the implementation
 //
 std::vector<hogboxVision::CaptureDevicePtr> IPhoneWebCamStream::GetConnectedDevicesListImplementation()
 {

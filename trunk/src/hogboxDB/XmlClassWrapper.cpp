@@ -219,7 +219,7 @@ const std::string XmlClassWrapper::getClassNameFromXmlNode(osgDB::XmlNode* xmlNo
 
 
 //
-//print the xml avaliable attributes etc of the wrapped class
+//print the xml available attributes etc of the wrapped class
 void XmlClassWrapper::printXmlInterface()
 {
 	//check we're properly wrapping something

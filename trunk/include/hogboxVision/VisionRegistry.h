@@ -108,7 +108,7 @@ public:
 
 	//
 	//Return a videostream plugin prototype based on it's name
-	//if no name is passed the first avaliable plugin is returned
+	//if no name is passed the first available plugin is returned
 	VideoFileStreamWrapperPtr GetVideoFileStreamPluginProto(const std::string& plugin);
 	
 	//
@@ -124,7 +124,7 @@ public:
 
 	//
 	//Return a videostream plugin prototype based on it's name
-	//if no name is passed the first avaliable plugin is returned
+	//if no name is passed the first available plugin is returned
 	WebCamStreamWrapperPtr GetWebCamStreamPluginProto(const std::string& plugin);
 
 	//

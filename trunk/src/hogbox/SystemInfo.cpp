@@ -75,7 +75,7 @@ SystemInfo::SystemInfo(GatherLevel level)
     //list of Systeminfolevels
     _renderSupportInfo(NULL),
 	_totalDedicatedGLMemory(0),
-	_avaliableGLMemory(0),
+	_availableGLMemory(0),
 	_avliableDedicatedGLMemory(0)
 {
 	//call init to get info
@@ -344,7 +344,7 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 	_maxVertexTextureUnits = _renderSupportInfo->maxVertexTextureUnits();
 	_maxFragmentTextureUnits = _renderSupportInfo->maxFragmentTextureUnits();
 	_maxGeometryTextureUnits = _renderSupportInfo->maxGeometryTextureUnits();
-	_totalTextureUnits = _renderSupportInfo->totalTextureUnitsAvaliable();
+	_totalTextureUnits = _renderSupportInfo->totalTextureUnitsAvailable();
 	
 	_maxTextureCoordUnits = _renderSupportInfo->maxTextureCoordUnits();
 	
@@ -356,8 +356,8 @@ bool SystemInfo::SetGLSystemInfoFromGather(osg::ref_ptr<osg::GraphicsContext> gr
 	if(_glMemoryInfo.get())
 	{
 		_totalDedicatedGLMemory = _glMemoryInfo->totalDedicatedVideoMemory();
-		_avaliableGLMemory = _glMemoryInfo->avaliableMemory();
-		_avliableDedicatedGLMemory = _glMemoryInfo->avaliableDedicatedVideoMemory();
+		_availableGLMemory = _glMemoryInfo->availableMemory();
+		_avliableDedicatedGLMemory = _glMemoryInfo->availableDedicatedVideoMemory();
 	}
 	
 	return true;
@@ -830,7 +830,7 @@ bool SystemInfo::IsFeatureLevelSupported(SystemFeatureLevel* featureLevel)
 	if(featureLevel->glslVersion > this->getGLSLVersionNumber())
 	{return false;}
 	
-	if(featureLevel->textureUnits > this->totalTextureUnitsAvaliable())
+	if(featureLevel->textureUnits > this->totalTextureUnitsAvailable())
 	{return false;}
 
 	if(featureLevel->textureCoordUnits > this->maxTextureCoordUnits())
@@ -944,9 +944,9 @@ void SystemInfo::PrintReportToLog()
 
 	OSG_NOTICE << "                Onboard (MB):= " << (this->totalDedicatedGLMemory() > 0 ? this->totalDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	OSG_NOTICE << "                Avaliable Onboard (MB):= " << (this->avaliableDedicatedGLMemory() > 0 ? this->avaliableDedicatedGLMemory()/1024 : 0) <<std::endl; 
+	OSG_NOTICE << "                available Onboard (MB):= " << (this->availableDedicatedGLMemory() > 0 ? this->availableDedicatedGLMemory()/1024 : 0) <<std::endl; 
 
-	OSG_NOTICE << "                Total Avaliable (MB):= " << (this->avaliableGLMemory() > 0 ? this->avaliableGLMemory()/1024 : 0) <<std::endl; 
+	OSG_NOTICE << "                Total available (MB):= " << (this->availableGLMemory() > 0 ? this->availableGLMemory()/1024 : 0) <<std::endl; 
 
 	OSG_NOTICE << "        Buffer Formats:" <<std::endl;
 	
@@ -990,7 +990,7 @@ void SystemInfo::PrintReportToLog()
 
 	OSG_NOTICE << "                Max Geometry Shader Texture Units:= " << this->maxGeometryTextureUnits() <<std::endl;
 
-	OSG_NOTICE << "                Total avaliable Texture Units:= " << this->totalTextureUnitsAvaliable() <<std::endl;
+	OSG_NOTICE << "                Total available Texture Units:= " << this->totalTextureUnitsAvailable() <<std::endl;
 
 	OSG_NOTICE << "                Max Texture Coord Units:= " << this->maxTextureCoordUnits() <<std::endl;
 

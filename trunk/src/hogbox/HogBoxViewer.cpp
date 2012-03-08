@@ -233,7 +233,7 @@ bool HogBoxViewer::CreateAppWindow()
 
         OSG_FATAL << "HogBoxViewer Content Scale " << _contentScale << std::endl;
         
-		//attach to any handle if avaliable
+		//attach to any handle if available
 		if(_hwnd != NULL)
 		{
 			// Init the Windata Variable that holds the handle for the Window to display OSG in.

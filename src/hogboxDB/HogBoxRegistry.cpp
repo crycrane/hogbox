@@ -21,7 +21,7 @@ HogBoxRegistry::HogBoxRegistry(void)
 {
 	//add the aliases for the standard osg and hogbox 
 	//types to the multi purpose hogbox xml plugin which 
-	//should always be avaliable
+	//should always be available
 	AddClassTypeAlias("node", "hogbox");
 	AddClassTypeAlias("image", "hogbox");
 	AddClassTypeAlias("texture", "hogbox");

@@ -231,7 +231,7 @@ public:
 		{
 			connected = this->ConnectToDeviceImplementation(devices[deviceIndex]);
 		}else{
-			OSG_WARN << "WebCamStream::CreateWebCamStream: WARN: The requested device '" << config << "', was not found, trying the next avaliable." << std::endl; 	
+			OSG_WARN << "WebCamStream::CreateWebCamStream: WARN: The requested device '" << config << "', was not found, trying the next available." << std::endl; 	
 		}
 
 		//if we're still not connected try each device until one works
@@ -262,7 +262,7 @@ public:
 
 		if(formats.empty())
 		{
-			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to find any avaliable formats for capture device '" << _captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
+			OSG_WARN << "WebCamStream::CreateWebCamStream: ERROR: Failed to find any available formats for capture device '" << _captureDevice->GetDeviceName() << "'. It can't be used." << std::endl;
 			return false;
 		}
 
@@ -302,7 +302,7 @@ public:
 	}
 
 	//
-	//function to return a list of connected devices avaliable to the
+	//function to return a list of connected devices available to the
 	//implementation (can we have virtual static functions ?)
 	std::vector<CaptureDevicePtr> GetConnectedDevicesList(){
 		return GetConnectedDevicesListImplementation();
@@ -353,7 +353,7 @@ protected:
 	//perform implementation specific showing of props
 	virtual bool ShowPropertiesDialogImplementation(){return false;}
 
-	//return a list of capture devices avaliable to the implementation
+	//return a list of capture devices available to the implementation
 	virtual std::vector<CaptureDevicePtr> GetConnectedDevicesListImplementation(){return std::vector<CaptureDevicePtr>();}
 
 	//try and connect to the passed device

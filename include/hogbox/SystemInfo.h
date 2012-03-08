@@ -55,7 +55,7 @@ namespace hogbox {
 #endif
 	
 //
-//Gathers infomation on avaliable dedicated video memory (currently nvidia only)
+//Gathers infomation on available dedicated video memory (currently nvidia only)
 //
 class GPUMemoryCallback : public osg::Camera::DrawCallback
 {
@@ -63,8 +63,8 @@ public:
 	GPUMemoryCallback()
 		: osg::Camera::DrawCallback(),
 		_totalDedicatedVideoMemory(0),
-		_avavliableMemory(0),
-		_avavliableDedicatedVideoMemory(0)
+		_availableMemory(0),
+		_availableDedicatedVideoMemory(0)
 	{
 	}
 
@@ -93,8 +93,8 @@ public:
 			glGetIntegerv(0x904B, &evictedMem);
 
 			_totalDedicatedVideoMemory = dedVideoMem;
-			_avavliableMemory = totalAvailableMem;
-			_avavliableDedicatedVideoMemory = curAvailableMem;
+			_availableMemory = totalAvailableMem;
+			_availableDedicatedVideoMemory = curAvailableMem;
 		
 		}else{
 
@@ -105,14 +105,14 @@ public:
 				//ati returns totally different stuff, 
 
 				//were going to only handle texture memory for now and just hack it into the current variales
-				//to get an idea of whats avaliable
+				//to get an idea of whats available
 				//TEXTURE_FREE_MEMORY_ATI                 0x87FC
 				GLint textureFreeMemoryInfo[4];
 				glGetIntegerv(0x87FC, textureFreeMemoryInfo);
 
 				_totalDedicatedVideoMemory = textureFreeMemoryInfo[2]; //total auxiliary memory free (close :) )
-				_avavliableMemory = _totalDedicatedVideoMemory;
-				_avavliableDedicatedVideoMemory = textureFreeMemoryInfo[0]; //total memory free in the pool
+				_availableMemory = _totalDedicatedVideoMemory;
+				_availableDedicatedVideoMemory = textureFreeMemoryInfo[0]; //total memory free in the pool
 			}
 		}
 	}
@@ -120,11 +120,11 @@ public:
 	//total memory on the card kb
 	const int totalDedicatedVideoMemory(){return _totalDedicatedVideoMemory;}
 
-	//total memory avaliable including ram kb
-	const int avaliableMemory(){return _avavliableMemory;}
+	//total memory available including ram kb
+	const int availableMemory(){return _availableMemory;}
 
-	//total memory avaliable on the card kb 
-	const int avaliableDedicatedVideoMemory(){return _avavliableDedicatedVideoMemory;}
+	//total memory available on the card kb 
+	const int availableDedicatedVideoMemory(){return _availableDedicatedVideoMemory;}
 
 protected:
     mutable OpenThreads::Mutex  _mutex;
@@ -132,11 +132,11 @@ protected:
 	//total memory on the card kb
 	mutable int _totalDedicatedVideoMemory;
 
-	//total memory avaliable including ram kb
-	mutable int _avavliableMemory;
+	//total memory available including ram kb
+	mutable int _availableMemory;
 
-	//total memory avaliable on the card kb 
-	mutable int _avavliableDedicatedVideoMemory;
+	//total memory available on the card kb 
+	mutable int _availableDedicatedVideoMemory;
 };
 
 
@@ -260,17 +260,17 @@ public:
 			glGetIntegerv(GL_MAX_TEXTURE_UNITS , &maxTextureUnits);
 			_maxTextureUnits = (int)maxTextureUnits;
 
-			//max texture units avaliable to vertex shader
+			//max texture units available to vertex shader
 			GLint maxVertTextureUnits = 0;
 			glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS , &maxVertTextureUnits);
 			_maxVertexTextureUnits = (int)maxVertTextureUnits;
 
-			//max texture units avaliable to fragment shader
+			//max texture units available to fragment shader
 			GLint maxFragTextureUnits = 0;
 			glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS , &maxFragTextureUnits);
 			_maxFragmentTextureUnits = (int)maxFragTextureUnits;
 
-			//max texture units avaliable to geometry shader
+			//max texture units available to geometry shader
 			GLint maxGeomTextureUnits = 0;
 			glGetIntegerv(GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_EXT , &maxGeomTextureUnits);
 			_maxGeometryTextureUnits = (int)maxGeomTextureUnits;
@@ -280,7 +280,7 @@ public:
 			glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS , &totalTextureUnits);
 			_totalTextureUnits = (int)totalTextureUnits;
 
-			//max texture coord channels avaliable
+			//max texture coord channels available
 			GLint maxTextureCoordUnits = 0;
 #ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
 			glGetIntegerv(GL_MAX_TEXTURE_COORDS , &maxTextureCoordUnits);
@@ -327,7 +327,7 @@ public:
 	const int maxGeometryTextureUnits(){return _maxGeometryTextureUnits;}
 
 	//is a total across all types 
-	const int totalTextureUnitsAvaliable(){return _totalTextureUnits;}
+	const int totalTextureUnitsAvailable(){return _totalTextureUnits;}
 
 	const int maxTextureCoordUnits(){return _maxTextureCoordUnits;}
 
@@ -544,7 +544,7 @@ public:
 	const int maxVertexTextureUnits(){return _maxVertexTextureUnits;}
 	const int maxFragmentTextureUnits(){return _maxFragmentTextureUnits;}
 	const int maxGeometryTextureUnits(){return _maxGeometryTextureUnits;}
-	const int totalTextureUnitsAvaliable(){return _totalTextureUnits;}
+	const int totalTextureUnitsAvailable(){return _totalTextureUnits;}
 	
 	//number of texture coord channels	
 	const int maxTextureCoordUnits(){return _maxTextureCoordUnits;}
@@ -557,16 +557,16 @@ public:
 	//total memory on the card kb
 	const int totalDedicatedGLMemory(){return _totalDedicatedGLMemory;}
 
-	//total memory avaliable including ram kb
-	const int avaliableGLMemory(){return _avaliableGLMemory;}
+	//total memory available including ram kb
+	const int availableGLMemory(){return _availableGLMemory;}
 
-	//total memory avaliable on the card kb 
-	const int avaliableDedicatedGLMemory(){return _avliableDedicatedGLMemory;}
+	//total memory available on the card kb 
+	const int availableDedicatedGLMemory(){return _avliableDedicatedGLMemory;}
 	
 	//simplified supported feature level info
 
 	//add a new feature level by name, if feature level already exists, it
-	//will be overriden
+	//will be overwritten
 	bool SetFeatureLevel(const std::string& name, SystemFeatureLevel* featureLevel);
 
 	//get featurelevel by name, returns null if not in list
@@ -588,6 +588,9 @@ public:
 
     //
     //File path helpers
+    
+    //Return the systems documents path, which should be safe for
+    //saving user generated documents
     const std::string GetDocumentPath();
     
 	//
@@ -714,7 +717,7 @@ private:
 	
 	//gl memory info
 	int _totalDedicatedGLMemory;
-	int _avaliableGLMemory;
+	int _availableGLMemory;
 	int _avliableDedicatedGLMemory;
 	
 	osg::ref_ptr<GPUMemoryCallback> _glMemoryInfo;

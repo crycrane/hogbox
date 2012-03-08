@@ -100,7 +100,7 @@ public:
 				break;
 			case VGA_640X480:
 				//store basic params
-				_width = 640;// should always be avaliable
+				_width = 640;// should always be available
 				_height = 480;// 
 				_bitRate = 24;//?
 				_fps = 30;
@@ -268,7 +268,7 @@ protected:
 	//perform implementation specific showing of props
 	virtual bool ShowPropertiesDialogImplementation();
 
-	//return a list of capture devices avaliable to the implementation
+	//return a list of capture devices available to the implementation
 	virtual std::vector<hogboxVision::CaptureDevicePtr> GetConnectedDevicesListImplementation();
 
 	//try and connect to the passed device

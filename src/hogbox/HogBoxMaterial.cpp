@@ -866,7 +866,7 @@ void HogBoxMaterial::ComposeShaderFromMaterialState(ShaderDetail detail, Lightin
 	std::ostringstream vert;
 	std::ostringstream frag;
 	
-	//define precision if not avaliable
+	//define precision if not available
 	vert <<	"#ifndef GL_ES" << std::endl <<
 			"	#if (__VERSION__ <= 110)" << std::endl << 
 			"		#define lowp" << std::endl <<
@@ -1115,7 +1115,7 @@ HogBoxMaterial* HogBoxMaterial::GetFunctionalMaterial()
 	if(!_featureLevel){return this;}
 
 	//compare to system info levels
-	if(SystemInfo::Inst()->IsFeatureLevelSupported(_featureLevel)) //features are avaliable to support the material
+	if(SystemInfo::Inst()->IsFeatureLevelSupported(_featureLevel)) //features are available to support the material
 	{
 		return this;	
 	}else{ //try fallback

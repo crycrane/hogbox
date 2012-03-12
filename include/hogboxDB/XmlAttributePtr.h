@@ -244,11 +244,27 @@ namespace hogboxDB {
 		//write to nodes contents
 		virtual osgDB::XmlNodePtr serialize() 
 		{
-			//std::stringstream ss;
-			//ss << this->get();
-			//out->contents = ss.str();
-			//out << *_value;
-			return NULL;
+            if(!mp_object){return NULL;}
+            
+			//create the head node which will provide the count as a property
+            osgDB::XmlNodePtr listNode = new osgDB::XmlNode();
+            listNode->name = this->getName();
+            listNode->type = osgDB::XmlNode::GROUP;
+            
+            //get local ref to the objects list 
+            L list = this->get();
+            
+            //set the count property
+            hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)list.size());
+            
+            //now loop each item of serialize to an xmlnode and add as child
+            for(int i=0; i<list.size(); i++){
+                osgDB::XmlNodePtr classNode = hogboxDB::HogBoxManager::Inst()->WriteXmlNode(list.at(i).get());
+                if(classNode.get()){
+                    listNode->children.push_back(classNode.get());
+                }
+            }
+            return listNode;
 		}
 
 		//

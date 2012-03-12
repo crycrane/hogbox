@@ -97,7 +97,7 @@ namespace hogboxDB {
 			//create the head node which will provide the count as a property
             osgDB::XmlNodePtr listNode = new osgDB::XmlNode();
             listNode->name = this->getName();
-            listNode->type = osgDB::XmlNode::GROUP;
+            listNode->type = osgDB::XmlNode::NODE;
             
             //set the count property
             hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)_list->size());
@@ -106,7 +106,7 @@ namespace hogboxDB {
             std::stringstream listss;
             for(int i=0; i<_list->size(); i++){
                 hogboxDB::typeToStringStream(this->get(i), listss);
-                listss << " ";
+                if(i != _list->size()-1){listss << " ";}
             }
             listNode->contents = listss.str();
             return listNode;
@@ -238,19 +238,20 @@ namespace hogboxDB {
 			//create the head node which will provide the count as a property
             osgDB::XmlNodePtr listNode = new osgDB::XmlNode();
             listNode->name = this->getName();
-            listNode->type = osgDB::XmlNode::GROUP;
+            listNode->type = osgDB::XmlNode::NODE;
 
             //get local ref to the objects list 
             L list = this->get();
             
             //set the count property
             hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)list.size());
-                                          
+            OSG_FATAL << "Serialize XmlList" << std::endl;
             //now loop each item of the list and write it to a stringstream
             std::stringstream listss;
             for(int i=0; i<list.size(); i++){
                 hogboxDB::typeToStringStream(list.at(i), listss);
-                listss << " ";
+                if(i != list.size()-1){listss << " ";}
+                OSG_FATAL << "    Serialize list value '" << listss.str() << "'." <<  std::endl;
             }
             listNode->contents = listss.str();
             return listNode;

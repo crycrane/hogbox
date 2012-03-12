@@ -90,9 +90,10 @@ protected:
     //Bind the xml attributes for the wrapped object
     virtual void bindXmlAttributes(){
         osg::Image* image = dynamic_cast<osg::Image*>(p_wrappedObject.get());
-		_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Image,std::string>("File", image,
-                                                                                            &osg::Image::getFileName,
-                                                                                            &osg::Image::setFileName);
+		_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Image,std::string>
+                                ("File", image,
+                                &osg::Image::getFileName,
+                                &osg::Image::setFileName);
     }
 
 };

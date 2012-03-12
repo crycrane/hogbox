@@ -121,9 +121,10 @@ protected:
     virtual void bindXmlAttributes(){
         osg::Shader* shader = dynamic_cast<osg::Shader*>(p_wrappedObject.get());
 		//File name for the source code of the shader. Gets read into the shaders fileName variable
-		_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Shader,std::string>("File", shader,
-                                                                                             &osg::Shader::getFileName,
-                                                                                             &osg::Shader::setFileName);
+		_xmlAttributes["File"] = new hogboxDB::CallbackXmlAttribute<osg::Shader,std::string>
+                                ("File", shader,
+                                &osg::Shader::getFileName,
+                                &osg::Shader::setFileName);
     }
 
 };

@@ -60,6 +60,9 @@ typedef std::vector<UniformPtr> UniformPtrVector;
 typedef osg::ref_ptr<osg::Shader> ShaderPtr;
 typedef std::vector<ShaderPtr> ShaderPtrVector;
 typedef osg::ref_ptr<osg::Program> ProgramPtr;
+typedef std::vector<osg::Vec2> Vec2Vector;
+typedef std::vector<osg::Vec3> Vec3Vector;
+typedef std::vector<osg::Vec4> Vec4Vector;
 };
 
 namespace osgDB {

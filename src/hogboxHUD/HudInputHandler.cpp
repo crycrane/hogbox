@@ -1,6 +1,6 @@
-#include <hogboxHUD/OsgInput.h>
+#include <hogboxHUD/HudInputHandler.h>
 
-#include <hogboxHUD/HogBoxHud.h>
+#include <hogboxHUD/Hud.h>
 
 using namespace hogboxHUD;
 
@@ -139,7 +139,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 	osg::Node* scene = NULL;
 	if(true){//hudPick){
 		//get our hud node
-		scene = HogBoxHud::Instance()->GetHudNode();
+		scene = Hud::Inst()->GetHudNode();
 	}else{
 		//get entire scene
 		scene = _sceneView->getCamera();
@@ -197,8 +197,8 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 			//successfully picked a node so store it then pass its name down to the basic hud system
 			p_clickObject = NULL;
 			//check if the node has user data
-			HudRegionWrapper* regionWrapper = dynamic_cast<HudRegionWrapper*>(node->getUserData());
-			HudRegion* geodeRegion = NULL;
+			RegionWrapper* regionWrapper = dynamic_cast<RegionWrapper*>(node->getUserData());
+			Region* geodeRegion = NULL;
 			if(regionWrapper){
 				geodeRegion= regionWrapper->GetRegion();
 			}
@@ -224,7 +224,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 //Set a new focus object, this will also inform the previous focus object
 //of the mouseLeave event, and the new object of the mouseEnter event
 //
-void HudInputHandler::SetFocusRegion(HudRegion* focusRegion)
+void HudInputHandler::SetFocusRegion(Region* focusRegion)
 {
 	if(focusRegion)
 	{

@@ -1,16 +1,16 @@
-#include <hogboxHUD/HogBoxHud.h>
+#include <hogboxHUD/Hud.h>
 
 using namespace hogboxHUD;
 
 //BUG@tom Since moving to CMake the Singleton class has been misbehaving. An app seems to
 //use a different instance of the registry then the plugins seem to register too.
 //Changing to the dreaded global instance below has fixed things but I need to try and correct this
-osg::ref_ptr<HogBoxHud> s_hogboxHUDInstance = NULL;
+osg::ref_ptr<Hud> s_hogboxHUDInstance = NULL;
 
-HogBoxHud* HogBoxHud::Instance(bool erase)
+Hud* Hud::Inst(bool erase)
 {
 	if(s_hogboxHUDInstance==NULL)
-	{s_hogboxHUDInstance = new HogBoxHud();}		
+	{s_hogboxHUDInstance = new Hud();}		
 	if(erase)
 	{
 		s_hogboxHUDInstance->destruct();
@@ -19,15 +19,15 @@ HogBoxHud* HogBoxHud::Instance(bool erase)
     return s_hogboxHUDInstance.get();
 }
 
-HogBoxHud::HogBoxHud(void) 
-: osg::Referenced(), 
-_camera(NULL),
-_regionGroup(NULL)
+Hud::Hud(void) 
+    : osg::Referenced(), 
+    _camera(NULL),
+    _regionGroup(NULL)
 {
     
 }
 
-HogBoxHud::~HogBoxHud(void)
+Hud::~Hud(void)
 {
 	OSG_NOTICE << "    Deallocating HogBoxHud Instance." << std::endl;
 	_regionGroup = NULL; 
@@ -44,7 +44,7 @@ HogBoxHud::~HogBoxHud(void)
 //
 //Sets up the camera for rendering the hud
 //
-osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
+osg::Node* Hud::Create(osg::Vec2 screenSize)
 {
 	//store our projection size
 	_screenSize = screenSize;
@@ -75,7 +75,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 	_camera->addChild( _regionGroup.get());
 	
 	//create and add our root region
-	_hudRegion = new HudRegion(hogboxHUD::HudRegion::PLANE_XY, hogboxHUD::HudRegion::ORI_BOTTOM_LEFT, true);
+	_hudRegion = new Region(hogboxHUD::Region::PLANE_XY, hogboxHUD::Region::ORI_BOTTOM_LEFT, true);
 	_hudRegion->Create(osg::Vec2(0.0f,0.0f), _screenSize, "");
 	//set the root region layer far back so we have plenty of positive layers infront
 	_hudRegion->SetLayer(-1.0f);
@@ -89,7 +89,7 @@ osg::Node* HogBoxHud::Create(osg::Vec2 screenSize)
 //
 // Pass an input event to all attached regions
 //
-bool HogBoxHud::HandleInputEvent(HudInputEvent& hudEvent)
+bool Hud::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	bool ret=false;
     
@@ -105,7 +105,7 @@ bool HogBoxHud::HandleInputEvent(HudInputEvent& hudEvent)
 //
 // Add a region to the hud
 //
-bool HogBoxHud::AddRegion(HudRegion* region)
+bool Hud::AddRegion(Region* region)
 {
 	//check it is not null
 	if(!region)
@@ -117,7 +117,7 @@ bool HogBoxHud::AddRegion(HudRegion* region)
 	return true;
 }
 
-bool HogBoxHud::RemoveRegion(HudRegion* region)
+bool Hud::RemoveRegion(Region* region)
 {
     if(!region){return false;}
     int deleteIndex = -1;
@@ -139,7 +139,7 @@ bool HogBoxHud::RemoveRegion(HudRegion* region)
 //
 //hide the hud
 //
-void HogBoxHud::SetHudVisibility(bool vis)
+void Hud::SetHudVisibility(bool vis)
 {
 	if(vis)
 	{
@@ -152,7 +152,7 @@ void HogBoxHud::SetHudVisibility(bool vis)
 //
 //get visible state
 //
-bool HogBoxHud::GetHudVisibility()
+bool Hud::GetHudVisibility()
 {
 	if(	_camera->getNodeMask() == 0xFFFFFFFF)
 	{
@@ -164,8 +164,16 @@ bool HogBoxHud::GetHudVisibility()
 }
 
 //
+//Get the hud size (projection size onto screen/view)
+//
+const osg::Vec2& Hud::GetHudSize()
+{
+    return _screenSize;
+}
+
+//
 //Set hud projection size
-void HogBoxHud::SetHudProjectionSize(osg::Vec2 size)
+void Hud::SetHudProjectionSize(osg::Vec2 size)
 {
     _screenSize = size;
     // set the projection matrix
@@ -175,7 +183,7 @@ void HogBoxHud::SetHudProjectionSize(osg::Vec2 size)
 //
 //Rotate and translate the root hud region to run vertically up screen
 //
-void HogBoxHud::SetHudOrientation(HudOrientation ori)
+void Hud::SetHudOrientation(HudOrientation ori)
 {
 	if(ori == HORIZONTAL_ORIENTATION){
 		_hudRegion->SetRotation(0.0f);

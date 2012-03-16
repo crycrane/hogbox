@@ -9,25 +9,25 @@ SET(LIB_NAME hogboxHUD)
 SET(HEADER_PATH ${hogbox_SOURCE_DIR}/include/${LIB_NAME})
 
 SET(LIB_PUBLIC_HEADERS
-    ${HEADER_PATH}/ButtonRegion.h
     ${HEADER_PATH}/Export.h
-    ${HEADER_PATH}/HogBoxHud.h
+    ${HEADER_PATH}/Hud.h
     ${HEADER_PATH}/HudInputEvent.h
-    ${HEADER_PATH}/HudRegion.h
-    ${HEADER_PATH}/OsgInput.h
-    ${HEADER_PATH}/TextRegion.h
+    ${HEADER_PATH}/HudInputHandler.h
     ${HEADER_PATH}/HudEventCallback.h
+    ${HEADER_PATH}/Region.h
+    ${HEADER_PATH}/TextRegion.h
+    ${HEADER_PATH}/ButtonRegion.h
 )
 
 # FIXME: For OS X, need flag for Framework or dylib
 ADD_LIBRARY(${LIB_NAME}
     ${hogbox_USER_DEFINED_DYNAMIC_OR_STATIC}
     ${LIB_PUBLIC_HEADERS}
-    ButtonRegion.cpp
-	HogBoxHud.cpp
-	HudRegion.cpp
-	OsgInput.cpp
+	Hud.cpp
+	HudInputHandler.cpp
+	Region.cpp
 	TextRegion.cpp
+    ButtonRegion.cpp
 )
 
 LINK_INTERNAL(${LIB_NAME} hogbox)

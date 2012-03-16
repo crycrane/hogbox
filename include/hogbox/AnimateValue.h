@@ -15,6 +15,7 @@
 
 #include <osg/MatrixTransform>
 #include <osgAnimation/EaseMotion>
+#include <hogbox/Callback.h>
 #include <deque>
 
 namespace hogbox 
@@ -58,7 +59,11 @@ namespace hogbox
             T end;
             float duration;
             osg::ref_ptr<osgAnimation::Motion> motion;
-            KeyFrame(){}
+            hogbox::CallbackEventPtr event;
+            
+            KeyFrame(){
+                event = new hogbox::CallbackEvent("KeyFrameEndEvent");
+            }
             KeyFrame(const KeyFrame& key)
             : end(key.end),
             duration(key.duration),
@@ -98,11 +103,12 @@ namespace hogbox
             //the template M is used to define the osgAnimation motion type
             //returns the new number of keys
             template <typename M>
-            bool AddKey(const T& pos, const float& duration){
+            bool AddKey(const T& pos, const float& duration, Callback* callback=NULL){
                 KeyFrame frame;
                 frame.end = pos;
                 frame.duration = duration;
                 frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
+                if(callback){frame.event->AddCallbackReceiver(callback);}
                 _keyFrameQueue.push_back(frame);
                 
                 //if this is the first key ensure _start is set to current value
@@ -142,7 +148,7 @@ namespace hogbox
             }
             
             //
-            //Update the current keys osgAAnimation motion time,
+            //Update the current keys osgAnimation motion time,
             //also handle moving to the next key if the motion reaches it's
             //duration time.
             //Returns 
@@ -190,6 +196,9 @@ namespace hogbox
                 
                 //ensure we reset the current key
                 KeyFrame* key = GetCurrentKey();
+                
+                //trigger the current keys end callback
+                key->event->Trigger(NULL);
                 //if(key){key->motion->reset();}
                 
                 //
@@ -223,12 +232,12 @@ namespace hogbox
         //we smooth from current _value to pos over duration seconds,
         //the template M is used to define the osgAnimation motion type
         template <typename M>
-        void AddKey(const T& pos, const float& duration, const std::string& animationName="DEFAULT"){
+        void AddKey(const T& pos, const float& duration, Callback* callback=NULL, const std::string& animationName="DEFAULT"){
             //KeyFrame frame;
             //frame.end = pos;
             //frame.duration = duration;
             //frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
-            _keyFrameQueue->AddKey<M>(pos,duration);
+            _keyFrameQueue->AddKey<M>(pos,duration,callback);
             
             //if this is the first key ensure _start is set to current value
             if(this->GetNumKeys() == 1)

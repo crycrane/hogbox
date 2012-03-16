@@ -1,4 +1,4 @@
-#include <hogboxHUD/HudRegion.h>
+#include <hogboxHUD/Region.h>
 
 #include <osg/BlendEquation>
 #include <osg/BlendFunc>
@@ -68,7 +68,7 @@ static const char* coloredFragSource = {
 	"}\n" 
 };
 
-HudRegion::HudRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
+Region::Region(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
     : osg::Object(),
     _isProcedural(isProcedural),
     _plane(plane),
@@ -119,7 +119,7 @@ HudRegion::HudRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural)
 	_childMount = new osg::MatrixTransform();
 	
 	//create and attach our default updatecallback
-	_updateCallback = new HudRegionUpdateCallback(this);
+	_updateCallback = new RegionUpdateCallback(this);
 	this->AddUpdateCallback(_updateCallback.get());
     
 	//build the transform hierachy	
@@ -193,7 +193,7 @@ HudRegion::HudRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural)
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
-HudRegion::HudRegion(const HudRegion& region,const osg::CopyOp& copyop)
+Region::Region(const Region& region,const osg::CopyOp& copyop)
     : osg::Object(region, copyop),
     _size(region._size),
     _corner(region._corner),
@@ -206,7 +206,7 @@ HudRegion::HudRegion(const HudRegion& region,const osg::CopyOp& copyop)
 {
 }
 
-HudRegion::~HudRegion(void)
+Region::~Region(void)
 {
 	//release the callback events
 	_onMouseDownEvent = NULL;
@@ -241,7 +241,7 @@ HudRegion::~HudRegion(void)
 //general update, updates and syncs our animations etc
 //normally called by an attached updateCallback
 //
-void HudRegion::Update(float simTime)
+void Region::Update(float simTime)
 {
     if(_prevTick==0.0f){_prevTick = simTime;}
 	float timePassed = simTime - _prevTick;
@@ -270,7 +270,7 @@ void HudRegion::Update(float simTime)
 //
 // Create the region of size, in postion using a loaded model
 //
-bool HudRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& folderName, bool microMemoryMode)
+bool Region::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& folderName, bool microMemoryMode)
 {
 	_assetFolder = folderName;
 	SetMicroMemoryMode(microMemoryMode);
@@ -295,7 +295,7 @@ bool HudRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fold
 //
 // Returns the root transform matrix
 //
-osg::MatrixTransform* HudRegion::GetRegion()
+osg::MatrixTransform* Region::GetRegion()
 {
 	return _root.get();
 }
@@ -303,7 +303,7 @@ osg::MatrixTransform* HudRegion::GetRegion()
 //
 // 0 not used, 1 used by this, 2 used by child
 //
-int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
+int Region::HandleInputEvent(HudInputEvent& hudEvent)
 {
 	int ret = 0;
 	
@@ -311,7 +311,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
     if(IsAnimating() || !_pickable){return 0;}
     
 	//check for basic event and inform our callbacks if detected
-	osg::notify(osg::DEBUG_FP) << "hogboxHUD HudRegion: Input Event received by region '" << this->getName() << "'." << std::endl;
+	osg::notify(osg::DEBUG_FP) << "hogboxHUD Region: Input Event received by region '" << this->getName() << "'." << std::endl;
 	
 	//handle the event type
     switch(hudEvent.GetEventType())
@@ -424,7 +424,7 @@ int HudRegion::HandleInputEvent(HudInputEvent& hudEvent)
 //adds a child to this region which will then be transformed relative
 // to the parent
 //
-void HudRegion::AddChild(HudRegion* region)
+void Region::AddChild(Region* region)
 {
 	_childMount->addChild(region->GetRegion());
 	_children.push_back(region); 
@@ -436,7 +436,7 @@ void HudRegion::AddChild(HudRegion* region)
 //
 // Checks if the name equal one of or children
 //
-bool HudRegion::IsChild(const std::string& uniqueID)
+bool Region::IsChild(const std::string& uniqueID)
 {
 	for(unsigned int i=0; i<_children.size(); i++)
 	{
@@ -454,7 +454,7 @@ bool HudRegion::IsChild(const std::string& uniqueID)
 //
 //remove child
 //
-void HudRegion::RemoveChild(HudRegion* region)
+void Region::RemoveChild(Region* region)
 {
     if(!region){return;}
     int deleteIndex = -1;
@@ -469,16 +469,16 @@ void HudRegion::RemoveChild(HudRegion* region)
     }
 }
 
-void HudRegion::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
+void Region::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
 {
 	if(pos >= _children.size()){return;}
-	HudRegionList::iterator first = _children.begin();
-	HudRegion* region = (*first+pos);
+	RegionList::iterator first = _children.begin();
+	Region* region = (*first+pos);
 	_childMount->removeChild(region->GetRegion());
 	_children.erase(first+pos);
 }
 
-void HudRegion::RemoveChildAllChildren()
+void Region::RemoveChildAllChildren()
 {
     unsigned int num = _children.size();
     for(unsigned int i=0; i<num; i++){
@@ -491,7 +491,7 @@ void HudRegion::RemoveChildAllChildren()
 // example, a diloag region passes to it button to animate the button
 // returns true if used by one of the children
 //
-bool HudRegion::HandleChildEvents(HudInputEvent& hudEvent)
+bool Region::HandleChildEvents(HudInputEvent& hudEvent)
 {
 	bool l_ret=false;
 	//loop through all the children
@@ -512,7 +512,7 @@ bool HudRegion::HandleChildEvents(HudInputEvent& hudEvent)
 //base.png, used as the default texture if present
 //rollover.png, used for mouse rollovers if present
 //
-bool HudRegion::LoadAssest(const std::string& folderName)
+bool Region::LoadAssest(const std::string& folderName)
 {
 	if(_assestLoaded){return true;}
 	//if it has no name, then no assets aren't needed
@@ -617,7 +617,7 @@ bool HudRegion::LoadAssest(const std::string& folderName)
 //Unload assest, deleting bae/rollover textures and any children
 //of _region
 //
-bool HudRegion::UnLoadAssests()
+bool Region::UnLoadAssests()
 {
 	if(!_assestLoaded){return true;}
     
@@ -638,16 +638,16 @@ bool HudRegion::UnLoadAssests()
 //
 //Set the id and rename any asset geodes
 //
-void HudRegion::setName(const std::string& name)
+void Region::setName(const std::string& name)
 {
 	_region->setName(name); 
 	osg::Object::setName(name);
-	MakeHudGeodes(_region.get(), new HudRegionWrapper(this));
+	MakeHudGeodes(_region.get(), new RegionWrapper(this));
 }
 
 //positioning
 
-void HudRegion::SetPosition(const osg::Vec2& corner)
+void Region::SetPosition(const osg::Vec2& corner)
 {
 	_corner = corner;
     
@@ -668,7 +668,7 @@ void HudRegion::SetPosition(const osg::Vec2& corner)
 	_translate->setMatrix( osg::Matrix::translate(offset)); 
 }
 
-const osg::Vec2& HudRegion::GetPosition() const
+const osg::Vec2& Region::GetPosition() const
 {
 	return _corner;
 }
@@ -676,7 +676,7 @@ const osg::Vec2& HudRegion::GetPosition() const
 //
 //get set roation around the z axis in degrees
 //
-void HudRegion::SetRotation(const float& rotate)
+void Region::SetRotation(const float& rotate)
 {
 	_rotation = rotate;
     
@@ -704,12 +704,12 @@ void HudRegion::SetRotation(const float& rotate)
 	_rotate->setMatrix(osg::Matrix::rotate(osg::DegreesToRadians(_rotation), axis));
 }
 
-const float& HudRegion::GetRotation() const
+const float& Region::GetRotation() const
 {
 	return _rotation;
 }
 
-void HudRegion::SetSize(const osg::Vec2& size)
+void Region::SetSize(const osg::Vec2& size)
 {
 	//resize this regions geometry
     float temp = 0.0f;
@@ -747,7 +747,7 @@ void HudRegion::SetSize(const osg::Vec2& size)
 	_size = size;
 }
 
-const osg::Vec2& HudRegion::GetSize() const
+const osg::Vec2& Region::GetSize() const
 {
 	return _size;
 }
@@ -756,7 +756,7 @@ const osg::Vec2& HudRegion::GetSize() const
 //set the size as a percentage/scale factor of the current size 
 //i.e. <1 smaller, >1 bigger
 //
-void HudRegion::SetSizeFromPercentage(float xScaler, float yScaler)
+void Region::SetSizeFromPercentage(float xScaler, float yScaler)
 {
 	osg::Vec2 newSize;
 	newSize.x() = _size.x()*xScaler;
@@ -768,7 +768,7 @@ void HudRegion::SetSizeFromPercentage(float xScaler, float yScaler)
 //set the position as a percentage/scale factor of the current position
 //i.e. <1 smaller, >1 bigger
 //
-void HudRegion::SetPositionFromPercentage(float xScaler, float yScaler)
+void Region::SetPositionFromPercentage(float xScaler, float yScaler)
 {
 	osg::Vec2 newPos;
 	newPos.x() = _corner.x()*xScaler;
@@ -780,7 +780,7 @@ void HudRegion::SetPositionFromPercentage(float xScaler, float yScaler)
 //move to a new layer
 //
 
-void HudRegion::SetLayer(const float& depth)
+void Region::SetLayer(const float& depth)
 {
     _depth = depth;
     
@@ -801,18 +801,18 @@ void HudRegion::SetLayer(const float& depth)
 	_translate->setMatrix( osg::Matrix::translate(offset)); 
 }
 
-const float& HudRegion::GetLayer() const
+const float& Region::GetLayer() const
 {
 	return _depth;
 }
 
 
-const bool& HudRegion::IsVisible() const
+const bool& Region::IsVisible() const
 {
 	return _visible;
 }
 
-void HudRegion::SetVisible(const bool& visible)
+void Region::SetVisible(const bool& visible)
 {
 	//set hud to invisable as default
 	if(visible)
@@ -839,11 +839,11 @@ void HudRegion::SetVisible(const bool& visible)
 }
 
 //pickable by hudinput
-const bool& HudRegion::IsPickable() const
+const bool& Region::IsPickable() const
 {
     return _pickable;
 }
-void HudRegion::SetPickable(const bool& pickable)
+void Region::SetPickable(const bool& pickable)
 {
     _pickable = pickable;
     ApplyNodeMask();
@@ -856,7 +856,7 @@ void HudRegion::SetPickable(const bool& pickable)
 
 //
 //compute and apply the current node mask for the region geode
-void HudRegion::ApplyNodeMask()
+void Region::ApplyNodeMask()
 {
     unsigned int nodeMask = 0x0;
     if(_visible){
@@ -875,7 +875,7 @@ void HudRegion::ApplyNodeMask()
 //
 //set the texture used by default
 //
-void HudRegion::SetBaseTexture(osg::Texture* texture)
+void Region::SetBaseTexture(osg::Texture* texture)
 {
 	_baseTexture = NULL;
 	_baseTexture = texture;
@@ -883,7 +883,7 @@ void HudRegion::SetBaseTexture(osg::Texture* texture)
 //
 //Set the texture used as rollover
 //
-void HudRegion::SetRolloverTexture(osg::Texture* texture)
+void Region::SetRolloverTexture(osg::Texture* texture)
 {
 	_baseTexture = NULL;
 	_baseTexture = texture;
@@ -892,7 +892,7 @@ void HudRegion::SetRolloverTexture(osg::Texture* texture)
 //
 //Apply the texture to the channel 0/diffuse
 //
-void HudRegion::ApplyTexture(osg::Texture* tex)
+void Region::ApplyTexture(osg::Texture* tex)
 {
 	if(!_stateset.get()){return;}
 	
@@ -959,12 +959,12 @@ void HudRegion::ApplyTexture(osg::Texture* tex)
      }
 }
 
-void HudRegion::ApplyBaseTexture()
+void Region::ApplyBaseTexture()
 {
 	this->ApplyTexture(this->_baseTexture);
 }
 
-void HudRegion::ApplyRollOverTexture()
+void Region::ApplyRollOverTexture()
 {
 	this->ApplyTexture(this->_rollOverTexture);
 }
@@ -972,7 +972,7 @@ void HudRegion::ApplyRollOverTexture()
 //
 //set the material color of the region
 //
-void HudRegion::SetColor(const osg::Vec3& color)
+void Region::SetColor(const osg::Vec3& color)
 {
 	_color = color;
     
@@ -995,13 +995,13 @@ void HudRegion::SetColor(const osg::Vec3& color)
 	}
 }
 
-const osg::Vec3& HudRegion::GetColor() const
+const osg::Vec3& Region::GetColor() const
 {
 	return _color;
 }
 
 
-void HudRegion::SetAlpha(const float& alpha)
+void Region::SetAlpha(const float& alpha)
 {
 	_alpha = alpha;
     
@@ -1028,7 +1028,7 @@ void HudRegion::SetAlpha(const float& alpha)
 	}
 }
 
-const float& HudRegion::GetAlpha() const
+const float& Region::GetAlpha() const
 {
 	return _alpha;
 }
@@ -1036,7 +1036,7 @@ const float& HudRegion::GetAlpha() const
 //
 //get set enable alpha
 //
-void HudRegion::EnableAlpha(const bool& enable)
+void Region::EnableAlpha(const bool& enable)
 {
 	if(enable)
 	{
@@ -1056,12 +1056,12 @@ void HudRegion::EnableAlpha(const bool& enable)
 	_alphaEnabled = enable;
 }
 
-const bool& HudRegion::IsAlphaEnabled() const
+const bool& Region::IsAlphaEnabled() const
 {
 	return _alphaEnabled;
 }
 
-void HudRegion::SetStateSet(osg::StateSet* stateSet)
+void Region::SetStateSet(osg::StateSet* stateSet)
 {
 	if(_region.get()!=NULL)
 	{
@@ -1069,7 +1069,7 @@ void HudRegion::SetStateSet(osg::StateSet* stateSet)
 	}
 }
 
-osg::StateSet* HudRegion::GetStateSet()
+osg::StateSet* Region::GetStateSet()
 {
 	if(!_stateset.get())
 	{return NULL;}
@@ -1080,7 +1080,7 @@ osg::StateSet* HudRegion::GetStateSet()
 //
 //Loads and applies a custom shader
 //
-void HudRegion::SetCustomShader(const std::string& vertFile, const std::string& fragFile, const bool& shadersAreSource)
+void Region::SetCustomShader(const std::string& vertFile, const std::string& fragFile, const bool& shadersAreSource)
 {
     osg::Shader* fragShader = NULL;
     if(shadersAreSource){
@@ -1112,20 +1112,20 @@ void HudRegion::SetCustomShader(const std::string& vertFile, const std::string& 
 //
 //disable color writes, i.e. only write to depth buffer
 //
-void HudRegion::DisableColorWrites()
+void Region::DisableColorWrites()
 {
     this->SetColorWriteMask(false);
 }
 //
 //Reenable color writes
 //
-void HudRegion::EnableColorWrites()
+void Region::EnableColorWrites()
 {
     this->SetColorWriteMask(true);
 }
 
 //
-void HudRegion::SetColorWriteMask(const bool& enable)
+void Region::SetColorWriteMask(const bool& enable)
 {
     osg::ColorMask* colorMask = new osg::ColorMask();
     colorMask->setMask(enable, enable, enable, enable);
@@ -1135,20 +1135,20 @@ void HudRegion::SetColorWriteMask(const bool& enable)
 //
 //Disable depth writes
 //
-void HudRegion::DisableDepthWrites()
+void Region::DisableDepthWrites()
 {
     this->SetDepthWriteMask(false);
 }
 //
 //Enable depth writes
 //
-void HudRegion::EnableDepthWrites()
+void Region::EnableDepthWrites()
 {
     this->SetDepthWriteMask(true);
 }
 
 //
-void HudRegion::SetDepthWriteMask(const bool& enable)
+void Region::SetDepthWriteMask(const bool& enable)
 {
     osg::Depth* depth = new osg::Depth();
     depth->setWriteMask(false);
@@ -1158,7 +1158,7 @@ void HudRegion::SetDepthWriteMask(const bool& enable)
 //
 //Disable depth testing
 //
-void HudRegion::DisableDepthTest()
+void Region::DisableDepthTest()
 {
     this->SetDepthTestEnabled(false);
 }
@@ -1166,13 +1166,13 @@ void HudRegion::DisableDepthTest()
 //
 //Enable depth testing
 //
-void HudRegion::EnableDepthTest()
+void Region::EnableDepthTest()
 {
     this->SetDepthTestEnabled(true);
 }
 
 //
-void HudRegion::SetDepthTestEnabled(const bool& enable)
+void Region::SetDepthTestEnabled(const bool& enable)
 {
     _stateset->setMode(GL_DEPTH_TEST,enable ? osg::StateAttribute::ON : osg::StateAttribute::OFF);
 }
@@ -1180,7 +1180,7 @@ void HudRegion::SetDepthTestEnabled(const bool& enable)
 //
 //Enable fast drawm, just disables depth writes and testing
 //
-void HudRegion::EnableFastDraw()
+void Region::EnableFastDraw()
 {
     //this->DisableLighting();
     this->DisableDepthTest();
@@ -1189,7 +1189,7 @@ void HudRegion::EnableFastDraw()
 
 //
 //Set the renderbin number
-void HudRegion::SetRenderBinNumber(const int& num)
+void Region::SetRenderBinNumber(const int& num)
 {
     _stateset->setRenderBinDetails(num, "RenderBin");
 }
@@ -1198,7 +1198,7 @@ void HudRegion::SetRenderBinNumber(const int& num)
 //
 //convert corrds into the regions local system with corner at the origin
 //
-osg::Vec2 HudRegion::GetRegionSpaceCoords(osg::Vec2 spCoords)
+osg::Vec2 Region::GetRegionSpaceCoords(osg::Vec2 spCoords)
 {
 	//get the vector from corner to spCoord
 	osg::Vec2 coordVec = spCoords-GetAbsoluteCorner();
@@ -1213,7 +1213,7 @@ osg::Vec2 HudRegion::GetRegionSpaceCoords(osg::Vec2 spCoords)
 //
 //recersive through parents to get screen space corner
 //
-osg::Vec2 HudRegion::GetAbsoluteCorner()
+osg::Vec2 Region::GetAbsoluteCorner()
 {
 	osg::Vec2 ret = _corner;
 	if(p_parent != NULL)
@@ -1229,7 +1229,7 @@ osg::Vec2 HudRegion::GetAbsoluteCorner()
 }
 
 //recurse through parents and find the regions absolute rotation
-float HudRegion::GetAbsoluteRotation()
+float Region::GetAbsoluteRotation()
 {
 	float ret = _rotation;
 	if(p_parent != NULL)
@@ -1245,7 +1245,7 @@ float HudRegion::GetAbsoluteRotation()
 //attaching the update callback to it, then attaching the new node
 //to the root for updating
 //
-bool HudRegion::AddUpdateCallback(osg::NodeCallback* callback)
+bool Region::AddUpdateCallback(osg::NodeCallback* callback)
 {
 	//create the new node to handle the callback
 	osg::Node* callbackNode = NULL;
@@ -1260,7 +1260,7 @@ bool HudRegion::AddUpdateCallback(osg::NodeCallback* callback)
 	return true;	
 }
 
-void HudRegion::SetChildrenList(const HudRegionList& list)
+void Region::SetChildrenList(const RegionList& list)
 {
 	for(unsigned int i=0; i<list.size(); i++)
 	{
@@ -1271,12 +1271,12 @@ void HudRegion::SetChildrenList(const HudRegionList& list)
 //
 //Get/Set use of microMemory mode
 //
-const bool& HudRegion::GetMicroMemoryMode()const
+const bool& Region::GetMicroMemoryMode()const
 {
 	return _microMemoryMode; 
 }
 
-void HudRegion::SetMicroMemoryMode(const bool& on)
+void Region::SetMicroMemoryMode(const bool& on)
 {
 	_microMemoryMode = on;
 	if(_microMemoryMode){
@@ -1293,55 +1293,55 @@ void HudRegion::SetMicroMemoryMode(const bool& on)
 //Funcs to register event callbacks
 
 //mouse
-void HudRegion::AddOnMouseDownCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseDownCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseDownEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnMouseUpCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseUpCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseUpEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnMouseMoveCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseMoveCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseMoveEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnMouseDragCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseDragCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseDragEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnDoubleClickCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnDoubleClickCallbackReceiver(HudEventCallback* callback)
 {
 	_onDoubleClickEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnMouseEnterCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseEnterCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseEnterEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnMouseLeaveCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnMouseLeaveCallbackReceiver(HudEventCallback* callback)
 {
 	_onMouseLeaveEvent->AddCallbackReceiver(callback);
 }
 
 //keyboard
-void HudRegion::AddOnKeyDownCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnKeyDownCallbackReceiver(HudEventCallback* callback)
 {
 	_onKeyDownEvent->AddCallbackReceiver(callback);
 }
 
-void HudRegion::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
+void Region::AddOnKeyUpCallbackReceiver(HudEventCallback* callback)
 {
 	_onKeyUpEvent->AddCallbackReceiver(callback);
 }
 
 
 //helper func to rename geodes and attach region as user data
-void hogboxHUD::MakeHudGeodes(osg::Node* node, osg::ref_ptr<HudRegionWrapper> region)
+void hogboxHUD::MakeHudGeodes(osg::Node* node, osg::ref_ptr<RegionWrapper> region)
 {
 	//find geomtry in geodes
 	if(dynamic_cast<osg::Geode*> (node))

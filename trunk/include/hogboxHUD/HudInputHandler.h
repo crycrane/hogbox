@@ -15,7 +15,7 @@
 
 #include <hogboxHUD/Export.h>
 #include <hogboxHUD/HudInputEvent.h>
-#include <hogboxHUD/HudRegion.h>
+#include <hogboxHUD/Region.h>
 
 #include <osgViewer/Viewer>
 #include <osg/observer_ptr>
@@ -103,7 +103,7 @@ protected:
 	//
 	//Set a new focus object, this will also inform the previous focus object
 	//of the mouseLeave event, and the new object of the mouseEnter event
-	void SetFocusRegion(HudRegion* focusRegion);
+	void SetFocusRegion(Region* focusRegion);
 	
 protected:
 
@@ -117,7 +117,7 @@ protected:
 	osg::ref_ptr<HudInputEvent> _inputState;
 	
 	//the current hud region with focus (need to implement default root region, for now null till mouse click)
-	HudRegion* p_focusRegion;
+	Region* p_focusRegion;
 
 	//store a pointer to the last node to be clicked
 	//i.e. might not be a hud region

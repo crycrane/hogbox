@@ -49,7 +49,7 @@ static const char* textFragSource = {
 
 
 TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
-    : HudRegion(plane, origin, isProcedural),
+    : Region(plane, origin, isProcedural),
     _string(""),
     _text(NULL),
     _fontHeight(18.0f),
@@ -126,7 +126,7 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 TextRegion::TextRegion(const TextRegion& region,const osg::CopyOp& copyop)
-    : HudRegion(region, copyop),
+    : Region(region, copyop),
     //_text(copyop(region._text.get())),
     _fontHeight(region._fontHeight),
     _fontName(region._fontName),
@@ -166,7 +166,7 @@ bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fil
 	//load the base assets and apply names and sizes, do this
 	//after creating and adding the text so that the text geode 
 	//name will also be changed
-	bool ret = HudRegion::Create(corner,size,fileName);
+	bool ret = Region::Create(corner,size,fileName);
     
 	SetText(label);
     SetFontHeight(fontHeight);
@@ -181,7 +181,7 @@ bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fil
 bool TextRegion::LoadAssest(const std::string& folderName)
 {
 	//call base first
-	bool ret = HudRegion::LoadAssest(folderName);
+	bool ret = Region::LoadAssest(folderName);
     
 	//get the directory contents
 	osgDB::DirectoryContents dirCont;
@@ -203,13 +203,13 @@ bool TextRegion::LoadAssest(const std::string& folderName)
 //
 void TextRegion::SetPosition(const osg::Vec2& corner)
 {
-	HudRegion::SetPosition(corner);
+	Region::SetPosition(corner);
 }
 
 //overload SetSize so we can set the texts pixelheight independantly
 void TextRegion::SetSize(const osg::Vec2& size)
 {
-	HudRegion::SetSize(size);
+	Region::SetSize(size);
     
 	//set the texts max sizes to the new size
 	_text->setMaximumHeight(size.y());
@@ -275,9 +275,9 @@ void TextRegion::SetFontResolution(const osg::Vec2& fontRes)
 void TextRegion::SetFontType(const std::string& fontFile)
 {
 	_fontName = osgDB::findDataFile(fontFile);
-    osgText::FontPtr font = AssetManager::Inst()->getOrLoadFont(fontFile).get();
+    osgText::FontPtr font = hogbox::AssetManager::Inst()->GetOrLoadFont(fontFile).get();
     
-    if(font.geT())
+    if(font.get()){
         _text->setFont(_fontName);
     }
 }
@@ -441,7 +441,7 @@ void TextRegion::SetAlpha(const float& alpha)
 	
     _text->setBackdropColor(_backdropColor);
 	_text->setColor(_textColor);
-	HudRegion::SetAlpha(alpha);
+	Region::SetAlpha(alpha);
 }
 
 //
@@ -524,7 +524,7 @@ const int& TextRegion::GetBackDropTypeInt() const
 
 int TextRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {
-	return HudRegion::HandleInputEvent(hudEvent); 
+	return Region::HandleInputEvent(hudEvent); 
 }
 
 //

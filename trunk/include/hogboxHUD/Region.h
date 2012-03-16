@@ -40,21 +40,21 @@ typedef unsigned int InheritanceMask;
 #define	INHERIT_SIZE			0x00000004
 #define INHERIT_ALL_TRANSFORMS (INHERIT_POSITION|INHERIT_ROTATION|INHERIT_SIZE)
 
-class HudRegion;
-typedef osg::ref_ptr<HudRegion> HudRegionPtr;
-class HudRegionWrapper;
+class Region;
+typedef osg::ref_ptr<Region> RegionPtr;
+class RegionWrapper;
 //forward declare our update callback
-class HudRegionUpdateCallback;
+class RegionUpdateCallback;
 
 //helper func to rename geodes and attach region as user data
-extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* node, osg::ref_ptr<HudRegionWrapper> region);
+extern HOGBOXHUD_EXPORT void MakeHudGeodes(osg::Node* node, osg::ref_ptr<RegionWrapper> region);
 extern HOGBOXHUD_EXPORT void ClearHudGeodes(osg::Node* node);
 
 
 //
 //Base hud region
 //
-class HOGBOXHUD_EXPORT HudRegion : public osg::Object
+class HOGBOXHUD_EXPORT Region : public osg::Object
 {
 public:
     
@@ -80,14 +80,14 @@ public:
     //When constructing a region automatically within the create of a parent region
     //isProcedural should be flaged as true so that when hudregions are saved the
     //system knows not to save out the automaticaly created regions
-    HudRegion(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
+    Region(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
     
     /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
-    HudRegion(const HudRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
+    Region(const Region& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
     
-    META_Object(hogboxHUD,HudRegion);
+    META_Object(hogboxHUD,Region);
     
-    typedef std::vector<HudRegionPtr> HudRegionList;
+    typedef std::vector<RegionPtr> RegionList;
     
     //load assets, set size and position, then apply the names to any geodes for picking
     virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, bool microMemoryMode=false);
@@ -105,15 +105,15 @@ public:
     
     //adds a child to this region which will then be transformed relative
     //to this region
-    void AddChild(HudRegion* region);
+    void AddChild(Region* region);
     bool IsChild(const std::string& uniqueID);
     //set this regions parent, NULL if attached directly
     //to the hud
-    void SetParent(HudRegion* parent){p_parent=parent;}
-    HudRegion* GetParent(){return p_parent;}
+    void SetParent(Region* parent){p_parent=parent;}
+    Region* GetParent(){return p_parent;}
     
     //remove child
-    void RemoveChild(HudRegion* region);
+    void RemoveChild(Region* region);
     void RemoveChild(unsigned int pos, unsigned int numChildrenToRemove=1);
     void RemoveChildAllChildren();
     
@@ -283,8 +283,8 @@ public:
     //
     //Helpers to get set the entire list of children (used by hudregion xml plugin)
     //Set will pass each list item through add child
-    HudRegionList GetChildrenList()const{return _children;}
-    void SetChildrenList(const HudRegionList& list);
+    RegionList GetChildrenList()const{return _children;}
+    void SetChildrenList(const RegionList& list);
     
     
     //
@@ -292,11 +292,11 @@ public:
     
     //Rotation channel
     template <typename M>
-    void AddRotationKey(float degrees, float duration)
+    void AddRotationKey(float degrees, float duration, hogbox::Callback* callback=NULL)
     {
         //if its going to be the first key ensure value is the regions current
         if(_animateRotate->GetNumKeys() == 0){_animateRotate->SetValue(this->GetRotation());}
-        _animateRotate->AddKey<M>(degrees, duration);
+        _animateRotate->AddKey<M>(degrees, duration, callback);
     }
     hogbox::AnimateValue<float>::KeyFrame* GetRotationKey(unsigned int index){return _animateRotate->GetKey(index);}
     bool RemoveRotationKey(unsigned int index){return _animateRotate->RemoveKey(index);}
@@ -304,11 +304,11 @@ public:
     
     //Position channel
     template <class M>
-    void AddPositionKey(osg::Vec2 pos, float duration)
+    void AddPositionKey(osg::Vec2 pos, float duration, hogbox::Callback* callback=NULL)
     {
         //if its going to be the first key ensure value is the regions current
         if(_animatePosition->GetNumKeys() == 0){_animatePosition->SetValue(this->GetPosition());}
-        _animatePosition->AddKey<M>(pos, duration);
+        _animatePosition->AddKey<M>(pos, duration, callback);
     }
     hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetPositionKey(unsigned int index){return _animatePosition->GetKey(index);}
     bool RemovePositionKey(unsigned int index){return _animatePosition->RemoveKey(index);}
@@ -316,11 +316,11 @@ public:
     
     //Size channel
     template <typename M>
-    void AddSizeKey(osg::Vec2 size, float duration)
+    void AddSizeKey(osg::Vec2 size, float duration, hogbox::Callback* callback=NULL)
     {
         //if its going to be the first key ensure value is the regions current
         if(_animateSize->GetNumKeys() == 0){_animateSize->SetValue(this->GetSize());}
-        _animateSize->AddKey<M>(size, duration);
+        _animateSize->AddKey<M>(size, duration, callback);
     }
     hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetSizeKey(unsigned int index){return _animateSize->GetKey(index);}
     bool RemoveSizeKey(unsigned int index){return _animateSize->RemoveKey(index);}
@@ -328,11 +328,11 @@ public:
     
     //Color channel
     template <typename M>
-    void AddColorKey(osg::Vec3 color, float duration)
+    void AddColorKey(osg::Vec3 color, float duration, hogbox::Callback* callback=NULL)
     {
         //if its going to be the first key ensure value is the regions current
         if(_animateColor->GetNumKeys() == 0){_animateColor->SetValue(this->GetColor());}
-        _animateColor->AddKey<M>(color, duration);
+        _animateColor->AddKey<M>(color, duration, callback);
     }
     hogbox::AnimateValue<osg::Vec3>::KeyFrame* GetColorKey(unsigned int index){return _animateColor->GetKey(index);}
     bool RemoveColorKey(unsigned int index){return _animateColor->RemoveKey(index);}
@@ -340,11 +340,11 @@ public:
     
     //Alpha channel
     template <typename M>
-    void AddAlphaKey(float alpha, float duration)
+    void AddAlphaKey(float alpha, float duration, hogbox::Callback* callback=NULL)
     {
         //if its going to be the first key ensure value is the regions current
         if(_animateAlpha->GetNumKeys() == 0){_animateAlpha->SetValue(this->GetAlpha());}
-        _animateAlpha->AddKey<M>(alpha, duration);
+        _animateAlpha->AddKey<M>(alpha, duration, callback);
     }
     hogbox::AnimateValue<float>::KeyFrame* GetAlphaKey(unsigned int index){return _animateAlpha->GetKey(index);}
     bool RemoveAlphaKey(unsigned int index){return _animateAlpha->RemoveKey(index);}
@@ -385,7 +385,7 @@ public:
 protected:
     
     //destructor
-    virtual ~HudRegion(void);
+    virtual ~Region(void);
     
     //
     //Load assest takes a folder name containing our assest
@@ -474,10 +474,10 @@ protected:
     osg::ref_ptr<osg::Texture> _rollOverTexture;
     
     //nodes parent region, null if no parent (should this be shared or weak)
-    HudRegion* p_parent;
+    Region* p_parent;
     
     //regions attached to this one
-    HudRegionList _children; 
+    RegionList _children; 
     
     //the material applied to the region (should I just use HogBoxMaterial?)
     osg::ref_ptr<osg::StateSet> _stateset; 
@@ -501,7 +501,7 @@ protected:
     
     //
     //Our default update callback to ensure update is called each frame
-    osg::ref_ptr<HudRegionUpdateCallback> _updateCallback;
+    osg::ref_ptr<RegionUpdateCallback> _updateCallback;
     
     //
     //Animation for each of our attributes
@@ -544,41 +544,41 @@ protected:
 //
 //Wrapper to store a normal pointer to a hudregion
 //within an osg referenced object.
-class HudRegionWrapper : public osg::Referenced
+class RegionWrapper : public osg::Referenced
 {
 public:
-    HudRegionWrapper(HudRegion* region)
+    RegionWrapper(Region* region)
     : osg::Referenced(),
     p_region(region)
     {
     }
     
-    HudRegion* GetRegion(){
+    Region* GetRegion(){
         return p_region;
     }
-    void SetRegion(HudRegion* region){
+    void SetRegion(Region* region){
         p_region=region;
     }
     
 protected:
     
-    virtual ~HudRegionWrapper(){
+    virtual ~RegionWrapper(){
         p_region=NULL;
     }
     
 protected:
-    HudRegion* p_region;
+    Region* p_region;
 };
 
 //
 //HudRegionUpdateCallback
 //our default update callback which will ensure animations etc are updated
 //
-class HudRegionUpdateCallback : public osg::NodeCallback
+class RegionUpdateCallback : public osg::NodeCallback
 {
 public:
     //contuct, passing the region to update
-    HudRegionUpdateCallback(HudRegion* region) 
+    RegionUpdateCallback(Region* region) 
     : osg::NodeCallback(),
     p_updateRegion(region),
     _prevTick(0.0f)
@@ -607,11 +607,11 @@ public:
     
 protected:
     
-    virtual~HudRegionUpdateCallback(void){}
+    virtual~RegionUpdateCallback(void){}
     
 protected:
     
-    HudRegion* p_updateRegion;
+    Region* p_updateRegion;
     float _prevTick;
 };
     

@@ -13,6 +13,7 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/AnimationPathEventCallback.h
 	${HEADER_PATH}/AnimationUtils.h
     ${HEADER_PATH}/AssetManager.h
+    ${HEADER_PATH}/Callback.h
 	${HEADER_PATH}/Export.h
 	${HEADER_PATH}/Version.h
 	${HEADER_PATH}/HogBoxBase.h

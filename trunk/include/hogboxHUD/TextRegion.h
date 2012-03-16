@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "HudRegion.h"
+#include <hogboxHUD/Region.h>
 
 #include <osg/Group>
 #include <osg/Depth>
@@ -25,7 +25,7 @@ namespace hogboxHUD {
 //
 //TextRegion
 //
-class HOGBOXHUD_EXPORT TextRegion : public HudRegion
+class HOGBOXHUD_EXPORT TextRegion : public Region
 {
 public:
     enum TEXT_ALIGN{

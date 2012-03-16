@@ -13,10 +13,8 @@
 
 #pragma once
 
-//#include <hogbox/Singleton.h>
 #include <osg/Camera>
-
-#include "HudRegion.h"
+#include <hogboxHUD/Region.h>
 
 namespace hogboxHUD {
     
@@ -27,7 +25,7 @@ namespace hogboxHUD {
 //Also handles the occurance of window resizing and re positions/resizes
 //attached regions accordingly
 //
-class HOGBOXHUD_EXPORT HogBoxHud : public osg::Referenced //, public hogbox::Singleton<HogBoxHud> 
+class HOGBOXHUD_EXPORT Hud : public osg::Referenced //, public hogbox::Singleton<HogBoxHud> 
 {
 public:
     
@@ -37,7 +35,7 @@ public:
         VERTICAL_ORIENTATION
     };
     
-    static HogBoxHud* Instance(bool erase = false);
+    static Hud* Inst(bool erase = false);
     
     //
     //Creates the ortho camera and main region group attached to the camera
@@ -50,12 +48,16 @@ public:
     osg::Group* GetRootGroup(){return _regionGroup.get();}
     
     //add a region to our hud
-    bool AddRegion(HudRegion* region);
-    bool RemoveRegion(HudRegion* region);
+    bool AddRegion(Region* region);
+    bool RemoveRegion(Region* region);
     
     //hide the hud
     void SetHudVisibility(bool vis);
     bool GetHudVisibility(); 
+    
+    //
+    //Get the hud size (projection size onto screen/view)
+    const osg::Vec2& GetHudSize();
     
     //
     //Set hud projection size
@@ -67,8 +69,8 @@ public:
     
 protected:
     
-    HogBoxHud(void);
-    virtual ~HogBoxHud(void);
+    Hud(void);
+    virtual ~Hud(void);
     
     virtual void destruct(){
         _regions.clear();
@@ -85,10 +87,10 @@ protected:
     
     //the root region to which all regions are attached. This is
     //attach to the _regionGroup
-    osg::ref_ptr<HudRegion> _hudRegion;
+    osg::ref_ptr<Region> _hudRegion;
     
     //list of regions attached to this hud
-    HudRegion::HudRegionList _regions;
+    Region::RegionList _regions;
     
     //store current screnn/projection size
     osg::Vec2 _screenSize;

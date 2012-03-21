@@ -117,9 +117,9 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         }else{
             if(p_clickObject){
                 osg::Referenced* userData = p_clickObject->getUserData();
-                CallbackEvent* callback = dynamic_cast<CallbackEvent*>(userData);
+                HudCallbackEvent* callback = dynamic_cast<HudCallbackEvent*>(userData);
                 if(callback){
-                    callback->TriggerEvent(*_inputState.get());
+                    callback->Trigger(*_inputState.get());
                 }
                 //clear
                 p_clickObject=NULL;

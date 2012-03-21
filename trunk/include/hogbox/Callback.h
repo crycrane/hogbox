@@ -27,10 +27,15 @@ namespace hogbox {
 		Callback()
             : osg::Referenced()
 		{}
-		
+
+		virtual void TriggerCallback() 
+		{
+			OSG_FATAL << "Callback ERROR: No Callback function registered." << std::endl;
+		}
+        
 		virtual void TriggerCallback(void* object) 
 		{
-			OSG_WARN << "Callback ERROR: No Callback function registered." << std::endl;
+			OSG_FATAL << "Callback ERROR: No Callback function registered." << std::endl;
 		}
 		
 	protected:	
@@ -51,7 +56,8 @@ namespace hogbox {
 		//
 		//The template  function for all classes wanting to receive this callback event
 		//can pass only a void pointer to be cast to correct type
-		typedef void (C::* ObjectCallbackFunc)(void*);  //get value function definition
+        typedef void (C::* ObjectCallbackFunc)();
+		typedef void (C::* ObjectCallbackArgFunc)(void*); 
 								
 		//
 		//Contructor requires
@@ -64,16 +70,33 @@ namespace hogbox {
             mp_object(rObject)
 		{
 		}
-		
-		virtual void TriggerCallback(void* object) 
+		ObjectCallback(C *rObject, ObjectCallbackArgFunc ghandler = 0)
+        : Callback(),
+        f_callbackArgFunc(ghandler),
+        mp_object(rObject)
 		{
+		}
+
+		virtual void TriggerCallback() 
+		{
+            OSG_FATAL << "ObjectCallback::TriggerCallback" << std::endl;
 			if (f_callbackFunc) 
 			{
 				//call our receiver objects callback function
-				(mp_object->*f_callbackFunc)(object);			
-			} else 
+				(mp_object->*f_callbackFunc)();			
+			}else{
+				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
+			}
+		}
+        
+		virtual void TriggerCallback(void* object) 
+		{
+			if (f_callbackArgFunc) 
 			{
-				OSG_WARN << "HudEvent ERROR: No Callback function registered." << std::endl;
+				//call our receiver objects callback function
+				(mp_object->*f_callbackArgFunc)(object);			
+			}else{
+				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
 			}
 		}
 		
@@ -85,6 +108,7 @@ namespace hogbox {
 
 		//function pointers to the callback function for this event
 		ObjectCallbackFunc f_callbackFunc;
+        ObjectCallbackArgFunc f_callbackArgFunc;
 		
 		//the pointer to the class instance
 		//we are calling the callback of
@@ -103,7 +127,7 @@ namespace hogbox {
 			: osg::Referenced(),
 			_eventName(eventName)
 		{
-			
+			OSG_FATAL << "Construct CallbackEvent" << std::endl;
 		}
 		
 		const std::string& GetName(){return _eventName;}
@@ -111,9 +135,23 @@ namespace hogbox {
 		//Register a new Callback receiver for this event
 		void AddCallbackReceiver(Callback* callback)
 		{
+            OSG_FATAL << "CallbackEvent::AddCallbackReceiver for Event named '" << _eventName << "'." << std::endl;
 			_callbacks.push_back(callback);
 		}
-		
+
+		//
+		//
+		void Trigger()
+		{
+            OSG_FATAL << "CallbackEvent::Trigger, num callbacks '" << _callbacks.size() << "'." << std::endl;
+			//call all our callback functions
+			for(unsigned int i=0; i<_callbacks.size(); i++)
+			{
+                OSG_FATAL << "    LOOP" << std::endl;
+				_callbacks[i]->TriggerCallback();
+			}
+		}
+        
 		//
 		//
 		void Trigger(void* object)
@@ -126,7 +164,9 @@ namespace hogbox {
 		}
 		
 	protected:
-		virtual ~CallbackEvent(void){}
+		virtual ~CallbackEvent(void){
+            OSG_FATAL << "Destruct CallbackEvent" << std::endl;
+        }
 		
 	protected:
 

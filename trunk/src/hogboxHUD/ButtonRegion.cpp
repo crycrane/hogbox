@@ -11,7 +11,7 @@ ButtonRegion::ButtonRegion(RegionPlane plane, RegionOrigin origin, bool isProced
     _buttonDown(false),
     _mouseDownTexture(NULL),
     //callback events
-    _onButtonClickedEvent(new CallbackEvent(this, "OnButtonClicked"))
+    _onButtonClickedEvent(new HudCallbackEvent(this, "OnButtonClicked"))
 {
 
 	//register for the base mouse down and mouse up events to detect ButtonClicked
@@ -68,7 +68,7 @@ void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inpu
 	//if the button is down then it's a Click event
 	if(_buttonDown){
 		//trigger the onButtonClicked Event 
-		_onButtonClickedEvent->TriggerEvent(inputEvent);
+		_onButtonClickedEvent->Trigger(inputEvent);
 	}
 	
 	//reset buttonDown state

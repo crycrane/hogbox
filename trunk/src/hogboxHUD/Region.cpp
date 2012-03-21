@@ -99,16 +99,16 @@ Region::Region(RegionPlane plane, RegionOrigin origin, bool isProcedural)
     _animationDisabled(false),
     //Create our callbacks
     //mouse events
-    _onMouseDownEvent(new CallbackEvent(this, "OnMouseDown")),
-    _onMouseUpEvent(new CallbackEvent(this, "OnMouseUp")),
-    _onMouseMoveEvent(new CallbackEvent(this, "OnMouseMove")),
-    _onMouseDragEvent(new CallbackEvent(this, "OnMouseDrag")),
-    _onDoubleClickEvent(new CallbackEvent(this, "OnDoubleClick")),
-    _onMouseEnterEvent(new CallbackEvent(this, "OnMouseEnter")),
-    _onMouseLeaveEvent(new CallbackEvent(this, "OnMouseLeave")),
+    _onMouseDownEvent(new HudCallbackEvent(this, "OnMouseDown")),
+    _onMouseUpEvent(new HudCallbackEvent(this, "OnMouseUp")),
+    _onMouseMoveEvent(new HudCallbackEvent(this, "OnMouseMove")),
+    _onMouseDragEvent(new HudCallbackEvent(this, "OnMouseDrag")),
+    _onDoubleClickEvent(new HudCallbackEvent(this, "OnDoubleClick")),
+    _onMouseEnterEvent(new HudCallbackEvent(this, "OnMouseEnter")),
+    _onMouseLeaveEvent(new HudCallbackEvent(this, "OnMouseLeave")),
     //keyboard events
-    _onKeyDownEvent(new CallbackEvent(this, "OnKeyDown")),
-    _onKeyUpEvent(new CallbackEvent(this, "OnKeyUp"))
+    _onKeyDownEvent(new HudCallbackEvent(this, "OnKeyDown")),
+    _onKeyUpEvent(new HudCallbackEvent(this, "OnKeyUp"))
 {
     
 	_root = new osg::MatrixTransform(osg::Matrix::identity());
@@ -320,7 +320,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_KEY_DOWN):
         {
 			osg::notify(osg::DEBUG_FP) << "		KEY DOWN" << std::endl;
-			_onKeyDownEvent->TriggerEvent(hudEvent);
+			_onKeyDownEvent->Trigger(hudEvent);
 			break;
         }
 			
@@ -328,7 +328,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_KEY_UP):
         {
 			osg::notify(osg::DEBUG_FP) << "		KEY UP" << std::endl;
-			_onKeyUpEvent->TriggerEvent(hudEvent);
+			_onKeyUpEvent->Trigger(hudEvent);
 			break;
 		}
 			
@@ -337,7 +337,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseDown event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE MOVE" << std::endl;
-			_onMouseMoveEvent->TriggerEvent(hudEvent);
+			_onMouseMoveEvent->Trigger(hudEvent);
 			break;
 		}
 			
@@ -346,7 +346,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseDrag event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE DRAG" << std::endl;
-            _onMouseDragEvent->TriggerEvent(hudEvent);
+            _onMouseDragEvent->Trigger(hudEvent);
 			break;
         } 
 			
@@ -355,7 +355,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		{
 			//trigger our onMouseDown event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE DOWN" << std::endl;
-			_onMouseDownEvent->TriggerEvent(hudEvent);
+			_onMouseDownEvent->Trigger(hudEvent);
 			break;
 		}
 			
@@ -379,12 +379,12 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
                         //change the event type to a double click
                         hudEvent.SetEventType(ON_DOUBLE_CLICK);
                         osg::notify(osg::DEBUG_FP) << "		DOUBLE CLICK, FROM MULTI TOUCH" << std::endl;
-                        _onDoubleClickEvent->TriggerEvent(hudEvent);
+                        _onDoubleClickEvent->Trigger(hudEvent);
                         break;
                     }
                 }
             }
-            _onMouseUpEvent->TriggerEvent(hudEvent);
+            _onMouseUpEvent->Trigger(hudEvent);
 			break;
         } 
 			
@@ -392,7 +392,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_DOUBLE_CLICK):
         {
 			osg::notify(osg::DEBUG_FP) << "		DOUBLE CLICK" << std::endl;
-			_onDoubleClickEvent->TriggerEvent(hudEvent);
+			_onDoubleClickEvent->Trigger(hudEvent);
 			break;
         } 
 			
@@ -401,7 +401,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseUp event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE ENTER" << std::endl;
-			_onMouseEnterEvent->TriggerEvent(hudEvent);
+			_onMouseEnterEvent->Trigger(hudEvent);
 			break;
         } 
 			
@@ -410,7 +410,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
         {
 			//trigger our onMouseUp event
 			osg::notify(osg::DEBUG_FP) << "		MOUSE LEAVE" << std::endl;
-			_onMouseEnterEvent->TriggerEvent(hudEvent);
+			_onMouseEnterEvent->Trigger(hudEvent);
 			break;
         } 
 		default:break;

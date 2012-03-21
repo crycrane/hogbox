@@ -159,7 +159,7 @@ protected:
     //Callback events
     
     //on text changed called each time SetText is called to inform receivers of the change
-    osg::ref_ptr<CallbackEvent> _onTextChangedEvent;
+    osg::ref_ptr<HudCallbackEvent> _onTextChangedEvent;
 };
 
 typedef osg::ref_ptr<TextRegion> TextRegionPtr;

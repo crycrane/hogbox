@@ -74,7 +74,7 @@ protected:
 	osg::ref_ptr<osg::Texture> _mouseDownTexture;
 	
 	//sent once a mouse down followed by a mouse up event is received by this region
-	osg::ref_ptr<CallbackEvent> _onButtonClickedEvent;
+	osg::ref_ptr<HudCallbackEvent> _onButtonClickedEvent;
 };
 
 typedef osg::ref_ptr<ButtonRegion> ButtonRegionPtr;

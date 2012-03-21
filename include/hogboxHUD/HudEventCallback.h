@@ -18,21 +18,20 @@
 #include <osg/ref_ptr>
 
 //#include <hogboxHUD/HudRegion.h>
+#include <hogbox/Callback.h>
 #include <hogboxHUD/HudInputEvent.h>
 
 
 namespace hogboxHUD {
-
-	class HudRegion;
 	
 	//
 	//Base HudEvent Callback type
 	//
-	class HudEventCallback : public osg::Referenced
+	class HudEventCallback : public hogbox::Callback
 	{
 	public:	
 		HudEventCallback()
-		: osg::Referenced()
+		: hogbox::Callback()
 		{}
 		
 		virtual void TriggerCallback( HudInputEvent& inputEvent) 
@@ -71,20 +70,21 @@ namespace hogboxHUD {
 		HudEventObjectCallback(osg::Object* sender, C *rObject, HudEventCallbackFunc ghandler = 0)
 			: HudEventCallback(),
 			p_sender(sender),
-			f_callbackFunc(ghandler),
+			f_callbackHudFunc(ghandler),
             mp_object(rObject)
 		{
 		}
 		
 		virtual void TriggerCallback(HudInputEvent& inputEvent) 
 		{
-			if (f_callbackFunc) 
+            OSG_FATAL << "HudEventObjectCallback::TriggerCallback" << std::endl;
+			if (f_callbackHudFunc) 
 			{
 				//call our receiver objects callback function
-				(mp_object->*f_callbackFunc)(p_sender, inputEvent);			
+				(mp_object->*f_callbackHudFunc)(p_sender, inputEvent);			
 			} else 
 			{
-				osg::notify(osg::WARN) << "HudEvent ERROR: No Callback function registered." << std::endl;
+				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
 			}
 		}
 		
@@ -97,7 +97,7 @@ namespace hogboxHUD {
 		osg::Object* p_sender;
 
 		//function pointers to the callback function for this event
-		HudEventCallbackFunc f_callbackFunc;
+		HudEventCallbackFunc f_callbackHudFunc;
 		
 		//the pointer to the class instance
 		//we are calling the callback of
@@ -109,49 +109,40 @@ namespace hogboxHUD {
 	//CallbackEvent allows a hud region to register a new type of event for which external objects can register
 	//HudEventCallbacKs to be called when the event type is triggered
 	//
-	class CallbackEvent : public osg::Referenced 
+	class HudCallbackEvent : public hogbox::CallbackEvent
 	{
 	public:
-		CallbackEvent(osg::Object* sender, const std::string& eventName)
-			: osg::Referenced(),
-			p_eventSender(sender),
-			_eventName(eventName)
+		HudCallbackEvent(osg::Object* sender, const std::string& eventName)
+			: hogbox::CallbackEvent(eventName),
+			p_eventSender(sender)
 		{
 			
 		}
 		
-		const std::string& GetEventName(){return _eventName;}
-		
-		//Register a new Callback receiver for this event
-		void AddCallbackReceiver(HudEventCallback* callback)
-		{
-			_callbacks.push_back(callback);
-		}
-		
 		//
 		//
-		void TriggerEvent(HudInputEvent& inputEvent)
+		void Trigger(HudInputEvent& inputEvent)
 		{
+            OSG_FATAL << "HudCallbackEvent::Trigger, num callbacks '" << _callbacks.size() << "'." << std::endl;
 			//call all our callback functions
 			for(unsigned int i=0; i<_callbacks.size(); i++)
 			{
-				_callbacks[i]->TriggerCallback(inputEvent);
+                //cast to HudEventCallback
+                HudEventCallback* asHudCallback = dynamic_cast<HudEventCallback*>(_callbacks[i].get());
+                if(asHudCallback){
+                    asHudCallback->TriggerCallback(inputEvent);
+                }
 			}
 		}
 		
 	protected:
-		virtual ~CallbackEvent(void){}
+		virtual ~HudCallbackEvent(void){}
 		
 	protected:
 		
 		//the object sending the event (e.g. hudregion, button)
 		osg::Object* p_eventSender;
-		
-		//event has a name which can be used by user as a simple reference (e.g OnMouseDown)
-		std::string _eventName; 
-		
-		//the list of callbacks registered to receive this event when triggered
-		std::vector<HudEventCallbackPtr> _callbacks;
+    
 			
 	};
 

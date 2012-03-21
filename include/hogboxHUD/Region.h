@@ -528,17 +528,17 @@ protected:
     //OnMouseLeave, called when mouse leaves the area (input model will currently make this difficult to detect)
     
     //mouse events
-    osg::ref_ptr<CallbackEvent> _onMouseDownEvent;
-    osg::ref_ptr<CallbackEvent> _onMouseUpEvent;
-    osg::ref_ptr<CallbackEvent> _onMouseMoveEvent;
-    osg::ref_ptr<CallbackEvent> _onMouseDragEvent;
-    osg::ref_ptr<CallbackEvent> _onDoubleClickEvent;
-    osg::ref_ptr<CallbackEvent> _onMouseEnterEvent;
-    osg::ref_ptr<CallbackEvent> _onMouseLeaveEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseDownEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseUpEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseMoveEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseDragEvent;
+    osg::ref_ptr<HudCallbackEvent> _onDoubleClickEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseEnterEvent;
+    osg::ref_ptr<HudCallbackEvent> _onMouseLeaveEvent;
     
     //keyboard events
-    osg::ref_ptr<CallbackEvent> _onKeyDownEvent;
-    osg::ref_ptr<CallbackEvent> _onKeyUpEvent;
+    osg::ref_ptr<HudCallbackEvent> _onKeyDownEvent;
+    osg::ref_ptr<HudCallbackEvent> _onKeyUpEvent;
 };
 
 //

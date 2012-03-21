@@ -60,7 +60,7 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
     _backdropType(NO_BACKDROP),
     _backdropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
     //callback events
-    _onTextChangedEvent(new CallbackEvent(this, "OnTextChanged"))
+    _onTextChangedEvent(new HudCallbackEvent(this, "OnTextChanged"))
 
 {
 	//create the text label to add to the button
@@ -232,7 +232,7 @@ void TextRegion::SetText(const std::string& str)
 	_string = str;
 	_text->setText(str);
 	osg::ref_ptr<HudInputEvent> dummyEvent;
-	_onTextChangedEvent->TriggerEvent(*dummyEvent.get());
+	_onTextChangedEvent->Trigger(*dummyEvent.get());
 }
 
 //

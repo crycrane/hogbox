@@ -69,6 +69,7 @@ namespace hogbox
             duration(key.duration),
             motion(key.motion.get())
             {
+                event = new hogbox::CallbackEvent("KeyFrameEndEvent");
             }
         };
         
@@ -86,6 +87,7 @@ namespace hogbox
 			_isPlaying(true),
 			_currentKeyIndex(0)
             {
+                OSG_FATAL << "Contruct KeyFrameQueue" << std::endl;
             }
             /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
             KeyFrameQueue(const KeyFrameQueue& queue,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
@@ -105,11 +107,16 @@ namespace hogbox
             template <typename M>
             bool AddKey(const T& pos, const float& duration, Callback* callback=NULL){
                 KeyFrame frame;
-                frame.end = pos;
-                frame.duration = duration;
-                frame.motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
-                if(callback){frame.event->AddCallbackReceiver(callback);}
                 _keyFrameQueue.push_back(frame);
+                KeyFrame* framePtr = &_keyFrameQueue[_keyFrameQueue.size()-1];
+                framePtr->end = pos;
+                framePtr->duration = duration;
+                framePtr->motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
+                if(callback){
+                    OSG_FATAL << "KeyFrameQueue: AddKey with Callback" << std::endl;
+                    framePtr->event->AddCallbackReceiver(callback);
+                }
+                
                 
                 //if this is the first key ensure _start is set to current value
                 return this->GetNumKeys()>0;
@@ -198,7 +205,10 @@ namespace hogbox
                 KeyFrame* key = GetCurrentKey();
                 
                 //trigger the current keys end callback
-                key->event->Trigger(NULL);
+                if(key->event.valid()){
+                    OSG_FATAL << "KeyFrameQueue: Trigger Callback" << std::endl;
+                    key->event->Trigger();
+                }
                 //if(key){key->motion->reset();}
                 
                 //

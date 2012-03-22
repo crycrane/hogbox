@@ -10,6 +10,7 @@
 //#include <hogbox/SystemInfo.h>
 #include <hogbox/HogBoxUtils.h>
 #include <hogbox/AssetManager.h>
+#include <hogboxHUD/Hud.h>
 //#include <hogbox/NPOTResizeCallback.h>
 
 using namespace hogboxHUD;
@@ -243,8 +244,8 @@ Region::~Region(void)
 //
 void Region::Update(float simTime)
 {
-    if(_prevTick==0.0f){_prevTick = simTime;}
-	float timePassed = simTime - _prevTick;
+    //use global hud timepassed
+	float timePassed = Hud::Inst()->GetTimePassed();
 	_prevTick = simTime;
     
 	if(!_animationDisabled)

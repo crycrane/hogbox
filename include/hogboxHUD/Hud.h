@@ -17,6 +17,8 @@
 #include <hogboxHUD/Region.h>
 
 namespace hogboxHUD {
+
+class HudUpdateCallback;
     
 //
 //HogBoxHud
@@ -28,6 +30,8 @@ namespace hogboxHUD {
 class HOGBOXHUD_EXPORT Hud : public osg::Referenced //, public hogbox::Singleton<HogBoxHud> 
 {
 public:
+    
+    friend class HudUpdateCallback;
     
     //friend hogbox::Singleton<HogBoxHud>;
     enum HudOrientation{
@@ -67,6 +71,9 @@ public:
     //Rotate and translate the root hud region to run vertically up screen
     void SetHudOrientation(HudOrientation ori);
     
+    //
+    //get the ammount of time passed to this frame
+    const float& GetTimePassed(){return _timePassed;}
 protected:
     
     Hud(void);
@@ -78,7 +85,13 @@ protected:
         _camera=NULL;
     }
     
+    void SetTimePassed(const float& timePassed){_timePassed = timePassed;}
+    
 protected:
+    
+    //track a single prev time so all hudregions can be updated 
+    //with a single timePassed (to prevent issues with adding/removing)
+    float _timePassed;
     
     //hud is rendered using a post render ortho camera
     osg::ref_ptr<osg::Camera> _camera;
@@ -94,6 +107,41 @@ protected:
     
     //store current screnn/projection size
     osg::Vec2 _screenSize;
+};
+
+//
+class HudUpdateCallback : public osg::NodeCallback
+{
+public:
+    HudUpdateCallback() 
+        : osg::NodeCallback(),
+        _prevTick(0.0f)
+    {
+    }
+    
+    //
+    //Update operator
+    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
+    {
+        if (nv->getVisitorType()==osg::NodeVisitor::UPDATE_VISITOR && 
+            nv->getFrameStamp())
+        {
+            //get the time passed since last update
+            double time = nv->getFrameStamp()->getReferenceTime();
+            if(_prevTick==0.0f){_prevTick = time;}
+            float timePassed = time - _prevTick;
+            Hud::Inst()->SetTimePassed(timePassed);
+            _prevTick = time;
+        }
+        osg::NodeCallback::traverse(node,nv);
+    }
+    
+protected:
+    
+    virtual~HudUpdateCallback(void){}
+    
+protected:
+    float _prevTick;
 };
     
 };

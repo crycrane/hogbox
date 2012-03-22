@@ -70,6 +70,7 @@ osg::Node* Hud::Create(osg::Vec2 screenSize)
     
 	//add the main group to which we attach the regions
 	_regionGroup = new osg::Group();
+    _regionGroup->setUpdateCallback(new HudUpdateCallback());
     
     //add the new page to the hud camera
 	_camera->addChild( _regionGroup.get());

@@ -127,7 +127,7 @@ namespace hogbox {
 			: osg::Referenced(),
 			_eventName(eventName)
 		{
-			OSG_FATAL << "Construct CallbackEvent" << std::endl;
+			//OSG_FATAL << "Construct CallbackEvent" << std::endl;
 		}
 		
 		const std::string& GetName(){return _eventName;}
@@ -135,7 +135,6 @@ namespace hogbox {
 		//Register a new Callback receiver for this event
 		void AddCallbackReceiver(Callback* callback)
 		{
-            OSG_FATAL << "CallbackEvent::AddCallbackReceiver for Event named '" << _eventName << "'." << std::endl;
 			_callbacks.push_back(callback);
 		}
 
@@ -143,11 +142,9 @@ namespace hogbox {
 		//
 		void Trigger()
 		{
-            OSG_FATAL << "CallbackEvent::Trigger, num callbacks '" << _callbacks.size() << "'." << std::endl;
-			//call all our callback functions
+            //call all our callback functions
 			for(unsigned int i=0; i<_callbacks.size(); i++)
 			{
-                OSG_FATAL << "    LOOP" << std::endl;
 				_callbacks[i]->TriggerCallback();
 			}
 		}
@@ -165,7 +162,6 @@ namespace hogbox {
 		
 	protected:
 		virtual ~CallbackEvent(void){
-            OSG_FATAL << "Destruct CallbackEvent" << std::endl;
         }
 		
 	protected:

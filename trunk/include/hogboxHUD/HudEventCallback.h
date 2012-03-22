@@ -123,7 +123,6 @@ namespace hogboxHUD {
 		//
 		void Trigger(HudInputEvent& inputEvent)
 		{
-            OSG_FATAL << "HudCallbackEvent::Trigger, num callbacks '" << _callbacks.size() << "'." << std::endl;
 			//call all our callback functions
 			for(unsigned int i=0; i<_callbacks.size(); i++)
 			{

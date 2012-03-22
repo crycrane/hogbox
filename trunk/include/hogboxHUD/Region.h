@@ -109,7 +109,7 @@ public:
     bool IsChild(const std::string& uniqueID);
     //set this regions parent, NULL if attached directly
     //to the hud
-    void SetParent(Region* parent){p_parent=parent;}
+    void SetParent(Region* parent){p_parent=parent;_prevTick=0.0f;}
     Region* GetParent(){return p_parent;}
     
     //remove child
@@ -587,7 +587,6 @@ public:
     
     //
     //Update operator
-    //Here we smooth to targets if value is not equal
     virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
     {
         if (p_updateRegion &&

@@ -71,6 +71,7 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
 	osg::Geode* textGeode = new osg::Geode();
     //geode is visible, not pickable
     textGeode->setNodeMask(hogbox::MAIN_CAMERA_CULL);
+    MakeHudGeodes(textGeode, new RegionWrapper(this));
     osg::StateSet* stateset = textGeode->getOrCreateStateSet();
 	stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);
     

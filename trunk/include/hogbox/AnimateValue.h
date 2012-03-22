@@ -32,23 +32,23 @@ namespace hogbox
     public:
         
         AnimateValue()
-		: osg::Object(),
-		_keyFrameQueue(new KeyFrameQueue())
+            : osg::Object(),
+            _keyFrameQueue(new KeyFrameQueue())
         {
         }
         AnimateValue(const T& value)
-		: osg::Object(),
-		_value(value),
-		_start(value),
-		_keyFrameQueue(new KeyFrameQueue())
+            : osg::Object(),
+            _value(value),
+            _start(value),
+            _keyFrameQueue(new KeyFrameQueue())
         {
         }
         
         /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
         AnimateValue(const AnimateValue& value,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
-		: osg::Object(value, copyop),
-		_value(value._value),
-		_start(value._start)
+            : osg::Object(value, copyop),
+            _value(value._value),
+            _start(value._start)
         {
         }
         
@@ -87,7 +87,7 @@ namespace hogbox
 			_isPlaying(true),
 			_currentKeyIndex(0)
             {
-                OSG_FATAL << "Contruct KeyFrameQueue" << std::endl;
+                //OSG_FATAL << "Contruct KeyFrameQueue" << std::endl;
             }
             /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
             KeyFrameQueue(const KeyFrameQueue& queue,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
@@ -113,7 +113,7 @@ namespace hogbox
                 framePtr->duration = duration;
                 framePtr->motion = new M(0.0f, duration, 1.0f, osgAnimation::Motion::CLAMP);
                 if(callback){
-                    OSG_FATAL << "KeyFrameQueue: AddKey with Callback" << std::endl;
+                    //OSG_FATAL << "KeyFrameQueue: AddKey with Callback" << std::endl;
                     framePtr->event->AddCallbackReceiver(callback);
                 }
                 
@@ -206,7 +206,6 @@ namespace hogbox
                 
                 //trigger the current keys end callback
                 if(key->event.valid()){
-                    OSG_FATAL << "KeyFrameQueue: Trigger Callback" << std::endl;
                     key->event->Trigger();
                 }
                 //if(key){key->motion->reset();}
@@ -300,7 +299,7 @@ namespace hogbox
             if(key)
             {	
                 //update the motions time
-                key->motion->update(timePassed);
+                //key->motion->update(timePassed);
                 //get the interpolation value
                 float t = key->motion->getValue();
                 

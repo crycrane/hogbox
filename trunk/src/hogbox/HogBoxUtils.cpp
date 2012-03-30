@@ -48,17 +48,33 @@ osg::Node* hogbox::FindNodeByName(osg::Node* node, const std::string name)
 
 osg::Matrix hogbox::ComputeLookAtMatrixForNodeBounds(osg::Node* scene, float distance, osg::Vec3 forwardAxis, osg::Vec3 upAxis)
 {
-    if(!scene){
+    osg::Vec3 camPos, lookAt, up;
+    if(!hogbox::ComputeLookAtVectorsForNodeBounds(scene, distance, forwardAxis, upAxis, 
+                                                  camPos, lookAt, up)){
         return osg::Matrix::identity();
+    }
+    return osg::Matrix::lookAt(camPos, lookAt, up);
+}
+
+bool hogbox::ComputeLookAtVectorsForNodeBounds(osg::Node* scene, float distance, osg::Vec3 forwardAxis, osg::Vec3 upAxis,
+                                               osg::Vec3& outCamPos, osg::Vec3& outLookAt, osg::Vec3& outUpAxis)
+{
+    if(!scene){
+        return false;
     }
     forwardAxis.normalize();
     osg::BoundingSphere bounds = scene->computeBound();
     osg::Vec3 lookAt = bounds.center();
+    //float radius = bounds.radius() >= 1.0f ? bounds.radius() : 1.0f;
+    //OSG_FATAL << "ComputeLookAtMatrixForNodeBounds: radius " << radius << std::endl;
     osg::Vec3 camPos = lookAt + (-forwardAxis * (bounds.radius()*distance));
     osg::Vec3 up = upAxis;
     up.normalize();
     
-    return osg::Matrix::lookAt(camPos, lookAt, up);
+    outCamPos = camPos;
+    outLookAt = lookAt;
+    outUpAxis = up;
+    return true;
 }
 
 osg::Image* hogbox::CreateSubImage(int sCol, int sRow, int width, int height, osg::Image* source)

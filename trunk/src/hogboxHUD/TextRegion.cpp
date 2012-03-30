@@ -65,7 +65,9 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
 {
 	//create the text label to add to the button
 	_text = new osgText::Text;
-	//_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMU_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
+    _text->setUseDisplayList(false);
+    _text->setUseVertexBufferObjects(true);
+    //_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMU_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
     
 	//add the text to a geode for drawing
 	osg::Geode* textGeode = new osg::Geode();

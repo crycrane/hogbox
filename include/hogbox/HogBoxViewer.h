@@ -125,6 +125,7 @@ public:
 	bool done();
 
 	void addEventHandler(osgGA::GUIEventHandler* eventHandler);
+	void removeEventHandler(osgGA::GUIEventHandler* eventHandler);
 
 
 	//contruct the window and viewer using existing settings

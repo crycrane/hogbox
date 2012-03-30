@@ -191,6 +191,21 @@ void HogBoxViewer::addEventHandler(osgGA::GUIEventHandler* eventHandler)
 	}
 }
 
+void HogBoxViewer::removeEventHandler(osgGA::GUIEventHandler* eventHandler)
+{
+	//add to our list of eventHandler
+    std::vector<EventHandlerObserver>::iterator itr = std::find(_appEventHandlers.begin(), _appEventHandlers.end(), eventHandler);
+    if (itr == _appEventHandlers.end())
+    {
+        _appEventHandlers.push_back(eventHandler);
+    }
+    
+	if(_viewer.valid())
+	{
+		_viewer->removeEventHandler(eventHandler);
+	}
+}
+
 //
 //contruct the window and viewer using existing settings
 //returns false if no scene node set
@@ -342,14 +357,14 @@ bool HogBoxViewer::CreateAppWindow()
 
 		//create the osg viewer
 		_viewer = new osgViewer::Viewer();
-		_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+		//_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 		
 		//set cameras projection and viewport
 		double height = _glSystemInfo->getScreenWidth(_screenID);
 		double width = _glSystemInfo->getScreenHeight(_screenID);
 		osg::Vec2 screenRes = osg::Vec2(width,height);
 
-		_viewer->getCamera()->setProjectionMatrixAsPerspective( _vfov, width/height, 1.0f,1000.0f);
+		_viewer->getCamera()->setProjectionMatrixAsPerspective( _vfov, _winSize.x()/_winSize.y(), 1.0f,1000.0f);
 
 		//attach the graphics context to the viewers camera
 		_viewer->getCamera()->setGraphicsContext(_graphicsContext.get());

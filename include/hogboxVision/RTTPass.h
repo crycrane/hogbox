@@ -128,6 +128,8 @@ public:
     osg::ref_ptr<osg::Group> getRoot() { return _rootGroup; }
     TextureRef getOutputTexture(int i) { return _outTextures[i]; }
     
+    osg::Camera* getRTTCamera(){return _camera.get();}
+    
 	int getOutputWidth(){return _outputWidth;}
 	int getOutputHeight(){return _outputHeight;}
 

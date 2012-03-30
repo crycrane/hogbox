@@ -3,6 +3,8 @@
 #include <hogbox/SystemInfo.h>
 #include <osgDB/FileNameUtils>
 
+#include <hogbox/HogBoxUtils.h>
+
 #ifdef TARGET_OS_IPHONE
 #import <Foundation/NSString.h>
 #import <Foundation/NSUserDefaults.h>
@@ -140,13 +142,15 @@ bool AssetManager::OpenAndMountArchive(const std::string& fileName){
 //
 //get or load a new osg node
 //
-osg::NodePtr AssetManager::GetOrLoadNode(std::string fileName)
+osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, bool cache)
 {
     //check if name is already in the map
-    FileToNodeMap::iterator found = _fileCache.find(fileName);
-    if(found != _fileCache.end()){
-        //return existing
-        return (*found).second;
+    if(cache){
+        FileToNodeMap::iterator found = _fileCache.find(fileName);
+        if(found != _fileCache.end()){
+            //return existing
+            return (*found).second;
+        }
     }
     
     //not found so load
@@ -164,18 +168,28 @@ osg::NodePtr AssetManager::GetOrLoadNode(std::string fileName)
         node = osgDB::readNodeFile(fileName);
     }
     
-    //apply the defaults visitor
-    //ApplyIOSOptVisitor visitor;
-    //node->accept(visitor);
-    //add to the cache
-    _fileCache[fileName] = node;
+    //check we have a valid node
+    if(node.get()){
+        //make sure we are using vertex buffer objects
+        ApplyVBOVisitor vboVisitor;
+        node->accept(vboVisitor);
+        
+        if(cache){
+            //apply the defaults visitor
+            //ApplyIOSOptVisitor visitor;
+            //node->accept(visitor);
+            //add to the cache
+            _fileCache[fileName] = node;
+        }
+    }
+
     return node;
 }
 
 //
 //load node then return a cloned version, cloning everything bar primatives, textures and arrays
 //
-osg::Node* AssetManager::InstanceNode(std::string fileName)
+osg::Node* AssetManager::InstanceNode(const std::string& fileName, bool cache)
 {
     //load to cache
     osg::NodePtr node = GetOrLoadNode(fileName);
@@ -192,7 +206,7 @@ osg::Node* AssetManager::InstanceNode(std::string fileName)
 //
 //get or load a new osg node
 //
-osg::Tex2DPtr AssetManager::GetOrLoadTex2D(std::string fileName)
+osg::Tex2DPtr AssetManager::GetOrLoadTex2D(const std::string& fileName, bool cache)
 {
     //check if name is already in the map
     FileToTex2DMap::iterator found = _textureCache.find(fileName);
@@ -231,7 +245,7 @@ osg::Tex2DPtr AssetManager::GetOrLoadTex2D(std::string fileName)
 //
 //get or load an image
 //
-osg::ImagePtr AssetManager::GetOrLoadImage(std::string fileName)
+osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, bool cache)
 {
     //check if name is already in the map
     FileToImageMap::iterator found = _imageCache.find(fileName);
@@ -264,7 +278,7 @@ osg::ImagePtr AssetManager::GetOrLoadImage(std::string fileName)
 //
 //get or load a font
 //
-osgText::FontPtr AssetManager::GetOrLoadFont(std::string fileName)
+osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, bool cache)
 {
     //check if name is already in the map
     FileToFontMap::iterator found = _fontCache.find(fileName);
@@ -301,7 +315,7 @@ osgText::FontPtr AssetManager::GetOrLoadFont(std::string fileName)
 //
 //Get or load an xml object
 //
-XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(std::string fileName)
+XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, bool cache)
 {
     //check if name is already in the map
     FileToXmlObjectMap::iterator found = _xmlObjectCache.find(fileName);
@@ -333,7 +347,7 @@ XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(std::string fileName)
 //
 //Get or load a shader from file
 //
-osg::ShaderPtr AssetManager::GetOrLoadShader(std::string fileName, osg::Shader::Type shaderType)
+osg::ShaderPtr AssetManager::GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, bool cache)
 {
     //check if name is already in the map
     FileToShaderMap::iterator found = _shaderCache.find(fileName);
@@ -358,7 +372,7 @@ osg::ShaderPtr AssetManager::GetOrLoadShader(std::string fileName, osg::Shader::
 //
 //Get or load a program based on the two shaders used to create it
 //
-osg::ProgramPtr AssetManager::GetOrLoadProgram(std::string vertShaderFile, std::string fragShaderFile)
+osg::ProgramPtr AssetManager::GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, bool cache)
 {
     //programs are labeled using both filenames combined
     std::string programName = vertShaderFile + fragShaderFile;

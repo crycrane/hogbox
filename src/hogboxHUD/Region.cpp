@@ -566,7 +566,7 @@ bool Region::LoadAssest(const std::string& folderName)
         }
         
         geom = osg::createTexturedQuadGeometry(corner, width, height);
-        geom->setColorArray(NULL);//don't use color array as we set color via gl material
+        geom->setColorArray(NULL);//don't use color array as we set color via gl material or uniform
 #ifdef TARGET_OS_IPHONE
         geom->setUseDisplayList(false);
         geom->setUseVertexBufferObjects(true);

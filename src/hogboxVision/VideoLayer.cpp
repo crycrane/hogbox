@@ -121,7 +121,9 @@ osg::ref_ptr<osg::Geode> Ortho2DLayer::buildLayerGeometry()
     _geometry->setColorArray(quad_colors.get());
     _geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
 
-	
+    _geometry->setUseDisplayList(false);
+    _geometry->setUseVertexBufferObjects(true);
+    
     // diable depth read and write and culling for fastest render   
     this->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::ON);
     this->getOrCreateStateSet()->setMode(GL_DEPTH_TEST,osg::StateAttribute::OFF);

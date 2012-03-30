@@ -92,35 +92,35 @@ public:
     bool OpenAndMountArchive(const std::string& fileName);
     
     //get or load a new osg node
-    osg::NodePtr GetOrLoadNode(std::string fileName);
+    osg::NodePtr GetOrLoadNode(const std::string& fileName, bool cache=true);
     
     //load node then return a cloned version, cloning everything bar primatives, textures and arrays
-    osg::Node* InstanceNode(std::string fileName);
+    osg::Node* InstanceNode(const std::string& fileName, bool cache=true);
     
     //
     //get or load an image then add to a texture
-    osg::Tex2DPtr GetOrLoadTex2D(std::string fileName);
+    osg::Tex2DPtr GetOrLoadTex2D(const std::string& fileName, bool cache=true);
     
     //
     //get or load an image
-    osg::ImagePtr GetOrLoadImage(std::string fileName);
+    osg::ImagePtr GetOrLoadImage(const std::string& fileName, bool cache=true);
     
     //
     //get or load a font
-    osgText::FontPtr GetOrLoadFont(std::string fileName);
+    osgText::FontPtr GetOrLoadFont(const std::string& fileName, bool cache=true);
     
     //
     //Get or load an xml object
-    XmlInputObjectPtr GetOrLoadXmlObject(std::string fileName);
+    XmlInputObjectPtr GetOrLoadXmlObject(const std::string& fileName, bool cache=true);
     
     
     //
     //Get or load a shader from file
-    osg::ShaderPtr GetOrLoadShader(std::string fileName, osg::Shader::Type shaderType);
+    osg::ShaderPtr GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, bool cache=true);
     
     //
     //Get or load a program based on the two shaders used to create it
-    osg::ProgramPtr GetOrLoadProgram(std::string vertShaderFile, std::string fragShaderFile);
+    osg::ProgramPtr GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, bool cache=true);
     
     //release all objects from the cache
     void ReleaseAssets();

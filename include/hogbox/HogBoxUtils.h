@@ -45,6 +45,9 @@ namespace hogbox {
     //Camera helpers
     extern HOGBOX_EXPORT osg::Matrix ComputeLookAtMatrixForNodeBounds(osg::Node* scene, float distance = 3.0f, osg::Vec3 axis = osg::Y_AXIS, osg::Vec3 upAxis = osg::Z_AXIS);
     
+    extern HOGBOX_EXPORT bool ComputeLookAtVectorsForNodeBounds(osg::Node* scene, float distance, osg::Vec3 forwardAxis, osg::Vec3 upAxis,
+                                                                osg::Vec3& outCamPos, osg::Vec3& outLookAt, osg::Vec3& outUpAxis);
+    
 	//
 	//Image Helpers
 

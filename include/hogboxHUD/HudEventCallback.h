@@ -77,7 +77,6 @@ namespace hogboxHUD {
 		
 		virtual void TriggerCallback(HudInputEvent& inputEvent) 
 		{
-            OSG_FATAL << "HudEventObjectCallback::TriggerCallback" << std::endl;
 			if (f_callbackHudFunc) 
 			{
 				//call our receiver objects callback function

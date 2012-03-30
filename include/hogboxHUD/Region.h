@@ -20,7 +20,8 @@
 
 #include <osg/MatrixTransform>
 #include <osg/Material>
-#include<osg/Texture2D>
+#include <osg/Texture2D>
+#include <osg/ValueObject>
 
 #include "HudInputEvent.h"
 #include "HudEventCallback.h"

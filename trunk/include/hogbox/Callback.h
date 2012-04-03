@@ -37,6 +37,16 @@ namespace hogbox {
 		{
 			OSG_FATAL << "Callback ERROR: No Callback function registered." << std::endl;
 		}
+        
+        virtual void TriggerCallback(osg::Object* object) 
+		{
+			OSG_FATAL << "Callback ERROR: No Callback function registered." << std::endl;
+		}
+        
+        virtual void TriggerCallback(osg::Node* node) 
+		{
+			OSG_FATAL << "Callback ERROR: No Callback function registered." << std::endl;
+		}
 		
 	protected:	
 		
@@ -58,6 +68,8 @@ namespace hogbox {
 		//can pass only a void pointer to be cast to correct type
         typedef void (C::* ObjectCallbackFunc)();
 		typedef void (C::* ObjectCallbackArgFunc)(void*); 
+        typedef void (C::* ObjectCallbackObjArgFunc)(osg::Object*); 
+        typedef void (C::* ObjectCallbackNodeArgFunc)(osg::Node*); 
 								
 		//
 		//Contructor requires
@@ -67,13 +79,37 @@ namespace hogbox {
 		ObjectCallback(C *rObject, ObjectCallbackFunc ghandler = 0)
 			: Callback(),
 			f_callbackFunc(ghandler),
+            f_callbackArgFunc(NULL),
+            f_callbackObjArgFunc(NULL),
+            f_callbackNodeArgFunc(NULL),
             mp_object(rObject)
 		{
 		}
 		ObjectCallback(C *rObject, ObjectCallbackArgFunc ghandler = 0)
-        : Callback(),
-        f_callbackArgFunc(ghandler),
-        mp_object(rObject)
+            : Callback(),
+            f_callbackArgFunc(ghandler),
+            f_callbackFunc(NULL),
+            f_callbackObjArgFunc(NULL),
+            f_callbackNodeArgFunc(NULL),
+            mp_object(rObject)
+		{
+		}
+		ObjectCallback(C *rObject, ObjectCallbackObjArgFunc ghandler = 0)
+            : Callback(),
+            f_callbackObjArgFunc(ghandler),
+            f_callbackArgFunc(NULL),
+            f_callbackFunc(NULL),
+            f_callbackNodeArgFunc(NULL),
+            mp_object(rObject)
+		{
+		}
+		ObjectCallback(C *rObject, ObjectCallbackNodeArgFunc ghandler = 0)
+            : Callback(),
+            f_callbackNodeArgFunc(ghandler),
+            f_callbackObjArgFunc(NULL),
+            f_callbackArgFunc(NULL),
+            f_callbackFunc(NULL),
+            mp_object(rObject)
 		{
 		}
 
@@ -99,6 +135,28 @@ namespace hogbox {
 				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
 			}
 		}
+        
+		virtual void TriggerCallback(osg::Object* object) 
+		{
+			if (f_callbackObjArgFunc) 
+			{
+				//call our receiver objects callback function
+				(mp_object->*f_callbackObjArgFunc)(object);			
+			}else{
+				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
+			}
+		}
+        
+		virtual void TriggerCallback(osg::Node* object) 
+		{
+			if (f_callbackNodeArgFunc) 
+			{
+				//call our receiver objects callback function
+				(mp_object->*f_callbackNodeArgFunc)(object);			
+			}else{
+				OSG_FATAL << "HudEvent ERROR: No Callback function registered." << std::endl;
+			}
+		}
 		
 	protected:	
 
@@ -109,6 +167,8 @@ namespace hogbox {
 		//function pointers to the callback function for this event
 		ObjectCallbackFunc f_callbackFunc;
         ObjectCallbackArgFunc f_callbackArgFunc;
+        ObjectCallbackObjArgFunc f_callbackObjArgFunc;
+        ObjectCallbackNodeArgFunc f_callbackNodeArgFunc;
 		
 		//the pointer to the class instance
 		//we are calling the callback of
@@ -157,6 +217,28 @@ namespace hogbox {
 			for(unsigned int i=0; i<_callbacks.size(); i++)
 			{
 				_callbacks[i]->TriggerCallback(object);
+			}
+		}
+        
+		//
+		//
+		void Trigger(osg::Object* object)
+		{
+			//call all our callback functions
+			for(unsigned int i=0; i<_callbacks.size(); i++)
+			{
+				_callbacks[i]->TriggerCallback(object);
+			}
+		}
+        
+		//
+		//
+		void Trigger(osg::Node* node)
+		{
+			//call all our callback functions
+			for(unsigned int i=0; i<_callbacks.size(); i++)
+			{
+				_callbacks[i]->TriggerCallback(node);
 			}
 		}
 		

@@ -19,8 +19,12 @@
 #include <osgDB/ReadFile>
 #include <osgDB/Archive>
 #include <osgDB/XmlParser>
+#include <osgDB/FileNameUtils>
+
+#include <osgUtil/IncrementalCompileOperation>
 
 #include <hogbox/HogBoxBase.h>
+#include <hogbox/Callback.h>
 
 #ifdef ANDROID
 #include <jni.h>
@@ -73,6 +77,167 @@ protected:
 
 typedef osg::ref_ptr<XmlInputObject> XmlInputObjectPtr;
 
+//
+//ReadFileCallback used to read images from archive when reading from
+//an osg in an archive
+//
+class ReadOsgImageFileFromArchiveCallback : public virtual osgDB::ReadFileCallback
+{
+public:
+    ReadOsgImageFileFromArchiveCallback(const std::string& osgPath, osgDB::Archive* archive)
+    : osgDB::ReadFileCallback(),
+    _archive(archive),
+    _osgPath(osgPath)
+    {}
+    
+    virtual osgDB::ReaderWriter::ReadResult readImage(const std::string& filename, const osgDB::ReaderWriter::Options* options){
+        OSG_FATAL << "READ IMAGE CALLBACK '" << filename << "', osgPath: '" << _osgPath << "'." <<std::endl;
+        //
+        osg::setNotifyLevel(osg::DEBUG_FP);
+        if(_archive.get()){
+            osgDB::ReaderWriter::ReadResult result = _archive->readImage(_osgPath+"/"+filename, options);
+            osg::setNotifyLevel(osg::FATAL);
+            return result;
+        }
+        return osgDB::ReadFileCallback::readImage(filename, options);
+    }
+    
+protected:
+    virtual ~ReadOsgImageFileFromArchiveCallback() {}
+    
+protected:
+    osg::ref_ptr<osgDB::Archive> _archive;
+    std::string _osgPath;
+};
+    
+// 
+class DatabasePagingOperation : public osg::Operation, public osgUtil::IncrementalCompileOperation::CompileCompletedCallback
+{
+public:
+    
+    DatabasePagingOperation(const std::string& filename,
+                            hogbox::Callback* callback,
+                            bool cache = false,
+                            osgDB::Archive* archive=NULL,
+                            osgUtil::IncrementalCompileOperation* ico=NULL)
+        : Operation("DatabasePaging Operation", false),
+        _filename(filename),
+        _modelReadyToMerge(false),
+        _done(false),
+        _callback(callback),
+        _cache(cache),
+        _archive(archive),
+        _incrementalCompileOperation(ico)
+    {
+    }
+    
+    virtual void operator () (osg::Object* object)
+    {
+        OSG_FATAL<<"LoadAndCompileOperation "<<_filename<<std::endl;
+        
+        _modelReadyToMerge = false;
+        
+        //read the model file, using the archive if supplied
+        if(_archive.valid()){
+            
+            osg::ref_ptr<osgDB::ReaderWriter::Options> local_opt = new osgDB::ReaderWriter::Options();
+            std::string folderPath = osgDB::getFilePath(_filename);
+            std::string fullFolderPath = folderPath.empty() ? "/assets" : "/assets/"+folderPath;
+            local_opt->setReadFileCallback(new ReadOsgImageFileFromArchiveCallback(fullFolderPath, _archive.get()));
+            
+            osgDB::ReaderWriter::ReadResult result = _archive->readNode("/assets/"+_filename, local_opt.get());
+            _loadedModel = result.getNode();
+        }else{
+            _loadedModel = osgDB::readNodeFile(_filename);
+        }
+        
+        if (_loadedModel.valid())
+        {
+            if (_incrementalCompileOperation.valid())
+            {
+                OSG_FATAL<<"Registering with ICO "<<_filename<<std::endl;
+                
+                osg::ref_ptr<osgUtil::IncrementalCompileOperation::CompileSet> compileSet =
+                new osgUtil::IncrementalCompileOperation::CompileSet(_loadedModel.get());
+                
+                compileSet->_compileCompletedCallback = this;
+                
+                _incrementalCompileOperation->add(compileSet.get());
+            }else{
+                _modelReadyToMerge = true;
+            }
+        }
+        
+        if(!_incrementalCompileOperation.get()){
+            _done = true;
+        }
+        
+        OSG_FATAL<<"done LoadAndCompileOperation "<<_filename<<std::endl;
+    }
+    
+    virtual bool compileCompleted(osgUtil::IncrementalCompileOperation::CompileSet* compileSet)
+    {
+        OSG_NOTICE<<"compileCompleted"<<std::endl;
+        _modelReadyToMerge = true;
+        _done = true;
+        return true;
+    }
+    
+    //
+    //called by assetmanager on the main thread once per frame to perform callback etc 
+    //once load is compelte,
+    //returns true sync is compelte and PagingOperation can be deleted
+    //returns false if still loading
+    bool Sync(){
+        if(_modelReadyToMerge){
+            if(_callback.get()){
+                _callback->TriggerCallback(_loadedModel.get());
+            }
+            return true;
+        }else if(_done){
+            //should we still call the callback and just pass NULL?
+            return true;
+        }
+        return false;
+    }
+    
+    //
+    //does the loaded model require caching
+    bool CacheModel(){return _cache;}
+    
+    //
+    //return the loaded model
+    osg::Node* GetLoadedModel(){
+        return _loadedModel;
+    }
+    
+    //
+    //get model ready sate
+    bool ModelReady(){
+        return _modelReadyToMerge;
+    }
+    
+    //
+    //is it done, i.e. can be done but the model didn't load
+    //and thus isn't ready to merge
+    bool Done(){
+        return _done;
+    }
+    
+protected:
+    
+    std::string                                         _filename;
+    osg::ref_ptr<osg::Node>                             _loadedModel;
+    bool                                                _modelReadyToMerge;
+    bool                                                _done;
+    hogbox::CallbackPtr                                 _callback;
+    bool                                                _cache;
+    osg::ref_ptr<osgUtil::IncrementalCompileOperation>  _incrementalCompileOperation;
+    
+    //optional archive used to load assets from
+    osg::ref_ptr<osgDB::Archive> _archive;
+};
+typedef osg::ref_ptr<DatabasePagingOperation> DatabasePagingOperationPtr;
 
 //
 //Handle reading and writing of files
@@ -91,36 +256,53 @@ public:
     //subsequent asset loads are loaded from the archive
     bool OpenAndMountArchive(const std::string& fileName);
     
+    //
+    //Call once per frame if using paging (getOrLoad with a callback)
+    void Sync();
+    
+    //options for reading
+    class ReadOptions : public osg::Referenced{
+    public:
+        ReadOptions()
+            : osg::Referenced(),
+            cache(false),
+            loadCompleteCallback(NULL)
+        {
+        }
+        bool cache;
+        hogbox::CallbackPtr loadCompleteCallback;
+    };
+    
     //get or load a new osg node
-    osg::NodePtr GetOrLoadNode(const std::string& fileName, bool cache=true);
+    osg::NodePtr GetOrLoadNode(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     //load node then return a cloned version, cloning everything bar primatives, textures and arrays
-    osg::Node* InstanceNode(const std::string& fileName, bool cache=true);
+    osg::Node* InstanceNode(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     //
     //get or load an image then add to a texture
-    osg::Tex2DPtr GetOrLoadTex2D(const std::string& fileName, bool cache=true);
+    osg::Tex2DPtr GetOrLoadTex2D(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     //
     //get or load an image
-    osg::ImagePtr GetOrLoadImage(const std::string& fileName, bool cache=true);
+    osg::ImagePtr GetOrLoadImage(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     //
     //get or load a font
-    osgText::FontPtr GetOrLoadFont(const std::string& fileName, bool cache=true);
+    osgText::FontPtr GetOrLoadFont(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     //
     //Get or load an xml object
-    XmlInputObjectPtr GetOrLoadXmlObject(const std::string& fileName, bool cache=true);
+    XmlInputObjectPtr GetOrLoadXmlObject(const std::string& fileName, ReadOptions* readOptions=NULL);
     
     
     //
     //Get or load a shader from file
-    osg::ShaderPtr GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, bool cache=true);
+    osg::ShaderPtr GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, ReadOptions* readOptions=NULL);
     
     //
     //Get or load a program based on the two shaders used to create it
-    osg::ProgramPtr GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, bool cache=true);
+    osg::ProgramPtr GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, ReadOptions* readOptions=NULL);
     
     //release all objects from the cache
     void ReleaseAssets();
@@ -163,6 +345,12 @@ protected:
     
     //optional archive used to load assets from
     osg::ref_ptr<osgDB::Archive> _archive;
+    
+    //the database paging thread
+    osg::ref_ptr<osg::OperationThread> _databasePagingThread;
+    //our array of paging operations running on the paging thread
+    //need to call asset manager Sync function to handle mergeing etc
+    std::vector<DatabasePagingOperationPtr> _pagingOperations;
     
     //the map of file names to cached osg nodes
     typedef std::pair<std::string, osg::NodePtr> FileToNodePair;

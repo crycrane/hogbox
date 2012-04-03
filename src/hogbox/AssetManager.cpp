@@ -1,8 +1,6 @@
 #include <hogbox/AssetManager.h>
 
 #include <hogbox/SystemInfo.h>
-#include <osgDB/FileNameUtils>
-
 #include <hogbox/HogBoxUtils.h>
 
 #ifdef TARGET_OS_IPHONE
@@ -12,40 +10,6 @@
 
 using namespace hogbox;
 
-
-
-//
-//ReadFileCallback used to read images from archive when reading from
-//an osg in an archive
-//
-class ReadOsgImageFileFromArchiveCallback : public virtual osgDB::ReadFileCallback
-{
-public:
-    ReadOsgImageFileFromArchiveCallback(const std::string& osgPath, osgDB::Archive* archive)
-    : osgDB::ReadFileCallback(),
-    _archive(archive),
-    _osgPath(osgPath)
-    {}
-    
-    virtual osgDB::ReaderWriter::ReadResult readImage(const std::string& filename, const osgDB::ReaderWriter::Options* options){
-        OSG_FATAL << "READ IMAGE CALLBACK '" << filename << "', osgPath: '" << _osgPath << "'." <<std::endl;
-        //
-        osg::setNotifyLevel(osg::DEBUG_FP);
-        if(_archive.get()){
-            osgDB::ReaderWriter::ReadResult result = _archive->readImage(_osgPath+"/"+filename, options);
-            osg::setNotifyLevel(osg::FATAL);
-            return result;
-        }
-        return osgDB::ReadFileCallback::readImage(filename, options);
-    }
-    
-protected:
-    virtual ~ReadOsgImageFileFromArchiveCallback() {}
-    
-protected:
-    osg::ref_ptr<osgDB::Archive> _archive;
-    std::string _osgPath;
-};
 
 //
 //Plugin to wrap xml inputs
@@ -102,11 +66,17 @@ public:
 //
 //
 AssetManager::AssetManager(void)
-    : osg::Referenced()
+    : osg::Referenced(),
+    _archive(NULL)
 {
     OSG_INFO << "Construct AssetManager" << std::endl;
+    
+    //hack for now we register the xml plugin here
     static osgDB::RegisterReaderWriterProxy<ReaderWriterXMLObject> g_proxy_ReaderWriterXMLObject;
-    _archive = NULL;
+    
+    //create and start our database paging thread
+    _databasePagingThread = new osg::OperationThread;
+    _databasePagingThread->startThread();
 }
 
 AssetManager::~AssetManager(void)
@@ -140,17 +110,65 @@ bool AssetManager::OpenAndMountArchive(const std::string& fileName){
 }
 
 //
+//Call once per frame if using paging (getOrLoad with a callback)
+void AssetManager::Sync()
+{
+    std::vector<DatabasePagingOperationPtr>::iterator itr = _pagingOperations.begin();
+    //for( ; itr!=_pagingOperations.end(); itr++){
+    while(itr != _pagingOperations.end()){
+        
+        OSG_FATAL << "  Sync Operation" << std::endl;
+        if((*itr)->Sync()){
+             OSG_FATAL << "  Operation Complete" << std::endl;
+            //it's done, does it require caching
+            if((*itr)->CacheModel()){
+                
+            }
+            
+            //erase this operation from array
+            itr = _pagingOperations.erase(itr);
+            
+        }else{
+            itr++;
+        }
+    }
+}
+
+//
 //get or load a new osg node
 //
-osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, bool cache)
+osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, ReadOptions* readOptions)
 {
+    osg::ref_ptr<ReadOptions> defaultOptions;
+    //if read options is null allocate a default
+    if(!readOptions){
+        defaultOptions = new ReadOptions();
+        readOptions = defaultOptions.get();
+    }
     //check if name is already in the map
-    if(cache){
+    if(readOptions->cache){
         FileToNodeMap::iterator found = _fileCache.find(fileName);
         if(found != _fileCache.end()){
+            
+            //if there is a callback trigger now as the node is already loaded
+            if(readOptions->loadCompleteCallback.get()){
+                readOptions->loadCompleteCallback->TriggerCallback((*found).second);
+            }
+            
             //return existing
             return (*found).second;
         }
+    }
+    
+    //if there is a callback allocate a DatabasePagingOperation and add to our queue
+    if(readOptions->loadCompleteCallback.get()){
+        DatabasePagingOperationPtr operation = new DatabasePagingOperation(fileName,
+                                                                           readOptions->loadCompleteCallback.get(),
+                                                                           readOptions->cache,
+                                                                           _archive.get());
+        _databasePagingThread->add(operation.get());
+        _pagingOperations.push_back(operation);
+        return NULL;
     }
     
     //not found so load
@@ -174,7 +192,7 @@ osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, bool cache
         ApplyVBOVisitor vboVisitor;
         node->accept(vboVisitor);
         
-        if(cache){
+        if(readOptions->cache){
             //apply the defaults visitor
             //ApplyIOSOptVisitor visitor;
             //node->accept(visitor);
@@ -189,7 +207,7 @@ osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, bool cache
 //
 //load node then return a cloned version, cloning everything bar primatives, textures and arrays
 //
-osg::Node* AssetManager::InstanceNode(const std::string& fileName, bool cache)
+osg::Node* AssetManager::InstanceNode(const std::string& fileName, ReadOptions* readOptions)
 {
     //load to cache
     osg::NodePtr node = GetOrLoadNode(fileName);
@@ -206,7 +224,7 @@ osg::Node* AssetManager::InstanceNode(const std::string& fileName, bool cache)
 //
 //get or load a new osg node
 //
-osg::Tex2DPtr AssetManager::GetOrLoadTex2D(const std::string& fileName, bool cache)
+osg::Tex2DPtr AssetManager::GetOrLoadTex2D(const std::string& fileName, ReadOptions* readOptions)
 {
     //check if name is already in the map
     FileToTex2DMap::iterator found = _textureCache.find(fileName);
@@ -245,7 +263,7 @@ osg::Tex2DPtr AssetManager::GetOrLoadTex2D(const std::string& fileName, bool cac
 //
 //get or load an image
 //
-osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, bool cache)
+osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, ReadOptions* readOptions)
 {
     //check if name is already in the map
     FileToImageMap::iterator found = _imageCache.find(fileName);
@@ -278,7 +296,7 @@ osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, bool cac
 //
 //get or load a font
 //
-osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, bool cache)
+osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, ReadOptions* readOptions)
 {
     //check if name is already in the map
     FileToFontMap::iterator found = _fontCache.find(fileName);
@@ -315,7 +333,7 @@ osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, bool c
 //
 //Get or load an xml object
 //
-XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, bool cache)
+XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, ReadOptions* readOptions)
 {
     //check if name is already in the map
     FileToXmlObjectMap::iterator found = _xmlObjectCache.find(fileName);
@@ -347,7 +365,7 @@ XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, 
 //
 //Get or load a shader from file
 //
-osg::ShaderPtr AssetManager::GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, bool cache)
+osg::ShaderPtr AssetManager::GetOrLoadShader(const std::string& fileName, osg::Shader::Type shaderType, ReadOptions* readOptions)
 {
     //check if name is already in the map
     FileToShaderMap::iterator found = _shaderCache.find(fileName);
@@ -372,7 +390,7 @@ osg::ShaderPtr AssetManager::GetOrLoadShader(const std::string& fileName, osg::S
 //
 //Get or load a program based on the two shaders used to create it
 //
-osg::ProgramPtr AssetManager::GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, bool cache)
+osg::ProgramPtr AssetManager::GetOrLoadProgram(const std::string& vertShaderFile, const std::string& fragShaderFile, ReadOptions* readOptions)
 {
     //programs are labeled using both filenames combined
     std::string programName = vertShaderFile + fragShaderFile;

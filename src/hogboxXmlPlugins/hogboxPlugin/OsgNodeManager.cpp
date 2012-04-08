@@ -11,7 +11,7 @@
  * OpenSceneGraph Public License for more details.
  */
 
-#pragma once
+
 
 #include <hogboxDB/XmlClassManager.h>
 #include "OsgNodeXmlWrapper.h"

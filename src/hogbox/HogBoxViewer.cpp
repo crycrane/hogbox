@@ -357,7 +357,7 @@ bool HogBoxViewer::CreateAppWindow()
 
 		//create the osg viewer
 		_viewer = new osgViewer::Viewer();
-		//_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
+		_viewer->setThreadingModel(osgViewer::ViewerBase::SingleThreaded);
 		
 		//set cameras projection and viewport
 		double height = _glSystemInfo->getScreenWidth(_screenID);

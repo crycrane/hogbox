@@ -199,6 +199,8 @@ osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, ReadOption
             //add to the cache
             _fileCache[fileName] = node;
         }
+    }else{
+        OSG_FATAL << "AssetManager::GetOrLoadNode: Failed to read file '" << fileName << "'." << std::endl;
     }
 
     return node;

@@ -258,7 +258,7 @@ namespace hogboxDB {
             hogboxDB::setXmlPropertyValue(listNode.get(), "count", (unsigned int)list.size());
             
             //now loop each item of serialize to an xmlnode and add as child
-            for(int i=0; i<list.size(); i++){
+            for(unsigned int i=0; i<list.size(); i++){
                 osgDB::XmlNodePtr classNode = hogboxDB::HogBoxManager::Inst()->WriteXmlNode(list.at(i).get());
                 if(classNode.get()){
                     listNode->children.push_back(classNode.get());

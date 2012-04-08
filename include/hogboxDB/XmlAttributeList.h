@@ -104,7 +104,7 @@ namespace hogboxDB {
             
             //now loop each item of the list and write it to a stringstream
             std::stringstream listss;
-            for(int i=0; i<_list->size(); i++){
+            for(unsigned int i=0; i<_list->size(); i++){
                 hogboxDB::typeToStringStream(this->get(i), listss);
                 if(i != _list->size()-1){listss << " ";}
             }
@@ -248,7 +248,7 @@ namespace hogboxDB {
             OSG_FATAL << "Serialize XmlList" << std::endl;
             //now loop each item of the list and write it to a stringstream
             std::stringstream listss;
-            for(int i=0; i<list.size(); i++){
+            for(unsigned int i=0; i<list.size(); i++){
                 hogboxDB::typeToStringStream(list.at(i), listss);
                 if(i != list.size()-1){listss << " ";}
                 OSG_FATAL << "    Serialize list value '" << listss.str() << "'." <<  std::endl;

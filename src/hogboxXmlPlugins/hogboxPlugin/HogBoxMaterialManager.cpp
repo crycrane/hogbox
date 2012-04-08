@@ -11,7 +11,6 @@
  * OpenSceneGraph Public License for more details.
  */
 
-#pragma once
 
 #include <hogboxDB/HogBoxRegistry.h>
 #include <hogboxDB/XmlClassManager.h>

@@ -197,6 +197,18 @@ namespace hogbox {
 		{
 			_callbacks.push_back(callback);
 		}
+        
+        //delete callback at index
+        void RemoveCallback(unsigned int index){
+            if(index >= _callbacks.size()){return;}
+            std::vector<hogbox::CallbackPtr>::iterator itr = _callbacks.begin();
+            _callbacks.erase(itr+(index+1));
+        }
+        
+        //delete all callbacks
+        void RemoveAllCallbacks(){
+            _callbacks.clear();
+        }
 
 		//
 		//

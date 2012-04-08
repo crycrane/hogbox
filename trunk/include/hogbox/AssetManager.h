@@ -126,8 +126,8 @@ public:
         _done(false),
         _callback(callback),
         _cache(cache),
-        _archive(archive),
-        _incrementalCompileOperation(ico)
+        _incrementalCompileOperation(ico),
+        _archive(archive)
     {
     }
     

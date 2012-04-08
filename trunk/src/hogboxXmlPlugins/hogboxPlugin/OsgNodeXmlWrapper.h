@@ -77,7 +77,7 @@ public:
 		if(!_fileName.empty())
 		{
 			//load the file name using osgDB readNode
-			osg::Node* fileNode = hogbox::AssetManager::Inst()->GetOrLoadNode(_fileName);
+			osg::NodePtr fileNode = hogbox::AssetManager::Inst()->GetOrLoadNode(_fileName);
 
 			//check it loaded ok
 			if(!fileNode)

@@ -114,9 +114,9 @@ public:
     Region* GetParent(){return p_parent;}
     
     //remove child
-    void RemoveChild(Region* region);
-    void RemoveChild(unsigned int pos, unsigned int numChildrenToRemove=1);
-    void RemoveChildAllChildren();
+    bool RemoveChild(Region* region);
+    bool RemoveChild(unsigned int pos, unsigned int numChildrenToRemove=1);
+    void RemoveAllChildren();
     
     //get number of children
     unsigned int GetNumChildren(){

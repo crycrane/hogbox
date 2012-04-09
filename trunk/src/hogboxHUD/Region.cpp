@@ -455,9 +455,9 @@ bool Region::IsChild(const std::string& uniqueID)
 //
 //remove child
 //
-void Region::RemoveChild(Region* region)
+bool Region::RemoveChild(Region* region)
 {
-    if(!region){return;}
+    if(!region){return false;}
     int deleteIndex = -1;
 	for(unsigned int i=0; i<_children.size(); i++){
         if(_children[i]->getName() == region->getName()){
@@ -466,20 +466,22 @@ void Region::RemoveChild(Region* region)
         }
     }
     if(deleteIndex != -1){
-        this->RemoveChild(deleteIndex,1);
+        return this->RemoveChild(deleteIndex,1);
     }
+    return false;
 }
 
-void Region::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
+bool Region::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
 {
-	if(pos >= _children.size()){return;}
+	if(pos >= _children.size()){return false;}
 	RegionList::iterator first = _children.begin();
 	Region* region = (*first+pos);
 	_childMount->removeChild(region->GetRegion());
 	_children.erase(first+pos);
+    return true;
 }
 
-void Region::RemoveChildAllChildren()
+void Region::RemoveAllChildren()
 {
     unsigned int num = _children.size();
     for(unsigned int i=0; i<num; i++){

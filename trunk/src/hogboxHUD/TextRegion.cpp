@@ -172,7 +172,14 @@ bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fil
 	bool ret = Region::Create(corner,size,fileName);
     
 	SetText(label);
-    SetFontHeight(fontHeight);
+    
+    if(fontHeight == -1.0f){
+        float height = size.y()*0.4f;
+        this->SetFontHeight(height);
+        this->SetFontResolution(osg::Vec2(height,height));
+    }else{
+        this->SetFontHeight(fontHeight);
+    }
 	
 	return ret;
 }

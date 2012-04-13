@@ -11,37 +11,6 @@
 	#define MAX_PATH 512
 #endif
 
-//Search all nodes in the tree
-//
-osg::Node* hogbox::FindNodeByName(osg::Node* node, const std::string name)
-{
-
-	if(node->getName().compare(name) == 0)
-	{
-		//CMsgLog::Inst()->WriteToLog("found node");
-		return node;
-	}else{
-		//CMsgLog::Inst()->WriteToLog("Check Children of "+node->getName());
-	}
-
-	// Traverse any group node
-	if(dynamic_cast<osg::Group*> (node))
-	{
-		osg::Group* group = static_cast<osg::Group*> (node);
-
-		osg::Node* found = NULL;
-		for(unsigned int i=0; i < group->getNumChildren(); i++)
-		{
-			found =  FindNodeByName(group->getChild(i), name);
-			if(found!=NULL)
-			{return found;}
-        }
-
-	}
-
-	return NULL;
-}
-
 //
 //Camera helpers
 //
@@ -75,6 +44,231 @@ bool hogbox::ComputeLookAtVectorsForNodeBounds(osg::Node* scene, float distance,
     outLookAt = lookAt;
     outUpAxis = up;
     return true;
+}
+
+osg::Geometry* hogbox::createTexturedQuadGeometry(const float& width,const float& height, QuadArgs args)
+{
+    //create the default in XY plane with origin in bottom left
+    osg::Vec3 corner = osg::Vec3(0.0f,0.0f,0.0f);
+    osg::Vec3 widthVec = osg::Vec3(1.0f,0.0f,0.0f);
+    osg::Vec3 heightVec = osg::Vec3(0.0f,1.0f,0.0f);
+    float temp;
+    
+    switch(args._originType){
+        case hogbox::QuadArgs::ORI_BOTTOM_LEFT:
+            break;
+        case hogbox::QuadArgs::ORI_TOP_LEFT:
+            heightVec *= -1.0f;
+            break;
+        case hogbox::QuadArgs::ORI_CENTER:
+            corner = osg::Vec3(-0.5f,-0.5f,0.0f);
+            break;
+        default:break;
+    }
+    
+    //flip plane
+    switch(args._planeType){
+        case hogbox::QuadArgs::PLANE_XY:
+            break;
+        case hogbox::QuadArgs::PLANE_XZ:
+            //flip y and z
+            temp = corner.y();
+            corner.y() = corner.z();
+            corner.z() = temp;
+            
+            temp = widthVec.y();
+            widthVec.y() = widthVec.z();
+            widthVec.z() = temp;
+            
+            temp = heightVec.y();
+            heightVec.y() = heightVec.z();
+            heightVec.z() = temp;
+            break;
+        default:break;
+    }
+    
+    float l = args._corners[0]._texCoord.x();
+    float b = args._corners[0]._texCoord.y();
+    float r = args._corners[3]._texCoord.x();
+    float t = args._corners[3]._texCoord.y();
+    
+    if(args._corners[0]._radius == 0.0f && args._corners[1]._radius == 0.0f && args._corners[2]._radius == 0.0f && args._corners[3]._radius == 0.0f){
+        return osg::createTexturedQuadGeometry(corner, widthVec, heightVec, l,b,r,t); 
+    }
+    
+    //
+    osg::Vec3 heightDir = heightVec;
+    heightDir.normalize();
+    
+    osg::Vec3 widthDir = widthVec;
+    widthDir.normalize();
+    
+    osg::Geometry* geom = new osg::Geometry();
+    
+    osg::Vec3Array* coords = new osg::Vec3Array();
+    
+    //first vec at center
+    osg::Vec3 center = corner+(heightVec*0.5f)+(widthVec*0.5f);
+    coords->push_back(center);
+    
+    //move to bottom left corner
+    if(args._corners[0]._radius != 0.0f){
+        
+        osg::Vec3 arcPos = corner + (heightDir*args._corners[0]._radius);
+        coords->push_back(arcPos);
+
+        osg::Vec3 arcPivot = arcPos + (widthDir*args._corners[0]._radius);
+        
+        //loop and draw segments for rounded corner around arcPivot
+        unsigned int segments = args._corners[0]._segments;
+        for(unsigned int i=0; i<segments; i++){
+            float pc = (float)(i+1)/(float)segments;
+            //get radians for segment
+            float rad = osg::DegreesToRadians(180.0f+(90.0f*pc));
+            float c = cosf(rad);
+            float s = sinf(rad);
+            
+            osg::Vec3 localArcPos = osg::Vec3(c,s,0.0f) * args._corners[0]._radius;
+            arcPos = arcPivot + localArcPos;
+            coords->push_back(arcPos);
+        }
+        
+    }else{
+        coords->push_back(corner);
+    }
+    
+    //move to bottom right corner
+    if(args._corners[1]._radius != 0.0f){
+        
+        osg::Vec3 arcPos = (corner+widthVec) + -(widthDir*args._corners[1]._radius);
+        coords->push_back(arcPos);
+        
+        osg::Vec3 arcPivot = arcPos + (heightDir*args._corners[1]._radius);
+        
+        //loop and draw segments for rounded corner around arcPivot
+        unsigned int segments = args._corners[1]._segments;
+        for(unsigned int i=0; i<segments; i++){
+            float pc = (float)(i+1)/(float)segments;
+            //get radians for segment
+            float rad = osg::DegreesToRadians(270.0f+(90.0f*pc));
+            float c = cosf(rad);
+            float s = sinf(rad);
+            
+            osg::Vec3 localArcPos = osg::Vec3(c,s,0.0f) * args._corners[1]._radius;
+            arcPos = arcPivot + localArcPos;
+            coords->push_back(arcPos);
+        }
+        
+    }else{
+        coords->push_back(corner+widthVec);
+    }
+    
+    //move to top right corner
+    if(args._corners[3]._radius != 0.0f){
+        
+        osg::Vec3 arcPos = (corner+widthVec+heightVec) + -(heightDir*args._corners[3]._radius);
+        coords->push_back(arcPos);
+        
+        osg::Vec3 arcPivot = arcPos + (-widthDir*args._corners[3]._radius);
+        
+        //loop and draw segments for rounded corner around arcPivot
+        unsigned int segments = args._corners[3]._segments;
+        for(unsigned int i=0; i<segments; i++){
+            float pc = (float)(i+1)/(float)segments;
+            //get radians for segment
+            float rad = osg::DegreesToRadians((90.0f*pc));
+            float c = cosf(rad);
+            float s = sinf(rad);
+            
+            osg::Vec3 localArcPos = osg::Vec3(c,s,0.0f) * args._corners[3]._radius;
+            arcPos = arcPivot + localArcPos;
+            coords->push_back(arcPos);
+        }
+        
+    }else{
+        coords->push_back(corner+widthVec+heightVec);
+    }
+    
+    //move to top left
+    if(args._corners[2]._radius != 0.0f){
+        
+        osg::Vec3 arcPos = (corner+heightVec) + (widthDir*args._corners[2]._radius);
+        coords->push_back(arcPos);
+        
+        osg::Vec3 arcPivot = arcPos + -(heightDir*args._corners[2]._radius);
+        
+        //loop and draw segments for rounded corner around arcPivot
+        unsigned int segments = args._corners[2]._segments;
+        for(unsigned int i=0; i<segments; i++){
+            float pc = (float)(i+1)/(float)segments;
+            //get radians for segment
+            float rad = osg::DegreesToRadians(90.0f+(90.0f*pc));
+            float c = cosf(rad);
+            float s = sinf(rad);
+            
+            osg::Vec3 localArcPos = osg::Vec3(c,s,0.0f) * args._corners[2]._radius;
+            arcPos = arcPivot + localArcPos;
+            coords->push_back(arcPos);
+        }
+        
+    }else{
+        coords->push_back(corner+heightVec);
+    }
+    
+    if(args._corners[0]._radius != 0){
+        coords->push_back(corner + (heightDir*args._corners[0]._radius));
+    }else{
+        coords->push_back(corner);
+    }
+    
+    geom->setVertexArray(coords);
+    
+    osg::Vec2Array* tcoords = new osg::Vec2Array();
+    for(unsigned int i=0; i<coords->size(); i++){
+        tcoords->push_back(hogbox::computeQuadTexCoord((*coords)[i], width, height, l,b,r,t));
+    }
+    
+    geom->setTexCoordArray(0,tcoords);
+    
+    osg::Vec4Array* colours = new osg::Vec4Array(1);
+    (*colours)[0].set(1.0f,1.0f,1.0,1.0f);
+    //geom->setColorArray(colours);
+    //geom->setColorBinding(Geometry::BIND_OVERALL);
+    
+    osg::Vec3Array* normals = new osg::Vec3Array(1);
+    (*normals)[0] = widthVec^heightVec;
+    (*normals)[0].normalize();
+    //geom->setNormalArray(normals);
+    //geom->setNormalBinding(Geometry::BIND_OVERALL);
+    
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_FAN,0,coords->size()));
+    
+    return geom;
+}
+
+extern HOGBOX_EXPORT osg::Vec2 hogbox::computeQuadTexCoord(const osg::Vec3& coord, const float& width, const float& height,
+                                                           const float& l, const float& b, const float& r, const float& t)
+{
+    //get unit coord
+    float unitX,unitY;
+    if(coord.x() == 0.0f){
+        unitX=0.0f;
+    }else{
+        unitX = coord.x()/width;
+    }
+    if(coord.y() == 0.0f){
+        unitY=0.0f;
+    }else{
+        unitY = coord.y()/height;
+    }
+
+    //get coord difference
+    float xDif = r-l;
+    float yDif = t-b;
+    
+    float u = l+(xDif*unitX);
+    float v = b+(yDif*unitY);
+    return osg::Vec2(u,v);
 }
 
 osg::Image* hogbox::CreateSubImage(int sCol, int sRow, int width, int height, osg::Image* source)
@@ -124,72 +318,6 @@ osg::Image* hogbox::CreateSubImage(int sCol, int sRow, int width, int height, os
 }
 
 //
-// get the width in pixels of the passed image
-//
-int hogbox::GetImageWidth(osg::Image* image)
-{
-	int px = image->getPixelSizeInBits()/8;
-	//get the dimensions of each sub images
-	int width = image->getRowSizeInBytes()/px;
-
-	return width;
-}
-
-//
-// get the height in pixels of the current image
-//
-int hogbox::GetImageHeight(osg::Image* image)
-{
-	int height = image->getImageSizeInBytes()/image->getRowSizeInBytes();
-	return height;
-}
-
-//
-// Load an image file and apply to a new texture 2d
-//
-osg::Image* hogbox::LoadImage2D(std::string name)
-{
-	osg::ref_ptr<osg::Image> image = NULL;
-	image = osgDB::readImageFile(name);
-	if(image == NULL)
-	{
-//		CMsgLog::Inst()->WriteToLog( "Error could not load image file " + name );
-	}else{
-		image->setFileName(name);
-		return image.get();
-	}
-
-	return NULL;
-}
-
-//
-// Load an image file and apply to a new texture 2d
-//
-osg::Texture2D* hogbox::LoadTexture2D(const std::string& fileName)
-{
-	osg::Image* image = osgDB::readImageFile(fileName);
-
-	if(image == NULL)
-	{
-//		cout<< "Error could not load image file " << name << endl;
-	}else{
-		image->setFileName(fileName);
-
-		osg::Texture2D* tex;
-		tex = new osg::Texture2D();
-		tex->setFilter(osg::Texture2D::MIN_FILTER,osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-		tex->setFilter(osg::Texture2D::MAG_FILTER,osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-		tex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
-		tex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
-		tex->setImage(image);
-		//_imageDataBase.push_back(image);
-		return tex;
-	}
-
-	return NULL;
-}
-
-//
 // Loads a cube map cross file and splits it into the 6 images required
 // then loads into a texture object and returns
 //
@@ -204,8 +332,8 @@ osg::TextureCubeMap* hogbox::LoadTextureCubeCross(std::string file)
 	}else{
 
 		//get the dimensions of each sub images
-		int width = hogbox::GetImageWidth(image);
-		int height = hogbox::GetImageHeight(image);
+		int width = image->s();
+		int height = image->t();
 
 		int subW = width/3;
 		int subH = height/4;
@@ -512,28 +640,6 @@ std::string hogbox::ChangeFileFolder(std::string filePath, std::string newFolder
 	std::string fileName = osgDB::getSimpleFileName(filePath);
 
 	return (newFolder+fileName);
-}
-
-//
-// iterate through the sub nodes and rename any geodes to name string
-//
-void hogbox::RenameGeodes(osg::Node* node, const std::string name)
-{
-	//find geomtry in geodes
-	if(dynamic_cast<osg::Geode*> (node))
-	{
-		//loop all geometry nodes
-		osg::Geode* geode = static_cast<osg::Geode*> (node);
-		geode->setName(name) ;
-	}
-
-	// Traverse any group node
-	if(dynamic_cast<osg::Group*> (node))
-	{
-		osg::Group* group = static_cast<osg::Group*> (node);
-		for(unsigned int i=0; i < group->getNumChildren(); i++)
-		{	RenameGeodes(group->getChild(i), name);}
-	}
 }
 
 

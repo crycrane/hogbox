@@ -51,62 +51,6 @@ namespace hogbox {
     //
 	extern HOGBOX_EXPORT osg::TextureCubeMap* LoadTextureCubeCross(std::string file);
 
-    //
-    //args for building quads
-    class QuadArgs{
-    public:
-        //orientation
-        enum QuadPlane{
-            PLANE_XY = 0,
-            PLANE_XZ = 1,
-            PLANE_YZ = 2
-        };
-        
-        enum QuadOrigin{
-            ORI_BOTTOM_LEFT = 0,
-            ORI_TOP_LEFT = 1,
-            ORI_CENTER = 2
-        };
-        
-        class Corner{
-        public:
-            Corner()
-                : _texCoord(osg::Vec2(0.0f,0.0f)),
-                _color(osg::Vec4(1,1,1,1)),
-                _radius(0.0f),
-                _segments(1)
-            {
-            }
-            osg::Vec2 _texCoord;
-            osg::Vec4 _color;
-            float _radius;
-            unsigned int _segments;
-        };
-        
-        QuadArgs()
-        :_planeType(PLANE_XY),
-        _originType(ORI_BOTTOM_LEFT)
-        {
-            _corners[0]._texCoord = osg::Vec2(0.0f,0.0f);//bl
-            _corners[1]._texCoord = osg::Vec2(1.0f,0.0f);//br
-            _corners[2]._texCoord = osg::Vec2(1.0f,1.0f);//tl
-            _corners[3]._texCoord = osg::Vec2(1.0f,1.0f);//tr
-        }
-        Corner _corners[4];
-        QuadPlane _planeType;
-        QuadOrigin _originType;
-    };
-    
-    //
-	//Geom helpers
-    //Convenience function to be used for creating quad geometry with texture coords.
-    //Tex coords go from left bottom (l,b) to right top (r,t).
-    extern HOGBOX_EXPORT osg::Geometry* createTexturedQuadGeometry(const float& width,const float& height, QuadArgs args=QuadArgs());
-    
-    extern HOGBOX_EXPORT osg::Vec2 computeQuadTexCoord(const osg::Vec3& coord, const float& width, const float& height,
-                                                       const float& l, const float& b, const float& r, const float& t);
-    
-	extern HOGBOX_EXPORT osg::Geometry* BuildXYQuad(osg::Vec2 size, osg::Vec4 color, float depth);
     
 	extern HOGBOX_EXPORT double CalcAngleBetweenVectors(osg::Vec3 u, osg::Vec3 v);
     

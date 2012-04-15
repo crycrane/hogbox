@@ -16,6 +16,7 @@
 #include <hogboxHUD/Export.h>
 #include <hogbox/HogBoxBase.h>
 #include <hogbox/AnimateValue.h>
+#include <hogbox/Quad.h>
 
 
 #include <osg/MatrixTransform>

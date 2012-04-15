@@ -567,14 +567,23 @@ bool Region::LoadAssest(const std::string& folderName)
             default:break;
         }
         
-        geom = osg::createTexturedQuadGeometry(corner, width, height);
-        geom->setColorArray(NULL);//don't use color array as we set color via gl material or uniform
+        osg::ref_ptr<hogbox::Quad::QuadArgs> args = new hogbox::Quad::QuadArgs();
+        args->_corners[0]._radius = _size.x()*0.2f;
+        args->_corners[0]._segments = 16;
+        args->_corners[1]._radius = _size.x()*0.2f;
+        args->_corners[1]._segments = 16;
+        args->_corners[2]._radius = _size.x()*0.2f;
+        args->_corners[2]._segments = 16;
+        args->_corners[3]._radius = _size.x()*0.2f;
+        args->_corners[3]._segments = 16;
+        //geom = hogbox::createTexturedQuadGeometry(_size.x(),_size.y(),args);// osg::createTexturedQuadGeometry(corner, width, height);
+        //geom->setColorArray(NULL);//don't use color array as we set color via gl material or uniform
 #ifdef TARGET_OS_IPHONE
-        geom->setUseDisplayList(false);
-        geom->setUseVertexBufferObjects(true);
+        //geom->setUseDisplayList(false);
+        //geom->setUseVertexBufferObjects(true);
 #endif
 		
-		_region->addDrawable(geom);
+		_region->addDrawable(new hogbox::Quad(_size, args.get()));//geom);
 		//_region = geode;
         
 	}

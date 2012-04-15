@@ -28,6 +28,8 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/Noise.h
 	${HEADER_PATH}/SystemInfo.h
 	${HEADER_PATH}/NPOTResizeCallback.h
+    ${HEADER_PATH}/Quad.h
+    ${HEADER_PATH}/TransformQuad.h
     ${hogbox_CONFIG_HEADER}
 )
 
@@ -49,6 +51,8 @@ ADD_LIBRARY(${LIB_NAME}
 	Noise.cpp
 	SystemInfo.cpp
 	NPOTResizeCallback.cpp
+    Quad.cpp
+    TransformQuad.cpp
 	Version.cpp
     #${HOGBOX_VERSIONINFO_RC}
 )

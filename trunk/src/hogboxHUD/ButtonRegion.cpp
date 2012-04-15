@@ -104,8 +104,8 @@ bool ButtonRegion::LoadAssest(const std::string& folderName)
 
 	//try to load the mouseDown texture
 	std::string mouseDownTextureFile = folderName+"/mouseDown.png";
-	if(osgDB::fileExists(mouseDownTextureFile) )
-	{_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
+	//if(osgDB::fileExists(mouseDownTextureFile) )
+	//{_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
 
 	return ret;
 }

@@ -138,8 +138,8 @@ void Quad::buildQuadGeometry(const float& width, const float& height, QuadArgs* 
     
     //create the default in XY plane with origin in bottom left
     osg::Vec3 corner = osg::Vec3(0.0f,0.0f,0.0f);
-    osg::Vec3 widthVec = osg::Vec3(1.0f,0.0f,0.0f);
-    osg::Vec3 heightVec = osg::Vec3(0.0f,1.0f,0.0f);
+    osg::Vec3 widthVec = osg::Vec3(width,0.0f,0.0f);
+    osg::Vec3 heightVec = osg::Vec3(0.0f,height,0.0f);
     float temp;
     
     switch(args->_originType){
@@ -149,7 +149,7 @@ void Quad::buildQuadGeometry(const float& width, const float& height, QuadArgs* 
             heightVec *= -1.0f;
             break;
         case ORI_CENTER:
-            corner = osg::Vec3(-0.5f,-0.5f,0.0f);
+            corner = osg::Vec3(-(width*0.5f),-(height*0.5f),0.0f);
             break;
         default:break;
     }

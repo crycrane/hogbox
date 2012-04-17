@@ -3,9 +3,9 @@
 
 using namespace hogbox;
 
-TransformQuad::TransformQuad() 
+TransformQuad::TransformQuad(TransformQuadArgs* args) 
     : osg::MatrixTransform(),
-    _args(new TransformQuadArgs()),
+    _args(args),
     _size(osg::Vec2(1.0f, 1.0f)),
     _corner(osg::Vec2(0.0f,0.0f)),
     _rotation(0.0f),
@@ -42,6 +42,15 @@ TransformQuad::TransformQuad(const float& width, const float& height, TransformQ
 {
     this->buildBaseGraph();
     this->buildQuad(width, height, args);
+}
+
+//
+//Contruct base quad geometry now, passing width height and
+//quad args, quad args can't be null
+TransformQuad::TransformQuad(const osg::Vec2& size, TransformQuadArgs* args)
+{
+    this->buildBaseGraph();
+    this->buildQuad(size.x(), size.y(), args);    
 }
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
@@ -101,7 +110,7 @@ void TransformQuad::buildBaseGraph()
 //
 //Build the actual quad and attach to geode
 //
-void TransformQuad::buildQuad(const float& width, const float& height, Quad::QuadArgs* args)
+void TransformQuad::buildQuad(const float& width, const float& height, TransformQuadArgs* args)
 {
     //if a quad already exists, then remove it first
     if(_quad.get()){
@@ -109,10 +118,26 @@ void TransformQuad::buildQuad(const float& width, const float& height, Quad::Qua
         _quad = NULL;
     }
     
+    if(args){
+        _args = args;
+    }
+    
     if(_args->_sizeStyle == SIZE_BY_SCALEMATRIX){
-        _quad = new Quad(1.0f, 1.0f, args);
+        
+        //scale by
+        float scale = (width+height)*0.5f;
+        
+        //clone the quad args and scale any conrer radius to unit size
+        osg::ref_ptr<TransformQuadArgs> scaledArgs = new TransformQuadArgs(*_args.get());
+        for(unsigned int i=0; i<4; i++){
+            if(scaledArgs->_corners[i]._radius > 0.0f){
+                scaledArgs->_corners[i]._radius = scaledArgs->_corners[i]._radius/scale;
+            }
+        }
+
+        _quad = new Quad(1.0f, 1.0f, scaledArgs.get());
     }else{
-        _quad = new Quad(width, height, args);
+        _quad = new Quad(width, height, _args.get());
     }
     _quadGeode->addDrawable(_quad.get());
 }
@@ -121,10 +146,10 @@ void TransformQuad::buildQuad(const float& width, const float& height, Quad::Qua
 //general update, updates and syncs our animations etc
 //normally called by an attached updateCallback
 //
-void TransformQuad::Update(float simTime)
+void TransformQuad::UpdateAnimation(float simTime)
 {
     //use global hud timepassed
-	float timePassed = 0.033f;//Hud::Inst()->GetTimePassed();
+	float timePassed = simTime;//Hud::Inst()->GetTimePassed();
 	_prevTick = simTime;
     
 	if(!_animationDisabled)
@@ -205,16 +230,14 @@ const float& TransformQuad::GetRotation() const
 	return _rotation;
 }
 
-void TransformQuad::SetSize(const osg::Vec2& size, TransformQuadArgs* args)
+void TransformQuad::SetSize(const osg::Vec2& size)
 {
     if(size == _size){return;}
     
     //store new size
 	_size = size;
     
-    if(args){
-        _args = args;
-    }
+    //if(!_quad.get()){return;}
     
     if(_args->_sizeStyle == SIZE_BY_SCALEMATRIX)
     {
@@ -234,16 +257,17 @@ void TransformQuad::SetSize(const osg::Vec2& size, TransformQuadArgs* args)
         }
         _scale->setMatrix( osg::Matrix::scale(sizeAxis));
         
-        if(args){
-            this->buildQuad(_size.x(), _size.y(), _args.get());
+        if(!_quad.get()){
+            //this->buildQuad(_size.x(), _size.y(), _args.get());
         }
         
     }else{
-        if(!_quad.get()){
+        //if(!_quad.get()){
             this->buildQuad(_size.x(), _size.y(), _args.get());
-        }
+       //}
     }
 }
+
 
 const osg::Vec2& TransformQuad::GetSize() const
 {

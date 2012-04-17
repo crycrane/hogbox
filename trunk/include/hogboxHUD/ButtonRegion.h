@@ -24,26 +24,43 @@ namespace hogboxHUD {
 class HOGBOXHUD_EXPORT ButtonRegion : public TextRegion
 {
 public:
-	ButtonRegion(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
+    class ButtonRegionStyle : public TextRegionStyle{
+    public:
+        ButtonRegionStyle()
+            : TextRegionStyle()
+        {
+        }
+        
+        ButtonRegionStyle(const ButtonRegionStyle& args)
+            : TextRegionStyle(args)
+        {
+        }
+        
+    protected:
+        virtual ~ButtonRegionStyle(){
+        }
+    };
+    
+    //
+    ButtonRegion(ButtonRegionStyle* style = new ButtonRegionStyle());
+    
+    //
+	ButtonRegion(osg::Vec2 corner, osg::Vec2 size, ButtonRegionStyle* style = new ButtonRegionStyle());
 
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	ButtonRegion(const ButtonRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
 	META_Object(hogboxHUD,ButtonRegion);
+    virtual RegionStyle* allocateStyleType(){return new ButtonRegionStyle();}
 
 	//
 	//Create a region to behave like a basic button
-	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label);
+	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style = new ButtonRegionStyle());
 
 	//
 	//Detects mouse down and flags is pressed state,
 	//also swaps to the mouse down texture if one is present
 	virtual int HandleInputEvent(HudInputEvent& hudEvent);
-
-	//
-	//Button region loads the aditional assests
-	//mouseDown.png, used when the mouse is pressed down on the region
-	virtual bool LoadAssest(const std::string& folderName);
 	
 	//
 	//Funcs to register event callbacks
@@ -63,6 +80,11 @@ public:
 protected:
 
 	virtual ~ButtonRegion(void);
+    
+    //
+	//Button region loads the aditional assests
+	//mouseDown.png, used when the mouse is pressed down on the region
+	virtual bool LoadAssest(RegionStyle* args);
 
 protected:
 

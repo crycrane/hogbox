@@ -47,9 +47,87 @@ static const char* textFragSource = {
 	"}\n" 
 };
 
+//
+TextRegion::TextRegion(TextRegionStyle* style)
+    : Region(style),
+    _string(""),
+    _text(NULL),
+    _fontHeight(18.0f),
+    _fontName("Fonts/arial.ttf"),
+    _boarderPadding(5.0f),
+    _alignmentMode(CENTER_ALIGN),
+    _textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
+    _backdropType(NO_BACKDROP),
+    _backdropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
+    //callback events
+    _onTextChangedEvent(new HudCallbackEvent(this, "OnTextChanged"))
+{
+	//create the text label to add to the button
+	_text = new osgText::Text;
+    _text->setUseDisplayList(false);
+    _text->setUseVertexBufferObjects(true);
+    //_text->setCharacterSizeMode(osgText::TextBase::OBJECT_COORDS_WITH_MAXIMU_SCREEN_SIZE_CAPPED_BY_FONT_HEIGHT);
+    
+	//add the text to a geode for drawing
+	osg::Geode* textGeode = new osg::Geode();
+    //geode is visible, not pickable
+    textGeode->setNodeMask(hogbox::MAIN_CAMERA_CULL);
+    MakeHudGeodes(textGeode, new RegionWrapper(this));
+    osg::StateSet* stateset = textGeode->getOrCreateStateSet();
+	stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);
+    
+#ifndef OSG_GL_FIXED_FUNCTION_AVAILABLE
+	osg::Program* program = new osg::Program; 
+	program->setName("textShader"); 
+	program->addShader(new osg::Shader(osg::Shader::VERTEX, textVertSource)); 
+	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, textFragSource)); 
+	stateset->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 	
+    
+    stateset->addUniform(new osg::Uniform("glyphTexture", 0));
+#endif
+    
+	textGeode->setStateSet(stateset);
+    textGeode->addDrawable(_text.get());
+    
+    _textScale = new osg::MatrixTransform();
+    _textScale->addChild(textGeode);
+    
+	//use transform to orientate the text into correct plane and forward of the backdrop
+	osg::MatrixTransform* oriText = new osg::MatrixTransform();
+    
+    //flip plane
+    float temp = 0.0f;
+    osg::Vec3 offset = osg::Vec3(0,0,0.1);
+    osg::Matrix oriMatrix;
+    switch(_args->_planeType){
+        case hogbox::Quad::PLANE_XY:
+            oriMatrix = osg::Matrix::translate(offset);
+            break;
+        case hogbox::Quad::PLANE_XZ:
+            //flip x and z
+            temp = offset.y();
+            offset.y() = offset.z();
+            offset.z() = temp;
+            oriMatrix = osg::Matrix::translate(offset) * osg::Matrix::rotate(osg::DegreesToRadians(90.0f), osg::Vec3(1,0,0));
+            break;
+        default:break;
+    }
+    
+	oriText->setMatrix(oriMatrix);
+	oriText->addChild(_textScale.get());
+	//attach the text to translate for now 
+	_rotate->addChild(oriText);
+    
+    _text->setColor(_textColor);
+	this->SetFontType(_fontName);
+	this->SetFontHeight(_fontHeight);
+	this->SetAlignment(_alignmentMode);
+	this->SetBackDropType(_backdropType);
+	this->SetBackDropColor(_backdropColor);
+}
 
-TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
-    : Region(plane, origin, isProcedural),
+TextRegion::TextRegion(osg::Vec2 corner, osg::Vec2 size, TextRegionStyle* style) 
+    : Region(corner, size, style),
     _string(""),
     _text(NULL),
     _fontHeight(18.0f),
@@ -100,11 +178,11 @@ TextRegion::TextRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural
     float temp = 0.0f;
     osg::Vec3 offset = osg::Vec3(0,0,0.1);
     osg::Matrix oriMatrix;
-    switch(_plane){
-        case PLANE_XY:
+    switch(_args->_planeType){
+        case hogbox::Quad::PLANE_XY:
             oriMatrix = osg::Matrix::translate(offset);
             break;
-        case PLANE_XZ:
+        case hogbox::Quad::PLANE_XZ:
             //flip x and z
             temp = offset.y();
             offset.y() = offset.z();
@@ -156,45 +234,65 @@ TextRegion::~TextRegion(void)
 
 
 //
-// Create a text region using a fileName as the background
-// then creating an osg text geode and attaching directly to translate
-// so that the texts size can be set directly in pixels, without
-//being scaled by the _scale matrix
-//
-bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight)
+//overload create to allocate TextRegionStyle by default
+
+bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style )
 {
     //set ref height for scaling in setsize
     _scaleHeightRef = size.y();
     
-	//load the base assets and apply names and sizes, do this
-	//after creating and adding the text so that the text geode 
-	//name will also be changed
-	bool ret = Region::Create(corner,size,fileName);
+	//
+    //
+	return Region::Create(corner,size,style);
+}
+
+//
+//Convenience method to create a TextRegionStyle with label etc, which
+//is then passed to base Create
+//
+bool TextRegion::CreateWithLabel(osg::Vec2 corner, osg::Vec2 size, const std::string& asset, const std::string& label)
+{
+    TextRegionStyle* asTextStyle = dynamic_cast<TextRegionStyle*>(_args.get());
     
-	SetText(label);
-    
-    if(fontHeight == -1.0f){
-        float height = size.y()*0.4f;
-        this->SetFontHeight(height);
-        this->SetFontResolution(osg::Vec2(height,height));
-    }else{
-        this->SetFontHeight(fontHeight);
+    if(!asTextStyle){
+        _args = this->allocateStyleType();
+        asTextStyle = dynamic_cast<TextRegionStyle*>(_args.get());
     }
-	
-	return ret;
+    
+    if(asTextStyle){
+        asTextStyle->_assets = asset;
+        asTextStyle->_label = label;
+    }
+
+    return this->Create(corner, size, asTextStyle);
 }
 
 //
 //Text region loads the aditional assests
 //searches for a ttf file to use as a font
 //
-bool TextRegion::LoadAssest(const std::string& folderName)
+bool TextRegion::LoadAssest(RegionStyle* args)
 {
 	//call base first
-	bool ret = Region::LoadAssest(folderName);
+	bool ret = Region::LoadAssest(args);
+    
+    TextRegionStyle* asTextStyle = dynamic_cast<TextRegionStyle*>(args);
+    
+    if(asTextStyle){
+
+        this->SetText(asTextStyle->_label);
+        
+        if(asTextStyle->_fontHeight == -1.0f){
+            float height = _size.y()*0.4f;
+            this->SetFontHeight(height);
+            this->SetFontResolution(osg::Vec2(height,height));
+        }else{
+            this->SetFontHeight(asTextStyle->_fontHeight);
+        }        
+    }
     
 	//get the directory contents
-	osgDB::DirectoryContents dirCont;
+/*	osgDB::DirectoryContents dirCont;
 	dirCont = osgDB::getDirectoryContents(folderName);
 	//loop all the files and look for ttf extension
 	for(unsigned int i=0; i<dirCont.size(); i++)
@@ -205,6 +303,7 @@ bool TextRegion::LoadAssest(const std::string& folderName)
 			this->SetFontType(dirCont[i]);
 		}
 	}
+*/
 	return ret;
 }
 
@@ -219,6 +318,7 @@ void TextRegion::SetPosition(const osg::Vec2& corner)
 //overload SetSize so we can set the texts pixelheight independantly
 void TextRegion::SetSize(const osg::Vec2& size)
 {
+    OSG_ALWAYS << "TextRegion::SetSize " << size.x() << ", " << size.y() <<std::endl;
 	Region::SetSize(size);
     
 	//set the texts max sizes to the new size
@@ -330,22 +430,22 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 		case CENTER_ALIGN:
 		{
             offset = osg::Vec3(_size.x()*0.5f, _size.y()*0.5f, 0.0f);
-            switch(_origin){
-                case ORI_BOTTOM_LEFT:
+            switch(_args->_originType){
+                case hogbox::Quad::ORI_BOTTOM_LEFT:
                     break;
-                case ORI_TOP_LEFT:
+                case hogbox::Quad::ORI_TOP_LEFT:
                     offset.y() *= -1.0f;
                     break;
-                case ORI_CENTER:
+                case hogbox::Quad::ORI_CENTER:
                     offset = osg::Vec3(0.0f,0.0f,0.0f);
                     break;
                 default:break;
             }
             //flip plane
-            switch(_plane){
-                case PLANE_XY:
+            switch(_args->_planeType){
+                case hogbox::Quad::PLANE_XY:
                     break;
-                case PLANE_XZ:
+                case hogbox::Quad::PLANE_XZ:
                     //flip x and z
                     temp = offset.y();
                     offset.y() = offset.z();
@@ -353,7 +453,7 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
                     break;
                 default:break;
             }
-            
+            OSG_ALWAYS << "TEXT SETALIGN " << offset.x() << ", " << offset.y() << std::endl;
 			_text->setAlignment(osgText::Text::CENTER_CENTER ); 
 			_text->setPosition(offset);
 			break;
@@ -361,22 +461,22 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 		case RIGHT_ALIGN:
 		{
             offset = osg::Vec3(_size.x()-_boarderPadding, _size.y()*0.5f, 0);
-            switch(_origin){
-                case ORI_BOTTOM_LEFT:
+            switch(_args->_originType){
+                case hogbox::Quad::ORI_BOTTOM_LEFT:
                     break;
-                case ORI_TOP_LEFT:
+                case hogbox::Quad::ORI_TOP_LEFT:
                     offset.y() *= -1.0f;
                     break;
-                case ORI_CENTER:
+                case hogbox::Quad::ORI_CENTER:
                     offset += osg::Vec3((_size.x()*0.5f)-_boarderPadding,0.0f,0.0f);
                     break;
                 default:break;
             }
             //flip plane
-            switch(_plane){
-                case PLANE_XY:
+            switch(_args->_planeType){
+                case hogbox::Quad::PLANE_XY:
                     break;
-                case PLANE_XZ:
+                case hogbox::Quad::PLANE_XZ:
                     //flip x and z
                     temp = offset.y();
                     offset.y() = offset.z();
@@ -392,22 +492,22 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 		case LEFT_ALIGN:
 		{
             offset = osg::Vec3(_boarderPadding, _size.y()*0.5f, 0);
-            switch(_origin){
-                case ORI_BOTTOM_LEFT:
+            switch(_args->_originType){
+                case hogbox::Quad::ORI_BOTTOM_LEFT:
                     break;
-                case ORI_TOP_LEFT:
+                case hogbox::Quad::ORI_TOP_LEFT:
                     offset.y() *= -1.0f;
                     break;
-                case ORI_CENTER:
+                case hogbox::Quad::ORI_CENTER:
                     offset += osg::Vec3((-_size.x()*0.5f)+_boarderPadding,0.0f,0.0f);
                     break;
                 default:break;
             }
             //flip plane
-            switch(_plane){
-                case PLANE_XY:
+            switch(_args->_planeType){
+                case hogbox::Quad::PLANE_XY:
                     break;
-                case PLANE_XZ:
+                case hogbox::Quad::PLANE_XZ:
                     //flip x and z
                     temp = offset.y();
                     offset.y() = offset.z();

@@ -52,6 +52,13 @@ public:
                 _segments(3)
             {
             }
+            Corner(const Corner& cnr)
+                : _texCoord(cnr._texCoord),
+                _color(cnr._color),
+                _radius(cnr._radius),
+                _segments(cnr._segments)
+            {
+            }
             osg::Vec2 _texCoord;
             osg::Vec4 _color;
             float _radius;
@@ -72,6 +79,22 @@ public:
             _corners[2]._texCoord = osg::Vec2(1.0f,1.0f);//tl
             _corners[3]._texCoord = osg::Vec2(1.0f,1.0f);//tr
         }
+        
+        QuadArgs(const QuadArgs& args)
+            : osg::Referenced(),
+            _planeType(args._planeType),
+            _rotationType(args._rotationType),
+            _originType(args._originType),
+            _useTexcoords(args._useTexcoords),
+            _useColor(args._useColor),
+            _useNormal(args._useNormal)
+        {
+            _corners[0] = Corner(args._corners[0]);
+            _corners[1] = Corner(args._corners[1]);
+            _corners[2] = Corner(args._corners[2]);
+            _corners[3] = Corner(args._corners[3]);
+        }
+        
         Corner      _corners[4];
         QuadPlane   _planeType;
         QuadPlane   _rotationType;

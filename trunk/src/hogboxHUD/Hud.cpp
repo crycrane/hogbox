@@ -76,8 +76,8 @@ osg::Node* Hud::Create(osg::Vec2 screenSize)
 	_camera->addChild( _regionGroup.get());
 	
 	//create and add our root region
-	_hudRegion = new Region(hogboxHUD::Region::PLANE_XY, hogboxHUD::Region::ORI_BOTTOM_LEFT, true);
-	_hudRegion->Create(osg::Vec2(0.0f,0.0f), _screenSize, "");
+	_hudRegion = new Region();
+	//_hudRegion->Create(osg::Vec2(0.0f,0.0f), _screenSize, "");
 	//set the root region layer far back so we have plenty of positive layers infront
 	_hudRegion->SetLayer(-1.0f);
 	

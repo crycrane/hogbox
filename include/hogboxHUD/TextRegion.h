@@ -40,21 +40,78 @@ public:
         STROKE=2
     };
     
-    TextRegion(RegionPlane plane=PLANE_XY, RegionOrigin origin=ORI_BOTTOM_LEFT, bool isProcedural=false);
+    class TextRegionStyle : public RegionStyle{
+    public:
+        TextRegionStyle()
+            : RegionStyle(),
+            _label(""),
+            _fontHeight(-1.0f),//indicates to comupte from region height
+            _fontName("Fonts/arial.ttf"),
+            _boarderPadding(5.0f),
+            _alignmentMode(CENTER_ALIGN),
+            _textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
+            _backdropType(NO_BACKDROP),
+            _backdropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f))
+        {
+        }
+        
+        TextRegionStyle(const TextRegionStyle& args)
+            : RegionStyle(args),
+            _label(args._label),
+            _fontHeight(args._fontHeight),
+            _fontName(args._fontName),
+            _boarderPadding(args._boarderPadding),
+            _alignmentMode(args._alignmentMode),
+            _textColor(args._textColor),
+            _backdropType(args._backdropType),
+            _backdropColor(args._backdropColor)
+        {
+        }
+        
+        std::string _label;
+        float _fontHeight;
+        //the name of the font being used
+        std::string _fontName;
+        //the padding to left or right of text
+        float _boarderPadding;
+        //the alignment mode for the text
+        //relative to the local region space
+        TEXT_ALIGN _alignmentMode;
+        //the color of our text, including alpha
+        //which should match the region alpha
+        osg::Vec4 _textColor;
+        //is the drop shadow being rendered
+        BACKDROP_TYPE _backdropType;
+        //color of drop shadow
+        osg::Vec4 _backdropColor;
+        
+    protected:
+        virtual ~TextRegionStyle(){
+        }
+    };
+    
+    //
+    TextRegion(TextRegionStyle* style = new TextRegionStyle());
+    
+    TextRegion(osg::Vec2 corner, osg::Vec2 size, TextRegionStyle* style = new TextRegionStyle());
     
     /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
     TextRegion(const TextRegion& region,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
     
     META_Object(hogboxHUD,TextRegion);
-    
-    virtual bool Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName, const std::string& label, float fontHeight = -1);
-    
-    virtual int HandleInputEvent(HudInputEvent& hudEvent);
+    virtual RegionStyle* allocateStyleType(){return new TextRegionStyle();}
     
     //
-    //Text region loads the aditional assests
-    //searches for a ttf file to use as a font
-    virtual bool LoadAssest(const std::string& folderName);
+    //overload create to allocate TextRegionStyle by default
+    virtual bool Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style = new TextRegionStyle());
+    
+    //
+    //Convenience method to create a TextRegionStyle with label etc, which
+    //is then passed to base Create
+    virtual bool CreateWithLabel(osg::Vec2 corner, osg::Vec2 size, const std::string& asset, const std::string& label);
+    
+    
+    virtual int HandleInputEvent(HudInputEvent& hudEvent);
     
     
     //overload set position
@@ -118,6 +175,11 @@ public:
 protected:
     
     virtual ~TextRegion(void);
+    
+    //
+    //Text region loads the aditional assests
+    //searches for a ttf file to use as a font
+    virtual bool LoadAssest(RegionStyle* args);
     
 protected:
     

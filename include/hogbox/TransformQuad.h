@@ -30,6 +30,8 @@ class HOGBOX_EXPORT TransformQuad : public osg::MatrixTransform
 {
 public:
     
+    friend class AnimateUpdateCallback;
+    
     enum SizeStyle{
         SIZE_BY_SCALEMATRIX = 0, //default, fine for hard edge quads
         SIZE_BY_GEOM = 1 //best for quads wioth rounded corners but overhead of rebuilding quad
@@ -45,6 +47,13 @@ public:
         {
         }
         
+        TransformQuadArgs(const TransformQuadArgs& args)
+            : Quad::QuadArgs(args),
+            _sizeStyle(args._sizeStyle),
+            _rotatePlane(args._rotatePlane)
+        {
+        }
+        
         SizeStyle _sizeStyle;
         Quad::QuadPlane _rotatePlane;
         
@@ -55,22 +64,33 @@ public:
     
     //
     //just allocate the transform graph and geode
-    TransformQuad();
+    TransformQuad(TransformQuadArgs* args=NULL);
     
     //
     //Contruct base quad geometry now, passing width height and
     //quad args, quad args can't be null
     TransformQuad(const float& width, const float& height, TransformQuadArgs* args = new TransformQuadArgs());
+
+    //
+    //Contruct base quad geometry now, passing width height and
+    //quad args, quad args can't be null
+    TransformQuad(const osg::Vec2& size, TransformQuadArgs* args = new TransformQuadArgs());
     
     /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
     TransformQuad(const TransformQuad& quad,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
     
     META_Object(hogbox,TransformQuad);
-      
+    
     //
-    //general update, updates and syncs our animations etc
-    //normally called by an attached updateCallback
-    virtual void Update(float simTime);
+    //Build the actual quad and attach to geode
+    void buildQuad(const float& width, const float& height, TransformQuadArgs* args = new TransformQuadArgs());
+    
+    //
+    //Build the actual quad and attach to geode
+    inline void buildQuad(const osg::Vec2& size, TransformQuadArgs* args = new TransformQuadArgs()){
+        this->buildQuad(size.x(), size.y(), args);
+    }
+    
     
     //
     //translation in hudspace, set position virtual
@@ -90,7 +110,7 @@ public:
     //SIZE_BY_SCALEMATRIX will scale the unit sized quad with the scale matrix
     //SIZE_BY_GEOM will recreate the quad at the new size leaving scale matrix at 1,1,1
     //optionally set new build args
-    virtual void SetSize(const osg::Vec2& size, TransformQuadArgs* args=NULL);
+    virtual void SetSize(const osg::Vec2& size);
     //return the size of the region in hud coord
     const osg::Vec2& GetSize() const;
     
@@ -171,10 +191,11 @@ protected:
     //Build our base graph of translate, rotate
     //scale and geode
     void buildBaseGraph();
-    
+     
     //
-    //Build the actual quad and attach to geode
-    void buildQuad(const float& width, const float& height, Quad::QuadArgs* args = new Quad::QuadArgs());
+    //general update, updates and syncs our animations etc
+    //normally called by an attached updateCallback
+    virtual void UpdateAnimation(float simTime);
     
 protected:
     
@@ -254,7 +275,7 @@ public:
             //float timePassed = time - _prevTick;
             _prevTick = time;
             
-            p_updateRegion->Update(time);
+            p_updateRegion->UpdateAnimation(time);
         }
         osg::NodeCallback::traverse(node,nv);
     }

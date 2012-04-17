@@ -6,8 +6,29 @@
 
 using namespace hogboxHUD;
 
-ButtonRegion::ButtonRegion(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
-    : TextRegion(plane, origin, isProcedural),
+ButtonRegion::ButtonRegion(ButtonRegionStyle* style)
+    : TextRegion(style),
+    _buttonDown(false),
+    _mouseDownTexture(NULL),
+    //callback events
+    _onButtonClickedEvent(new HudCallbackEvent(this, "OnButtonClicked"))
+{
+    
+	//register for the base mouse down and mouse up events to detect ButtonClicked
+	//set app class to receive callback when mouse is pressed on region
+	this->AddOnMouseDownCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																							 &ButtonRegion::OnMouseDown));
+	this->AddOnMouseUpCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																						   &ButtonRegion::OnMouseUp));
+	this->AddOnMouseEnterCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+                                                                                              &ButtonRegion::OnMouseEnter));
+	this->AddOnMouseLeaveCallbackReceiver(new hogboxHUD::HudEventObjectCallback<ButtonRegion>(this, this,
+																							  &ButtonRegion::OnMouseLeave));
+	
+}
+
+ButtonRegion::ButtonRegion(osg::Vec2 corner, osg::Vec2 size, ButtonRegionStyle* style) 
+    : TextRegion(corner, size, style),
     _buttonDown(false),
     _mouseDownTexture(NULL),
     //callback events
@@ -43,11 +64,10 @@ ButtonRegion::~ButtonRegion(void)
 //
 // Create a button with a loaded file as backdrop
 //
-bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& fileName,
-																const std::string& label)
+bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style )
 {
 	//load the base assets and apply names and sizes
-	return TextRegion::Create(corner,size,fileName, label);
+	return TextRegion::Create(corner,size,style);
 }
 
 int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
@@ -97,13 +117,17 @@ void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& i
 //Button region loads the aditional assests
 //mouseDown.png, used when the mouse is pressed down on the region
 //
-bool ButtonRegion::LoadAssest(const std::string& folderName)
+bool ButtonRegion::LoadAssest(RegionStyle* args)
 {
 	//call base first
-	bool ret = TextRegion::LoadAssest(folderName);
+	bool ret = TextRegion::LoadAssest(args);
 
+    ButtonRegionStyle* asButtonStyle = dynamic_cast<ButtonRegionStyle*>(args);
+    if(asButtonStyle){
+        
+    }
 	//try to load the mouseDown texture
-	std::string mouseDownTextureFile = folderName+"/mouseDown.png";
+	//std::string mouseDownTextureFile = folderName+"/mouseDown.png";
 	//if(osgDB::fileExists(mouseDownTextureFile) )
 	//{_mouseDownTexture = hogbox::LoadTexture2D(mouseDownTextureFile);}
 

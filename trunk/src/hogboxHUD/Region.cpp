@@ -69,108 +69,31 @@ static const char* coloredFragSource = {
 	"}\n" 
 };
 
-Region::Region(RegionPlane plane, RegionOrigin origin, bool isProcedural) 
-    : osg::Object(),
-    _isProcedural(isProcedural),
-    _plane(plane),
-    _rotatePlane(PLANE_XY),
-    _origin(origin),
+Region::Region(RegionStyle* args) 
+    : TransformQuad(args),//give default style, can be overriden by create
+    _isProcedural(false),
     _assestLoaded(false),
-    _size(osg::Vec2(1.0f, 1.0f)),
-    _corner(osg::Vec2(0.0f,0.0f)),
-    _rotation(0.0f),
-    _depth(0.0f),
     //by default inherit all parent transforms
     _transformInheritMask(INHERIT_ALL_TRANSFORMS),
     _visible(true),
     _pickable(true),
     _microMemoryMode(false),
     //animation
-    _animateRotate(new hogbox::AnimateFloat()),
-    _isRotating(false),
-    _animatePosition(new hogbox::AnimateVec2()),
-    _isTranslating(false),
-    _animateSize(new hogbox::AnimateVec2()),
-    _isSizing(false),
     _animateColor(new hogbox::AnimateVec3()),
     _isColoring(false),
     _animateAlpha(new hogbox::AnimateFloat()),
-    _isFading(false),
-    _prevTick(0.0f),
-    _animationDisabled(false),
-    //Create our callbacks
-    //mouse events
-    _onMouseDownEvent(new HudCallbackEvent(this, "OnMouseDown")),
-    _onMouseUpEvent(new HudCallbackEvent(this, "OnMouseUp")),
-    _onMouseMoveEvent(new HudCallbackEvent(this, "OnMouseMove")),
-    _onMouseDragEvent(new HudCallbackEvent(this, "OnMouseDrag")),
-    _onDoubleClickEvent(new HudCallbackEvent(this, "OnDoubleClick")),
-    _onMouseEnterEvent(new HudCallbackEvent(this, "OnMouseEnter")),
-    _onMouseLeaveEvent(new HudCallbackEvent(this, "OnMouseLeave")),
-    //keyboard events
-    _onKeyDownEvent(new HudCallbackEvent(this, "OnKeyDown")),
-    _onKeyUpEvent(new HudCallbackEvent(this, "OnKeyUp"))
+    _isFading(false)
 {
+    this->InitEvents();
+    this->InitStateSet();
     
-	_root = new osg::MatrixTransform(osg::Matrix::identity());
-	_translate = new osg::MatrixTransform();
-	_rotate = new osg::MatrixTransform();
-	_scale = new osg::MatrixTransform();
-	_region = new osg::Geode();
 	_childMount = new osg::MatrixTransform();
-	
-	//create and attach our default updatecallback
-	_updateCallback = new RegionUpdateCallback(this);
-	this->AddUpdateCallback(_updateCallback.get());
-    
-	//build the transform hierachy	
-	_root->addChild(_translate);
-	_translate->addChild(_rotate.get());
-	_rotate->addChild(_scale.get());
-	//attach region node for rendering
-	_scale->addChild(_region.get());	
     
 	//attach the child regions to rotate, so children
 	//are affected by this regions translate and rotate
 	//transforms directly, but scale is applied indepenatly
 	//to allow for different resize modes etc
 	_rotate->addChild(_childMount.get());
-	
-	_stateset = new osg::StateSet(); 
-	_stateset->setDataVariance(osg::Object::DYNAMIC);
-    _material = new osg::Material();
-	_material->setColorMode(osg::Material::OFF);
-	_material->setDataVariance(osg::Object::DYNAMIC);
-    
-    //add the color uniform
-    _colorUniform = new osg::Uniform("_color", osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-    _stateset->addUniform(_colorUniform.get());
-    
-#ifdef TARGET_OS_IPHONE
-    _stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::ON);
-#endif
-    
-#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
-    
-    _stateset->setAttributeAndModes(_material, osg::StateAttribute::ON | osg::StateAttribute::PROTECTED);
-    
-#else
-	osg::Program* program = new osg::Program; 
-	program->setName("hudColorShader"); 
-	program->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
-	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource)); 
-	_stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
-    
-    _shaderMode = COLOR_SHADER;
-    
-#endif
-	//_root->setStateSet(_stateset.get()); 
-    _region->setStateSet(_stateset.get()); 
-    
-    
-	SetColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-	SetAlpha(1.0f);
-	EnableAlpha(false);
     
     ApplyNodeMask();
     
@@ -180,9 +103,51 @@ Region::Region(RegionPlane plane, RegionOrigin origin, bool isProcedural)
 	_hovering = false;
 	
 	//set default animation values
-	_animateRotate->SetValue(this->GetRotation());
-	_animateSize->SetValue(this->GetSize());
-	_animatePosition->SetValue(this->GetPosition());
+	_animateColor->SetValue(this->GetColor());
+	_animateAlpha->SetValue(this->GetAlpha());
+    
+    static int uniqueRegionID = 0;
+    std::stringstream nameStream;
+    nameStream << "region_" << uniqueRegionID;
+    uniqueRegionID++;
+    this->setName(nameStream.str());
+}
+
+Region::Region(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style) 
+    : TransformQuad(size, style),
+    _isProcedural(false),
+    _assestLoaded(false),
+    //by default inherit all parent transforms
+    _transformInheritMask(INHERIT_ALL_TRANSFORMS),
+    _visible(true),
+    _pickable(true),
+    _microMemoryMode(false),
+    //animation
+    _animateColor(new hogbox::AnimateVec3()),
+    _isColoring(false),
+    _animateAlpha(new hogbox::AnimateFloat()),
+    _isFading(false)
+{
+    
+    this->InitEvents();
+    this->InitStateSet();
+    
+	_childMount = new osg::MatrixTransform();
+	 
+	//attach the child regions to rotate, so children
+	//are affected by this regions translate and rotate
+	//transforms directly, but scale is applied indepenatly
+	//to allow for different resize modes etc
+	_rotate->addChild(_childMount.get());
+    
+    ApplyNodeMask();
+    
+	//no parent by default
+	p_parent=NULL;
+    
+	_hovering = false;
+	
+	//set default animation values
 	_animateColor->SetValue(this->GetColor());
 	_animateAlpha->SetValue(this->GetAlpha());
     
@@ -195,11 +160,7 @@ Region::Region(RegionPlane plane, RegionOrigin origin, bool isProcedural)
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 Region::Region(const Region& region,const osg::CopyOp& copyop)
-    : osg::Object(region, copyop),
-    _size(region._size),
-    _corner(region._corner),
-    _rotation(region._rotation),
-    _depth(region._depth),
+    : TransformQuad(region, copyop),
     _visible(region._visible),
     _color(region._color),
     _alpha(region._alpha),
@@ -226,44 +187,94 @@ Region::~Region(void)
 	}
 	_childMount = NULL;
 	_children.clear();
-	if(_region.valid()){
-		ClearHudGeodes(_region.get());
-		_region = NULL;
+	if(_quadGeode.valid()){
+		ClearHudGeodes(_quadGeode.get());
+		_quadGeode = NULL;
 	}
-	_root = NULL;
-	_translate = NULL;
-	_rotate = NULL;
-	_scale = NULL;
     
 	_material = NULL;
+}
+
+//
+//Init Callback Events
+//
+void Region::InitEvents()
+{
+    //Create our callbacks
+    //mouse events
+    _onMouseDownEvent = new HudCallbackEvent(this, "OnMouseDown");
+    _onMouseUpEvent = new HudCallbackEvent(this, "OnMouseUp");
+    _onMouseMoveEvent = new HudCallbackEvent(this, "OnMouseMove");
+    _onMouseDragEvent = new HudCallbackEvent(this, "OnMouseDrag");
+    _onDoubleClickEvent = new HudCallbackEvent(this, "OnDoubleClick");
+    _onMouseEnterEvent = new HudCallbackEvent(this, "OnMouseEnter");
+    _onMouseLeaveEvent = new HudCallbackEvent(this, "OnMouseLeave");
+                       
+    //keyboard events
+    _onKeyDownEvent = new HudCallbackEvent(this, "OnKeyDown");
+    _onKeyUpEvent = new HudCallbackEvent(this, "OnKeyUp");
+}
+
+//
+//Init Material/stateset stuff
+//
+void Region::InitStateSet()
+{
+	_stateset = new osg::StateSet(); 
+	_stateset->setDataVariance(osg::Object::DYNAMIC);
+    _material = new osg::Material();
+	_material->setColorMode(osg::Material::OFF);
+	_material->setDataVariance(osg::Object::DYNAMIC);
+    
+    //add the color uniform
+    _colorUniform = new osg::Uniform("_color", osg::Vec4(0.0f,1.0f,1.0f,1.0f));
+    _stateset->addUniform(_colorUniform.get());
+    
+#ifdef TARGET_OS_IPHONE
+    _stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::ON);
+#endif
+    
+#ifdef OSG_GL_FIXED_FUNCTION_AVAILABLE
+    
+    _stateset->setAttributeAndModes(_material, osg::StateAttribute::ON | osg::StateAttribute::PROTECTED);
+    
+#else
+	osg::Program* program = new osg::Program; 
+	program->setName("hudColorShader"); 
+	program->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
+	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource)); 
+	_stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
+    
+    _shaderMode = COLOR_SHADER;
+    
+#endif
+	//_root->setStateSet(_stateset.get()); 
+    _quadGeode->setStateSet(_stateset.get()); 
+    
+    
+	SetColor(osg::Vec3(0.0f, 1.0f, 1.0f));
+	SetAlpha(1.0f);
+	EnableAlpha(false);
 }
 
 //
 //general update, updates and syncs our animations etc
 //normally called by an attached updateCallback
 //
-void Region::Update(float simTime)
+void Region::UpdateAnimation(float simTime)
 {
     //use global hud timepassed
 	float timePassed = Hud::Inst()->GetTimePassed();
 	_prevTick = simTime;
     
+    TransformQuad::UpdateAnimation(timePassed);
+    
 	if(!_animationDisabled)
 	{
-		//update all our smooth values
-		if(_isRotating = _animateRotate->Update(timePassed))
-		{this->SetRotation(_animateRotate->GetValue());}
-		
-		if(_isTranslating = _animatePosition->Update(timePassed))
-		{this->SetPosition(_animatePosition->GetValue());}
-		
-		if(_isSizing = _animateSize->Update(timePassed))
-		{this->SetSize(_animateSize->GetValue());}
-		
-		if(_isColoring = _animateColor->Update(timePassed))
+		if((_isColoring = _animateColor->Update(timePassed)))
 		{this->SetColor(_animateColor->GetValue());}
 		
-		if(_isFading = _animateAlpha->Update(timePassed))
+		if((_isFading = _animateAlpha->Update(timePassed)))
 		{this->SetAlpha(_animateAlpha->GetValue());}
 	}
 }
@@ -271,26 +282,46 @@ void Region::Update(float simTime)
 //
 // Create the region of size, in postion using a loaded model
 //
-bool Region::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& folderName, bool microMemoryMode)
+bool Region::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style)
 {
-	_assetFolder = folderName;
-	SetMicroMemoryMode(microMemoryMode);
+	SetMicroMemoryMode(_microMemoryMode);
+
+	//Set the regions position, size and rotation
+	SetPosition(corner);
     
+    //if(folderName.empty()){
+    SetSize(size);
+	
 	if(!_microMemoryMode)
 	{
 		//load the assests that represent this region
 		//i.e. geometry and textures and apply to the region node
 		//for rendering
-		this->LoadAssest(_assetFolder);
+        if(style){
+            _args = style;
+        }    
+        this->LoadAssest(this->ArgsAsRegionStyle());
 	}else{
 		//in micro mode hud regions defult to not visible
 		SetVisible(false);
 	}
-    
-	//Set the regions position, size and rotation
-	SetPosition(corner);SetSize(size);
-	
+
 	return true;
+}
+
+//
+//Convenience method to create a RegionStyle with provided args
+//then pass to base Create
+//
+bool Region::CreateWithAsset(osg::Vec2 corner, osg::Vec2 size, const std::string& asset)
+{
+    RegionStyle* asRegionStyle = this->ArgsAsRegionStyle();
+    if(asRegionStyle){
+        _args = this->allocateStyleType();
+        asRegionStyle = this->ArgsAsRegionStyle();
+    }
+    asRegionStyle->_assets = asset;
+    return this->Create(corner, size, this->ArgsAsRegionStyle());
 }
 
 //
@@ -298,7 +329,7 @@ bool Region::Create(osg::Vec2 corner, osg::Vec2 size, const std::string& folderN
 //
 osg::MatrixTransform* Region::GetRegion()
 {
-	return _root.get();
+	return this;
 }
 
 //
@@ -515,84 +546,39 @@ bool Region::HandleChildEvents(HudInputEvent& hudEvent)
 //base.png, used as the default texture if present
 //rollover.png, used for mouse rollovers if present
 //
-bool Region::LoadAssest(const std::string& folderName)
+bool Region::LoadAssest(RegionStyle* style)
 {
 	if(_assestLoaded){return true;}
-	//if it has no name, then no assets aren't needed
-	if(folderName.size() == 0)
+    
+    if(!style){return;}
+    
+	//if it has no name, then assets aren't needed
+	if(style->_assets.empty())
 	{return true;}
     
-	{
-        //create the default in XY plane with origin in bottom left
-        osg::Vec3 corner = osg::Vec3(0.0f,0.0f,0.0f);
-        osg::Vec3 width = osg::Vec3(1.0f,0.0f,0.0f);
-        osg::Vec3 height = osg::Vec3(0.0f,1.0f,0.0f);
-        float temp = 0.0f;
-		//create an xy quad of size 1,1 in its place
-		osg::Geometry* geom = NULL;
+    std::string assetName = style->_assets;
+    
+    osg::ref_ptr<TransformQuadArgs> args = new TransformQuadArgs();
+    args->_corners[0]._radius = _size.x()*0.2f;
+    args->_corners[0]._segments = 4;
+    args->_corners[1]._radius = _size.x()*0.2f;
+    args->_corners[1]._segments = 4;
+    args->_corners[2]._radius = _size.x()*0.2f;
+    args->_corners[2]._segments = 4;
+    args->_corners[3]._radius = _size.x()*0.2f;
+    args->_corners[3]._segments = 4;
+    
+    //if we have any kind of asset name we build the quad
+    if(!assetName.empty()){
+        this->buildQuad(_size, style);
+    }
         
-        switch(_origin){
-            case ORI_BOTTOM_LEFT:
-                break;
-            case ORI_TOP_LEFT:
-                height *= -1.0f;
-                break;
-            case ORI_CENTER:
-                corner = osg::Vec3(-0.5f,-0.5f,0.0f);
-                //width =  osg::Vec3(0.5f,0.0f,0.0f);
-                //height =  osg::Vec3(0.0f,0.5f,0.0f);
-                break;
-            default:break;
-        }
-        
-        //flip plane
-        switch(_plane){
-            case PLANE_XY:
-                break;
-            case PLANE_XZ:
-                //flip y and z
-                temp = corner.y();
-                corner.y() = corner.z();
-                corner.z() = temp;
-                
-                temp = width.y();
-                width.y() = width.z();
-                width.z() = temp;
-                
-                temp = height.y();
-                height.y() = height.z();
-                height.z() = temp;
-                
-                break;
-            default:break;
-        }
-        
-        osg::ref_ptr<hogbox::Quad::QuadArgs> args = new hogbox::Quad::QuadArgs();
-        args->_corners[0]._radius = _size.x()*0.2f;
-        args->_corners[0]._segments = 16;
-        args->_corners[1]._radius = _size.x()*0.2f;
-        args->_corners[1]._segments = 16;
-        args->_corners[2]._radius = _size.x()*0.2f;
-        args->_corners[2]._segments = 16;
-        args->_corners[3]._radius = _size.x()*0.2f;
-        args->_corners[3]._segments = 16;
-        //geom = hogbox::createTexturedQuadGeometry(_size.x(),_size.y(),args);// osg::createTexturedQuadGeometry(corner, width, height);
-        //geom->setColorArray(NULL);//don't use color array as we set color via gl material or uniform
-#ifdef TARGET_OS_IPHONE
-        //geom->setUseDisplayList(false);
-        //geom->setUseVertexBufferObjects(true);
-#endif
-		
-		_region->addDrawable(new hogbox::Quad(_size, args.get()));//geom);
-		//_region = geode;
-        
-	}
     
     //load background texture
-    if(folderName != "Quad")//use Quad as special name to have just solid colored quad with no texture
+    if(assetName != "Quad")//use Quad as special name to have just solid colored quad with no texture
     {
         //now try to load a base texture
-        std::string baseTextureFile = folderName+".png";
+        std::string baseTextureFile = assetName+".png";
         {
             _baseTexture = hogbox::AssetManager::Inst()->GetOrLoadTex2D(baseTextureFile);
             if(_baseTexture.get())
@@ -603,7 +589,7 @@ bool Region::LoadAssest(const std::string& folderName)
         }
         
         //rollover
-        std::string rollOverTextureFile = folderName+"_over.png";
+        std::string rollOverTextureFile = assetName+"_over.png";
         //if(rollOverTextureFile.empty()){rollOverTextureFile = folderName+"/rollover.png";}
         //if(osgDB::fileExists(rollOverTextureFile) )
         _rollOverTexture = NULL;//OsgModelCache::Inst()->getOrLoadTex2D(rollOverTextureFile);
@@ -619,7 +605,8 @@ bool Region::LoadAssest(const std::string& folderName)
 	//by setting the regions geometry names to the
 	//unique ID
 	setName(this->getName());
-    
+    _args = style;
+    _assetFolder = style->_assets;
 	_assestLoaded = true;
     
 	return true;
@@ -634,7 +621,7 @@ bool Region::UnLoadAssests()
 	if(!_assestLoaded){return true;}
     
 	//remove children of _region
-	_region = NULL;
+	//_region = NULL;
     
 	if(_baseTexture.get()){_stateset->removeAssociatedTextureModes(0,_baseTexture.get());}
 	_baseTexture = NULL;
@@ -652,172 +639,10 @@ bool Region::UnLoadAssests()
 //
 void Region::setName(const std::string& name)
 {
-	_region->setName(name); 
+	_quadGeode->setName(name); 
 	osg::Object::setName(name);
-	MakeHudGeodes(_region.get(), new RegionWrapper(this));
+	MakeHudGeodes(_quadGeode.get(), new RegionWrapper(this));
 }
-
-//positioning
-
-void Region::SetPosition(const osg::Vec2& corner)
-{
-	_corner = corner;
-    
-    //flip plane
-    float temp = 0.0f;
-    osg::Vec3 offset = osg::Vec3(corner.x(),corner.y(),_depth);
-    switch(_plane){
-        case PLANE_XY:
-            break;
-        case PLANE_XZ:
-            //flip x and z
-            temp = offset.y();
-            offset.y() = offset.z();
-            offset.z() = temp;
-            break;
-        default:break;
-    }
-	_translate->setMatrix( osg::Matrix::translate(offset)); 
-}
-
-const osg::Vec2& Region::GetPosition() const
-{
-	return _corner;
-}
-
-//
-//get set roation around the z axis in degrees
-//
-void Region::SetRotation(const float& rotate)
-{
-	_rotation = rotate;
-    
-    //flip plane
-    float temp = 0.0f;
-    osg::Vec3 axis = osg::Vec3(0.0f,0.0f,1.0f);
-    switch(_rotatePlane){
-        case PLANE_XY:
-            break;
-        case PLANE_XZ:
-            //flip x and z (as its rotation)
-            temp = axis.y();
-            axis.y() = axis.z();
-            axis.z() = temp;
-            break;
-        case PLANE_YZ:
-            //flip x and z (as its rotation)
-            temp = axis.x();
-            axis.x() = axis.z();
-            axis.z() = temp;
-            break;
-        default:break;
-    }
-    
-	_rotate->setMatrix(osg::Matrix::rotate(osg::DegreesToRadians(_rotation), axis));
-}
-
-const float& Region::GetRotation() const
-{
-	return _rotation;
-}
-
-void Region::SetSize(const osg::Vec2& size)
-{
-	//resize this regions geometry
-    float temp = 0.0f;
-    osg::Vec3 sizeAxis = osg::Vec3(size.x(), size.y(), 1.0f);
-    switch(_plane){
-        case PLANE_XY:
-            break;
-        case PLANE_XZ:
-            //flip x and z
-            temp = sizeAxis.y();
-            sizeAxis.y() = sizeAxis.z();
-            sizeAxis.z() = temp;
-            break;
-        default:break;
-    }
-	_scale->setMatrix( osg::Matrix::scale(sizeAxis));
-	
-	//resize children using the relative scale difference
-	//between old and new size
-	float xScaler = size.x()/_size.x();
-	float yScaler = size.y()/_size.y();
-    
-	//then scale the relative position of any children
-	for(unsigned int i=0; i<_children.size(); i++)
-	{
-		//check if the child want to inherit
-		if((_children[i]->GetTransformInheritMask() & INHERIT_SIZE))
-		{_children[i]->SetSizeFromPercentage(xScaler, yScaler);}
-        
-		if((_children[i]->GetTransformInheritMask() & INHERIT_POSITION))
-		{_children[i]->SetPositionFromPercentage(xScaler, yScaler);}
-	}
-    
-	//store new size
-	_size = size;
-}
-
-const osg::Vec2& Region::GetSize() const
-{
-	return _size;
-}
-
-//
-//set the size as a percentage/scale factor of the current size 
-//i.e. <1 smaller, >1 bigger
-//
-void Region::SetSizeFromPercentage(float xScaler, float yScaler)
-{
-	osg::Vec2 newSize;
-	newSize.x() = _size.x()*xScaler;
-	newSize.y() = _size.y()*yScaler;
-	this->SetSize(newSize);
-}
-
-//
-//set the position as a percentage/scale factor of the current position
-//i.e. <1 smaller, >1 bigger
-//
-void Region::SetPositionFromPercentage(float xScaler, float yScaler)
-{
-	osg::Vec2 newPos;
-	newPos.x() = _corner.x()*xScaler;
-	newPos.y() = _corner.y()*yScaler;
-	this->SetPosition(newPos);
-}
-
-//
-//move to a new layer
-//
-
-void Region::SetLayer(const float& depth)
-{
-    _depth = depth;
-    
-    //flip plane
-    float temp = 0.0f;
-    osg::Vec3 offset = osg::Vec3(_corner.x(),_corner.y(),depth);
-    switch(_plane){
-        case PLANE_XY:
-            break;
-        case PLANE_XZ:
-            //flip x and z
-            temp = offset.y();
-            offset.y() = offset.z();
-            offset.z() = temp;
-            break;
-        default:break;
-    }
-	_translate->setMatrix( osg::Matrix::translate(offset)); 
-}
-
-const float& Region::GetLayer() const
-{
-	return _depth;
-}
-
 
 const bool& Region::IsVisible() const
 {
@@ -830,7 +655,7 @@ void Region::SetVisible(const bool& visible)
 	if(visible)
 	{
 		//load assests if micoMemory mode
-		if(_microMemoryMode){this->LoadAssest(_assetFolder);}
+		//if(_microMemoryMode){this->LoadAssest(_assetFolder);}
         SetPickable(true);
 		//_root->setNodeMask(0xFFFFFFFF);
         _prevTick = 0.0f; //reset prev tick
@@ -877,10 +702,10 @@ void Region::ApplyNodeMask()
     if(_pickable){
         nodeMask |= hogbox::PICK_MESH;
     }
-    if(_region.get())
+    if(_quadGeode.get())
     {
-        _region->setNodeMask(nodeMask);
-        _root->setNodeMask(nodeMask);
+        _quadGeode->setNodeMask(nodeMask);
+        this->setNodeMask(nodeMask);
     }
 }
 
@@ -906,7 +731,10 @@ void Region::SetRolloverTexture(osg::Texture* texture)
 //
 void Region::ApplyTexture(osg::Texture* tex)
 {
-	if(!_stateset.get()){return;}
+	if(!_stateset.get()){
+        OSG_ALWAYS << "Region::ApplyTexture Failed, NULL texture." << std::endl;
+        return;
+    }
 	
 	_stateset->setTextureAttributeAndModes(0,tex,osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
     _stateset->addUniform(new osg::Uniform("diffuseTexture", 0));
@@ -1075,9 +903,9 @@ const bool& Region::IsAlphaEnabled() const
 
 void Region::SetStateSet(osg::StateSet* stateSet)
 {
-	if(_region.get()!=NULL)
+	if(stateSet!=NULL)
 	{
-		_region->setStateSet(stateSet);
+		_quadGeode->setStateSet(stateSet);
 	}
 }
 
@@ -1265,7 +1093,7 @@ bool Region::AddUpdateCallback(osg::NodeCallback* callback)
 	if(callbackNode)
 	{
 		callbackNode->setUpdateCallback(callback);
-		if(_root){_root->addChild(callbackNode);}
+		this->addChild(callbackNode);
 	}else{
 		return false;
 	}

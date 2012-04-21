@@ -37,7 +37,8 @@ static const char* depthPassFragSource = {
 	SHADER_COMPAT 
     "void main(void)\n"
     "{\n"	
-    "    gl_FragColor.rgba = gl_FragCoord.zzzz;\n"
+    "    gl_FragColor.rgb = gl_FragCoord.zzz;\n"
+    "    gl_FragColor.a = 1.0;\n"
     "}\n"
 };
 

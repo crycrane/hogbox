@@ -76,6 +76,15 @@ int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 }
 
 //
+//In special cases, external object may need to break the buttonDown state,
+//e.g. if the button is being dragged as part of a list
+//
+void ButtonRegion::CancelButtonDown()
+{
+    _buttonDown = false; 
+}
+
+//
 //
 //receive the base callbacks to detect our button click event
 //

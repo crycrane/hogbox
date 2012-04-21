@@ -49,7 +49,7 @@ static const char* textFragSource = {
 
 //
 TextRegion::TextRegion(TextRegionStyle* style)
-    : Region(style),
+    : StrokeRegion(style),
     _string(""),
     _text(NULL),
     _fontHeight(18.0f),
@@ -127,7 +127,7 @@ TextRegion::TextRegion(TextRegionStyle* style)
 }
 
 TextRegion::TextRegion(osg::Vec2 corner, osg::Vec2 size, TextRegionStyle* style) 
-    : Region(corner, size, style),
+    : StrokeRegion(corner, size, style),
     _string(""),
     _text(NULL),
     _fontHeight(18.0f),
@@ -207,7 +207,7 @@ TextRegion::TextRegion(osg::Vec2 corner, osg::Vec2 size, TextRegionStyle* style)
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 TextRegion::TextRegion(const TextRegion& region,const osg::CopyOp& copyop)
-    : Region(region, copyop),
+    : StrokeRegion(region, copyop),
     //_text(copyop(region._text.get())),
     _fontHeight(region._fontHeight),
     _fontName(region._fontName),
@@ -243,7 +243,11 @@ bool TextRegion::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style )
     
 	//
     //
-	return Region::Create(corner,size,style);
+	bool ret = StrokeRegion::Create(corner,size,style);
+    //set ref height for scaling in setsize
+    _scaleHeightRef = size.y();
+    this->SetSize(_size);
+    return ret;
 }
 
 //
@@ -274,7 +278,7 @@ bool TextRegion::CreateWithLabel(osg::Vec2 corner, osg::Vec2 size, const std::st
 bool TextRegion::LoadAssest(RegionStyle* args)
 {
 	//call base first
-	bool ret = Region::LoadAssest(args);
+	bool ret = StrokeRegion::LoadAssest(args);
     
     TextRegionStyle* asTextStyle = dynamic_cast<TextRegionStyle*>(args);
     
@@ -312,14 +316,13 @@ bool TextRegion::LoadAssest(RegionStyle* args)
 //
 void TextRegion::SetPosition(const osg::Vec2& corner)
 {
-	Region::SetPosition(corner);
+	StrokeRegion::SetPosition(corner);
 }
 
 //overload SetSize so we can set the texts pixelheight independantly
 void TextRegion::SetSize(const osg::Vec2& size)
 {
-    OSG_ALWAYS << "TextRegion::SetSize " << size.x() << ", " << size.y() <<std::endl;
-	Region::SetSize(size);
+	StrokeRegion::SetSize(size);
     
 	//set the texts max sizes to the new size
 	_text->setMaximumHeight(size.y());
@@ -453,7 +456,7 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
                     break;
                 default:break;
             }
-            OSG_ALWAYS << "TEXT SETALIGN " << offset.x() << ", " << offset.y() << std::endl;
+
 			_text->setAlignment(osgText::Text::CENTER_CENTER ); 
 			_text->setPosition(offset);
 			break;
@@ -541,17 +544,20 @@ const TextRegion::TEXT_ALIGN& TextRegion::GetAlignment()const
 //
 void TextRegion::SetAlpha(const float& alpha)
 {
+    OSG_ALWAYS << "Set Alpha: " << alpha << " for region '" << this->getName() << std::endl;
 	_textColor.a() = alpha;
     _backdropColor.a() = alpha*0.5f;
-	if(!_alphaEnabled)
+	if(!this->IsAlphaEnabled())
 	{
+        OSG_ALWAYS << "   Not Enabled" << std::endl;
+
 		_textColor.a() = 1.0f;
         _backdropColor.a() = 1.0f;
 	}
 	
     _text->setBackdropColor(_backdropColor);
 	_text->setColor(_textColor);
-	Region::SetAlpha(alpha);
+	StrokeRegion::SetAlpha(alpha);
 }
 
 //
@@ -562,7 +568,7 @@ void TextRegion::SetTextColor(const osg::Vec4& color)
 	_textColor.r() = color.x();
 	_textColor.g() = color.y();
 	_textColor.b() = color.z();
-    _textColor.a() = _alpha;
+    _textColor.a() = this->GetAlpha();
 	_text->setColor(_textColor);
     this->SetColor(osg::Vec3(color.x(),color.y(),color.z()));
 }
@@ -583,7 +589,7 @@ void TextRegion::SetBackDropColor(const osg::Vec4 &color)
 	_backdropColor.r() = color.r();
 	_backdropColor.g() = color.g();
 	_backdropColor.b() = color.b();
-	_backdropColor.a() = _alpha*0.5f;
+	_backdropColor.a() = this->GetAlpha()*0.5f;
 	_text->setBackdropColor(_backdropColor);
 }
 

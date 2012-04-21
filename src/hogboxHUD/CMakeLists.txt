@@ -15,6 +15,7 @@ SET(LIB_PUBLIC_HEADERS
     ${HEADER_PATH}/HudInputHandler.h
     ${HEADER_PATH}/HudEventCallback.h
     ${HEADER_PATH}/Region.h
+    ${HEADER_PATH}/StrokeRegion.h
     ${HEADER_PATH}/TextRegion.h
     ${HEADER_PATH}/ButtonRegion.h
 )
@@ -26,6 +27,7 @@ ADD_LIBRARY(${LIB_NAME}
 	Hud.cpp
 	HudInputHandler.cpp
 	Region.cpp
+    StrokeRegion.cpp
 	TextRegion.cpp
     ButtonRegion.cpp
 )

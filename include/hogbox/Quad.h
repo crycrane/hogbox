@@ -18,6 +18,7 @@
 #include <hogbox/HogBoxBase.h>
 
 #include <osg/Geometry>
+#include <osg/Geode>
 
 
 namespace hogbox {
@@ -95,6 +96,17 @@ public:
             _corners[3] = Corner(args._corners[3]);
         }
         
+        //
+        //Sets all corners radius to the same value
+        void SetAllCornersRadius(const float& radius, const unsigned int& segments=0){
+            for(unsigned int i=0; i<4; i++){
+                _corners[i]._radius = radius;
+                if(segments>0){
+                    _corners[i]._segments = segments;
+                }
+            }
+        }
+        
         Corner      _corners[4];
         QuadPlane   _planeType;
         QuadPlane   _rotationType;
@@ -119,7 +131,7 @@ public:
     
     //
     //Contruct a quad with size and optional args
-    Quad(osg::Vec2 size, QuadArgs* args=new QuadArgs());
+    Quad(const osg::Vec2& size, QuadArgs* args=new QuadArgs());
     
     /** Copy constructor using CopyOp to manage deep vs shallow copy. */
     Quad(const Quad& quad,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
@@ -180,5 +192,130 @@ protected:
     //quad build args
     osg::ref_ptr<QuadArgs> _args;
 };
-
+    
+//
+//Quad geode wraps quad geometry and stateset
+//e.g. exposes color, texture data etc
+class HOGBOX_EXPORT QuadGeode : public osg::Geode
+{
+public:
+    enum ShaderMode{
+        COLOR_SHADER,
+        TEXTURED_SHADER,
+        CUSTOM_SHADER
+    };
+    
+    //extend QuadArgs
+    class QuadGeodeArgs : public Quad::QuadArgs {
+    public:
+        QuadGeodeArgs()
+            : Quad::QuadArgs()
+        {
+        }
+        
+        QuadGeodeArgs(const QuadGeodeArgs& args)
+            : Quad::QuadArgs(args)
+        {
+        }
+    
+        
+    protected:
+        virtual ~QuadGeodeArgs(){
+        }
+    };
+    
+    //
+    //just allocate the transform graph and geode
+    QuadGeode(QuadGeodeArgs* args=NULL);
+    
+    //
+    //Contruct base quad geometry now, passing width height and
+    //quad args, quad args can't be null
+    QuadGeode(const float& width, const float& height, QuadGeodeArgs* args = new QuadGeodeArgs());
+    
+    //
+    //Contruct base quad geometry now, passing width height and
+    //quad args, quad args can't be null
+    QuadGeode(const osg::Vec2& size, QuadGeodeArgs* args = new QuadGeodeArgs());
+    
+    //Apply the texture to the channel 0/diffuse
+    virtual void ApplyTexture(osg::Texture* tex, const unsigned int& channel=0);
+    
+    //set the material color of the region
+    void SetColor(const osg::Vec3& color);
+    const osg::Vec3& GetColor() const;
+    
+    //set the regions Alpha value
+    virtual void SetAlpha(const float& alpha);
+    const float& GetAlpha() const;
+    //get set enable alpha
+    void EnableAlpha(const bool& enable);
+    const bool& IsAlphaEnabled() const;
+    
+    //Hack for now, but blending doesn't work without light, but coloring doesn't work with
+    void DisableLighting(){
+        _stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+    }
+    
+    //
+    //Loads and applies a custom shader
+    void SetCustomShader(const std::string& vertShader, const std::string& fragShader, const bool& shadersAreSource = false);
+    
+    //
+    //Enable/Disable color writes, i.e. only write to depth buffer
+    void DisableColorWrites();
+    void EnableColorWrites();
+    
+    //
+    void SetColorWriteMask(const bool& enable);
+    
+    //
+    //Enable/Disable depth writes
+    void DisableDepthWrites();
+    void EnableDepthWrites();
+    
+    //
+    void SetDepthWriteMask(const bool& enable);
+    
+    //
+    //Enable/Disable depth testing
+    void DisableDepthTest();
+    void EnableDepthTest();
+    
+    //
+    void SetDepthTestEnabled(const bool& enable);
+    
+    //
+    //Enable fast drawm, just disables depth writes and testing
+    void EnableFastDraw();
+    
+    //
+    //Set the renderbin number
+    void SetRenderBinNumber(const int& num);
+    
+protected:
+    
+    virtual ~QuadGeode();
+    
+    //
+    //Init Material/stateset stuff
+    virtual void InitStateSet();
+    
+protected:
+    
+    //our quad geometry
+    osg::ref_ptr<Quad> _quad;
+    
+    //color of quad
+    osg::Vec3 _color;
+    //color uniform for shader, as vec4 including alpha
+    osg::ref_ptr<osg::Uniform> _colorUniform;
+    //alpha of quad
+    float _alpha;
+    bool _alphaEnabled;
+    
+    //
+    ShaderMode _shaderMode;
+};
+    
 };//end hogbox namespace

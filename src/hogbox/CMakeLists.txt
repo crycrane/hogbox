@@ -30,6 +30,7 @@ SET(LIB_PUBLIC_HEADERS
 	${HEADER_PATH}/NPOTResizeCallback.h
     ${HEADER_PATH}/Quad.h
     ${HEADER_PATH}/TransformQuad.h
+    ${HEADER_PATH}/AnimatedTransformQuad.h
     ${hogbox_CONFIG_HEADER}
 )
 
@@ -53,6 +54,7 @@ ADD_LIBRARY(${LIB_NAME}
 	NPOTResizeCallback.cpp
     Quad.cpp
     TransformQuad.cpp
+    AnimatedTransformQuad.cpp
 	Version.cpp
     #${HOGBOX_VERSIONINFO_RC}
 )

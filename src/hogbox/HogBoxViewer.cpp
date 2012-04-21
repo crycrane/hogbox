@@ -51,7 +51,7 @@ HogBoxViewer::HogBoxViewer(HWND hwnd)
 	//type of stereo display
 	_iStereoMode(1), //anaglyph
 //rendering
-	_clearColor(osg::Vec4(0.2f, 0.2f, 0.4f, 1.0f)),
+	_clearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f)),
 	//antialiasing samples
 	_aaSamples(0), //try for 4, systeminfo will prevent it if not supported
 //view/camera

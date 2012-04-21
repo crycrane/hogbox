@@ -9,16 +9,7 @@ TransformQuad::TransformQuad(TransformQuadArgs* args)
     _size(osg::Vec2(1.0f, 1.0f)),
     _corner(osg::Vec2(0.0f,0.0f)),
     _rotation(0.0f),
-    _depth(0.0f),
-    //animation
-    _animateRotate(new hogbox::AnimateFloat()),
-    _isRotating(false),
-    _animatePosition(new hogbox::AnimateVec2()),
-    _isTranslating(false),
-    _animateSize(new hogbox::AnimateVec2()),
-    _isSizing(false),
-    _prevTick(0.0f),
-    _animationDisabled(false)
+    _depth(0.0f)
 {
     this->buildBaseGraph();
 }
@@ -29,16 +20,7 @@ TransformQuad::TransformQuad(const float& width, const float& height, TransformQ
     _size(osg::Vec2(width, height)),
     _corner(osg::Vec2(0.0f,0.0f)),
     _rotation(0.0f),
-    _depth(0.0f),
-    //animation
-    _animateRotate(new hogbox::AnimateFloat()),
-    _isRotating(false),
-    _animatePosition(new hogbox::AnimateVec2()),
-    _isTranslating(false),
-    _animateSize(new hogbox::AnimateVec2()),
-    _isSizing(false),
-    _prevTick(0.0f),
-    _animationDisabled(false)
+    _depth(0.0f)
 {
     this->buildBaseGraph();
     this->buildQuad(width, height, args);
@@ -48,6 +30,12 @@ TransformQuad::TransformQuad(const float& width, const float& height, TransformQ
 //Contruct base quad geometry now, passing width height and
 //quad args, quad args can't be null
 TransformQuad::TransformQuad(const osg::Vec2& size, TransformQuadArgs* args)
+    : osg::MatrixTransform(),
+    _args(args),
+    _size(size),
+    _corner(osg::Vec2(0.0f,0.0f)),
+    _rotation(0.0f),
+    _depth(0.0f)
 {
     this->buildBaseGraph();
     this->buildQuad(size.x(), size.y(), args);    
@@ -82,11 +70,12 @@ void TransformQuad::buildBaseGraph()
 	_rotate = new osg::MatrixTransform();
 	_scale = new osg::MatrixTransform();
 
-    _quadGeode = new osg::Geode();
-	
-	//create and attach our default updatecallback
-	_updateCallback = new AnimateUpdateCallback(this);
-	this->setUpdateCallback(_updateCallback.get());
+    //allocate a quad, but don't attach, this
+    //will store state set info for types not using
+    //thw quad but attaching their own geom
+    _quadGeode = new QuadGeode();
+    
+    //_quadGeode = new osg::Geode();
     
 	//build the transform hierachy	
 	this->addChild(_translate);
@@ -94,17 +83,6 @@ void TransformQuad::buildBaseGraph()
 	_rotate->addChild(_scale.get());
 	//attach region node for rendering
 	_scale->addChild(_quadGeode.get());	
-    
-	//attach the child regions to rotate, so children
-	//are affected by this regions translate and rotate
-	//transforms directly, but scale is applied indepenatly
-	//to allow for different resize modes etc
-	//_rotate->addChild(_childMount.get());
-	
-	//set default animation values
-	_animateRotate->SetValue(this->GetRotation());
-	_animateSize->SetValue(this->GetSize());
-	_animatePosition->SetValue(this->GetPosition());
 }
 
 //
@@ -113,9 +91,9 @@ void TransformQuad::buildBaseGraph()
 void TransformQuad::buildQuad(const float& width, const float& height, TransformQuadArgs* args)
 {
     //if a quad already exists, then remove it first
-    if(_quad.get()){
-        _quadGeode->removeDrawable(_quad.get());
-        _quad = NULL;
+    if(_quadGeode.get()){
+        _scale->removeChild(_quadGeode.get());
+        _quadGeode = NULL;
     }
     
     if(args){
@@ -135,35 +113,12 @@ void TransformQuad::buildQuad(const float& width, const float& height, Transform
             }
         }
 
-        _quad = new Quad(1.0f, 1.0f, scaledArgs.get());
+        _quadGeode = new QuadGeode(1.0f, 1.0f, scaledArgs.get());
     }else{
-        _quad = new Quad(width, height, _args.get());
+        _quadGeode = new QuadGeode(width, height, _args.get());
     }
-    _quadGeode->addDrawable(_quad.get());
-}
-
-//
-//general update, updates and syncs our animations etc
-//normally called by an attached updateCallback
-//
-void TransformQuad::UpdateAnimation(float simTime)
-{
-    //use global hud timepassed
-	float timePassed = simTime;//Hud::Inst()->GetTimePassed();
-	_prevTick = simTime;
-    
-	if(!_animationDisabled)
-	{
-		//update all our smooth values
-		if((_isRotating = _animateRotate->Update(timePassed)))
-		{this->SetRotation(_animateRotate->GetValue());}
-		
-		if((_isTranslating = _animatePosition->Update(timePassed)))
-		{this->SetPosition(_animatePosition->GetValue());}
-		
-		if((_isSizing = _animateSize->Update(timePassed)))
-		{this->SetSize(_animateSize->GetValue());}
-	}
+    _scale->addChild(_quadGeode.get());
+    //_quadGeode->addDrawable(_quad.get());
 }
 
 //positioning
@@ -257,9 +212,9 @@ void TransformQuad::SetSize(const osg::Vec2& size)
         }
         _scale->setMatrix( osg::Matrix::scale(sizeAxis));
         
-        if(!_quad.get()){
+        //if(!_quad.get()){
             //this->buildQuad(_size.x(), _size.y(), _args.get());
-        }
+        //}
         
     }else{
         //if(!_quad.get()){
@@ -326,4 +281,168 @@ void TransformQuad::SetLayer(const float& depth)
 const float& TransformQuad::GetLayer() const
 {
 	return _depth;
+}
+
+//
+//Apply the texture to the channel 0/diffuse
+//
+void TransformQuad::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
+{
+	if(_quadGeode.get()){
+        _quadGeode->ApplyTexture(tex, channel);
+    }
+}
+
+//
+//set the material color of the region
+//
+void TransformQuad::SetColor(const osg::Vec3& color)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetColor(color);
+    }
+}
+
+const osg::Vec3& TransformQuad::GetColor() const
+{
+    if(_quadGeode.get()){
+        return _quadGeode->GetColor();
+    }
+    return osg::Vec3(0,0,0);
+}
+
+
+void TransformQuad::SetAlpha(const float& alpha)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetAlpha(alpha);
+    }
+}
+
+const float& TransformQuad::GetAlpha() const
+{
+    if(_quadGeode.get()){
+        return _quadGeode->GetAlpha();
+    }
+    return 1.0f;
+}
+
+//
+//get set enable alpha
+//
+void TransformQuad::EnableAlpha(const bool& enable)
+{
+    if(_quadGeode.get()){
+        _quadGeode->EnableAlpha(enable);
+    }else{
+        OSG_ALWAYS << "TransformQuad EnableAlpha No Geode for region '" << this->getName() << "'" << std::endl;
+    }
+}
+
+const bool& TransformQuad::IsAlphaEnabled() const
+{
+    if(_quadGeode.get()){
+        return _quadGeode->IsAlphaEnabled();
+    }
+    OSG_ALWAYS << "TransformQuad IsAlphaEnabled No Geode, alpha defaults to no for region '" << this->getName() << "'" << std::endl;
+    return false;
+}
+
+//
+//Loads and applies a custom shader
+//
+void TransformQuad::SetCustomShader(const std::string& vertFile, const std::string& fragFile, const bool& shadersAreSource)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetCustomShader(vertFile, fragFile, shadersAreSource);
+    }
+}
+
+//
+//disable color writes, i.e. only write to depth buffer
+//
+void TransformQuad::DisableColorWrites()
+{
+    this->SetColorWriteMask(false);
+}
+//
+//Reenable color writes
+//
+void TransformQuad::EnableColorWrites()
+{
+    this->SetColorWriteMask(true);
+}
+
+//
+void TransformQuad::SetColorWriteMask(const bool& enable)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetColorWriteMask(enable);
+    } 
+}
+
+//
+//Disable depth writes
+//
+void TransformQuad::DisableDepthWrites()
+{
+    this->SetDepthWriteMask(false);
+}
+//
+//Enable depth writes
+//
+void TransformQuad::EnableDepthWrites()
+{
+    this->SetDepthWriteMask(true);
+}
+
+//
+void TransformQuad::SetDepthWriteMask(const bool& enable)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetDepthWriteMask(enable);
+    }    
+}
+
+//
+//Disable depth testing
+//
+void TransformQuad::DisableDepthTest()
+{
+    this->SetDepthTestEnabled(false);
+}
+
+//
+//Enable depth testing
+//
+void TransformQuad::EnableDepthTest()
+{
+    this->SetDepthTestEnabled(true);
+}
+
+//
+void TransformQuad::SetDepthTestEnabled(const bool& enable)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetDepthTestEnabled(enable);
+    } 
+}
+
+//
+//Enable fast drawm, just disables depth writes and testing
+//
+void TransformQuad::EnableFastDraw()
+{
+    //this->DisableLighting();
+    this->DisableDepthTest();
+    this->DisableDepthWrites();
+}
+
+//
+//Set the renderbin number
+void TransformQuad::SetRenderBinNumber(const int& num)
+{
+    if(_quadGeode.get()){
+        _quadGeode->SetRenderBinNumber(num);
+    } 
 }

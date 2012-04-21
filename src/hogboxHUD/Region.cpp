@@ -70,19 +70,14 @@ static const char* coloredFragSource = {
 };
 
 Region::Region(RegionStyle* args) 
-    : TransformQuad(args),//give default style, can be overriden by create
+    : AnimatedTransformQuad(args),//give default style, can be overriden by create
     _isProcedural(false),
     _assestLoaded(false),
     //by default inherit all parent transforms
     _transformInheritMask(INHERIT_ALL_TRANSFORMS),
     _visible(true),
     _pickable(true),
-    _microMemoryMode(false),
-    //animation
-    _animateColor(new hogbox::AnimateVec3()),
-    _isColoring(false),
-    _animateAlpha(new hogbox::AnimateFloat()),
-    _isFading(false)
+    _microMemoryMode(false)
 {
     this->InitEvents();
     this->InitStateSet();
@@ -101,10 +96,6 @@ Region::Region(RegionStyle* args)
 	p_parent=NULL;
     
 	_hovering = false;
-	
-	//set default animation values
-	_animateColor->SetValue(this->GetColor());
-	_animateAlpha->SetValue(this->GetAlpha());
     
     static int uniqueRegionID = 0;
     std::stringstream nameStream;
@@ -114,19 +105,14 @@ Region::Region(RegionStyle* args)
 }
 
 Region::Region(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style) 
-    : TransformQuad(size, style),
+    : AnimatedTransformQuad(size, style),
     _isProcedural(false),
     _assestLoaded(false),
     //by default inherit all parent transforms
     _transformInheritMask(INHERIT_ALL_TRANSFORMS),
     _visible(true),
     _pickable(true),
-    _microMemoryMode(false),
-    //animation
-    _animateColor(new hogbox::AnimateVec3()),
-    _isColoring(false),
-    _animateAlpha(new hogbox::AnimateFloat()),
-    _isFading(false)
+    _microMemoryMode(false)
 {
     
     this->InitEvents();
@@ -160,11 +146,8 @@ Region::Region(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style)
 
 /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 Region::Region(const Region& region,const osg::CopyOp& copyop)
-    : TransformQuad(region, copyop),
-    _visible(region._visible),
-    _color(region._color),
-    _alpha(region._alpha),
-    _alphaEnabled(region._alphaEnabled)
+    : AnimatedTransformQuad(region, copyop),
+    _visible(region._visible)
 {
 }
 
@@ -192,7 +175,7 @@ Region::~Region(void)
 		_quadGeode = NULL;
 	}
     
-	_material = NULL;
+	//_material = NULL;
 }
 
 //
@@ -220,15 +203,15 @@ void Region::InitEvents()
 //
 void Region::InitStateSet()
 {
-	_stateset = new osg::StateSet(); 
+/*	_stateset = new osg::StateSet(); 
 	_stateset->setDataVariance(osg::Object::DYNAMIC);
-    _material = new osg::Material();
-	_material->setColorMode(osg::Material::OFF);
-	_material->setDataVariance(osg::Object::DYNAMIC);
+    //_material = new osg::Material();
+	//_material->setColorMode(osg::Material::OFF);
+	//_material->setDataVariance(osg::Object::DYNAMIC);
     
     //add the color uniform
-    _colorUniform = new osg::Uniform("_color", osg::Vec4(0.0f,1.0f,1.0f,1.0f));
-    _stateset->addUniform(_colorUniform.get());
+    //_colorUniform = new osg::Uniform("_color", osg::Vec4(0.0f,1.0f,1.0f,1.0f));
+    //_stateset->addUniform(_colorUniform.get());
     
 #ifdef TARGET_OS_IPHONE
     _stateset->setMode(GL_DEPTH_TEST,osg::StateAttribute::ON);
@@ -254,7 +237,7 @@ void Region::InitStateSet()
     
 	SetColor(osg::Vec3(0.0f, 1.0f, 1.0f));
 	SetAlpha(1.0f);
-	EnableAlpha(false);
+	EnableAlpha(false);*/
 }
 
 //
@@ -267,15 +250,11 @@ void Region::UpdateAnimation(float simTime)
 	float timePassed = Hud::Inst()->GetTimePassed();
 	_prevTick = simTime;
     
-    TransformQuad::UpdateAnimation(timePassed);
+    AnimatedTransformQuad::UpdateAnimation(timePassed);
     
 	if(!_animationDisabled)
 	{
-		if((_isColoring = _animateColor->Update(timePassed)))
-		{this->SetColor(_animateColor->GetValue());}
-		
-		if((_isFading = _animateAlpha->Update(timePassed)))
-		{this->SetAlpha(_animateAlpha->GetValue());}
+
 	}
 }
 
@@ -316,7 +295,7 @@ bool Region::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style)
 bool Region::CreateWithAsset(osg::Vec2 corner, osg::Vec2 size, const std::string& asset)
 {
     RegionStyle* asRegionStyle = this->ArgsAsRegionStyle();
-    if(asRegionStyle){
+    if(!asRegionStyle){
         _args = this->allocateStyleType();
         asRegionStyle = this->ArgsAsRegionStyle();
     }
@@ -550,7 +529,7 @@ bool Region::LoadAssest(RegionStyle* style)
 {
 	if(_assestLoaded){return true;}
     
-    if(!style){return;}
+    if(!style){return false;}
     
 	//if it has no name, then assets aren't needed
 	if(style->_assets.empty())
@@ -570,6 +549,7 @@ bool Region::LoadAssest(RegionStyle* style)
     
     //if we have any kind of asset name we build the quad
     if(!assetName.empty()){
+        
         this->buildQuad(_size, style);
     }
         
@@ -639,7 +619,7 @@ bool Region::UnLoadAssests()
 //
 void Region::setName(const std::string& name)
 {
-	_quadGeode->setName(name); 
+	if(_quadGeode.get()){_quadGeode->setName(name);}
 	osg::Object::setName(name);
 	MakeHudGeodes(_quadGeode.get(), new RegionWrapper(this));
 }
@@ -725,80 +705,6 @@ void Region::SetRolloverTexture(osg::Texture* texture)
 	_baseTexture = NULL;
 	_baseTexture = texture;
 }
-
-//
-//Apply the texture to the channel 0/diffuse
-//
-void Region::ApplyTexture(osg::Texture* tex)
-{
-	if(!_stateset.get()){
-        OSG_ALWAYS << "Region::ApplyTexture Failed, NULL texture." << std::endl;
-        return;
-    }
-	
-	_stateset->setTextureAttributeAndModes(0,tex,osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-    _stateset->addUniform(new osg::Uniform("diffuseTexture", 0));
-    
-    //
-    if(_shaderMode == COLOR_SHADER && tex != NULL){
-        osg::Program* program = new osg::Program; 
-        program->setName("hudTexturedShader"); 
-        program->addShader(new osg::Shader(osg::Shader::VERTEX, texturedVertSource)); 
-        program->addShader(new osg::Shader(osg::Shader::FRAGMENT, texturedFragSource)); 
-        _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
-        _shaderMode = TEXTURED_SHADER;
-        
-    }else if(_shaderMode == TEXTURED_SHADER && tex == NULL){
-        osg::Program* program = new osg::Program; 
-        program->setName("hudColorShader"); 
-        program->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
-        program->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource)); 
-        _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
-        _shaderMode = COLOR_SHADER;
-    }
-	
-	//if the textures image includes alpha enable alpha/blending
-	if(tex)
-	{
-		if(tex->getImage(0))
-		{
-			bool isImageTranslucent = tex->getImage(0)->getPixelFormat()==GL_RGBA || tex->getImage(0)->getPixelFormat()==GL_BGRA;
-			this->EnableAlpha(isImageTranslucent);
-		}
-	}
-	
-	//NOTE@tom, below isn't needed on platforms supporting glu
-	//apply a non power of two rezie callback if required
-    
-    /*if(!hogbox::SystemInfo::Instance()->npotTextureSupported())
-     {
-     osg::ref_ptr<hogbox::NPOTResizeCallback> resizer = new hogbox::NPOTResizeCallback(tex, 0, _stateset.get());
-     //if the texture casts as a rect apply the tex rect scaling to texture coords
-     osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
-     if(tex2D){
-     if(resizer->useAsCallBack()){tex2D->setSubloadCallback(resizer.get());}
-     }
-     }else*/{
-         
-         //clamp to edge required for IPhone NPOT support
-         tex->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
-         tex->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
-         
-         
-         //if 2d set filtering to nearest
-         osg::Texture2D* tex2D = dynamic_cast<osg::Texture2D*> (tex); 
-         if(tex2D){
-             //set to linear to disable mipmap generation
-             tex2D->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::NEAREST);
-             tex2D->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::NEAREST);
-             tex2D->setUseHardwareMipMapGeneration(false);
-             tex2D->setResizeNonPowerOfTwoHint(false);
-             tex2D->setUnRefImageDataAfterApply(true);
-         }
-         
-     }
-}
-
 void Region::ApplyBaseTexture()
 {
 	this->ApplyTexture(this->_baseTexture);
@@ -808,232 +714,6 @@ void Region::ApplyRollOverTexture()
 {
 	this->ApplyTexture(this->_rollOverTexture);
 }
-
-//
-//set the material color of the region
-//
-void Region::SetColor(const osg::Vec3& color)
-{
-	_color = color;
-    
-	osg::Vec4 vec4Color = osg::Vec4(color, _alpha);
-    
-	//set the materials color
-	_material->setAmbient(osg::Material::FRONT_AND_BACK, vec4Color ); 
-	_material->setDiffuse(osg::Material::FRONT_AND_BACK, vec4Color );
-	_material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4(0,0,0,1.0) );
-	_material->setShininess(osg::Material::FRONT_AND_BACK, 1.0);
-	_material->setEmission(osg::Material::FRONT_AND_BACK, osg::Vec4(color,_alpha));
-    
-    //update color uniform
-    _colorUniform->set(vec4Color);
-    
-	//call for children
-	for(unsigned int i=0; i<_children.size(); i++)
-	{
-		_children[i]->SetColor(color); 
-	}
-}
-
-const osg::Vec3& Region::GetColor() const
-{
-	return _color;
-}
-
-
-void Region::SetAlpha(const float& alpha)
-{
-	_alpha = alpha;
-    
-    //call set color to update the coloruniform with the new alpha
-    this->SetColor(_color);
-    
-	//set the materials alpha
-	_material->setAlpha(osg::Material::FRONT_AND_BACK, _alpha);
-    
-	//if the alpha is zero and we are in microMemory mode
-	//we also full hide the region
-	if(_microMemoryMode){
-		if(_alpha>0.0f){
-			SetVisible(true);
-		}else{
-			SetVisible(false);
-		}
-	}
-    
-	//call for children
-	for(unsigned int i=0; i<_children.size(); i++)
-	{
-		_children[i]->SetAlpha(alpha); 
-	}
-}
-
-const float& Region::GetAlpha() const
-{
-	return _alpha;
-}
-
-//
-//get set enable alpha
-//
-void Region::EnableAlpha(const bool& enable)
-{
-	if(enable)
-	{
-		osg::BlendEquation* blendEquation = new osg::BlendEquation(osg::BlendEquation::FUNC_ADD);
-		_stateset->setAttributeAndModes(blendEquation, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-		osg::BlendFunc* blendFunc = new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
-		_stateset->setAttributeAndModes(blendFunc, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-		//tell to sort the mesh before displaying it
-		_stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-		_stateset->setMode(GL_BLEND, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
-		//_stateset->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-        
-	}else{
-		_stateset->setRenderingHint(osg::StateSet::OPAQUE_BIN);
-		_stateset->setMode(GL_BLEND, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-	}
-	_alphaEnabled = enable;
-}
-
-const bool& Region::IsAlphaEnabled() const
-{
-	return _alphaEnabled;
-}
-
-void Region::SetStateSet(osg::StateSet* stateSet)
-{
-	if(stateSet!=NULL)
-	{
-		_quadGeode->setStateSet(stateSet);
-	}
-}
-
-osg::StateSet* Region::GetStateSet()
-{
-	if(!_stateset.get())
-	{return NULL;}
-    
-	return _stateset.get();
-}
-
-//
-//Loads and applies a custom shader
-//
-void Region::SetCustomShader(const std::string& vertFile, const std::string& fragFile, const bool& shadersAreSource)
-{
-    osg::Shader* fragShader = NULL;
-    if(shadersAreSource){
-        fragShader = new osg::Shader(osg::Shader::FRAGMENT, fragFile.c_str());
-    }else{
-        fragShader = new osg::Shader(osg::Shader::FRAGMENT);
-        std::string fullFragFile = osgDB::findDataFile(fragFile);
-        fragShader->loadShaderSourceFromFile(fullFragFile); 
-    }
-    
-    osg::Shader* vertShader = NULL;
-    if(shadersAreSource){
-        vertShader = new osg::Shader(osg::Shader::VERTEX, vertFile.c_str());
-    }else{
-        vertShader = new osg::Shader(osg::Shader::VERTEX);
-        std::string fullVertFile = osgDB::findDataFile(vertFile);
-        vertShader->loadShaderSourceFromFile(fullVertFile); 
-    }
-    
-    osg::Program* program = new osg::Program(); 
-    program->setName("hudCustomShader"); 
-    
-    program->addShader(fragShader); 
-    program->addShader(vertShader); 
-    _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
-    _shaderMode = CUSTOM_SHADER;
-}
-
-//
-//disable color writes, i.e. only write to depth buffer
-//
-void Region::DisableColorWrites()
-{
-    this->SetColorWriteMask(false);
-}
-//
-//Reenable color writes
-//
-void Region::EnableColorWrites()
-{
-    this->SetColorWriteMask(true);
-}
-
-//
-void Region::SetColorWriteMask(const bool& enable)
-{
-    osg::ColorMask* colorMask = new osg::ColorMask();
-    colorMask->setMask(enable, enable, enable, enable);
-    _stateset->setAttributeAndModes(colorMask, osg::StateAttribute::ON);  
-}
-
-//
-//Disable depth writes
-//
-void Region::DisableDepthWrites()
-{
-    this->SetDepthWriteMask(false);
-}
-//
-//Enable depth writes
-//
-void Region::EnableDepthWrites()
-{
-    this->SetDepthWriteMask(true);
-}
-
-//
-void Region::SetDepthWriteMask(const bool& enable)
-{
-    osg::Depth* depth = new osg::Depth();
-    depth->setWriteMask(false);
-    _stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);     
-}
-
-//
-//Disable depth testing
-//
-void Region::DisableDepthTest()
-{
-    this->SetDepthTestEnabled(false);
-}
-
-//
-//Enable depth testing
-//
-void Region::EnableDepthTest()
-{
-    this->SetDepthTestEnabled(true);
-}
-
-//
-void Region::SetDepthTestEnabled(const bool& enable)
-{
-    _stateset->setMode(GL_DEPTH_TEST,enable ? osg::StateAttribute::ON : osg::StateAttribute::OFF);
-}
-
-//
-//Enable fast drawm, just disables depth writes and testing
-//
-void Region::EnableFastDraw()
-{
-    //this->DisableLighting();
-    this->DisableDepthTest();
-    this->DisableDepthWrites();
-}
-
-//
-//Set the renderbin number
-void Region::SetRenderBinNumber(const int& num)
-{
-    _stateset->setRenderBinDetails(num, "RenderBin");
-}
-
 
 //
 //convert corrds into the regions local system with corner at the origin

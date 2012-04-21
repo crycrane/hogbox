@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <hogboxHUD/Region.h>
+#include <hogboxHUD/StrokeRegion.h>
 
 #include <osg/Group>
 #include <osg/Depth>
@@ -25,7 +25,7 @@ namespace hogboxHUD {
 //
 //TextRegion
 //
-class HOGBOXHUD_EXPORT TextRegion : public Region
+class HOGBOXHUD_EXPORT TextRegion : public StrokeRegion
 {
 public:
     enum TEXT_ALIGN{
@@ -40,10 +40,10 @@ public:
         STROKE=2
     };
     
-    class TextRegionStyle : public RegionStyle{
+    class TextRegionStyle : public StrokeRegionStyle{
     public:
         TextRegionStyle()
-            : RegionStyle(),
+            : StrokeRegion::StrokeRegionStyle(),
             _label(""),
             _fontHeight(-1.0f),//indicates to comupte from region height
             _fontName("Fonts/arial.ttf"),
@@ -56,7 +56,7 @@ public:
         }
         
         TextRegionStyle(const TextRegionStyle& args)
-            : RegionStyle(args),
+            : StrokeRegion::StrokeRegionStyle(args),
             _label(args._label),
             _fontHeight(args._fontHeight),
             _fontName(args._fontName),

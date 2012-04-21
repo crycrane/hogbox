@@ -15,15 +15,11 @@
 
 #include <hogboxHUD/Export.h>
 #include <hogbox/HogBoxBase.h>
-#include <hogbox/AnimateValue.h>
 #include <hogbox/Quad.h>
-#include <hogbox/TransformQuad.h>
+#include <hogbox/AnimatedTransformQuad.h>
 
-
-#include <osg/MatrixTransform>
-#include <osg/Material>
-#include <osg/Texture2D>
 #include <osg/ValueObject>
+#include <osg/UserDataContainer>
 
 #include "HudInputEvent.h"
 #include "HudEventCallback.h"
@@ -57,22 +53,16 @@ extern HOGBOXHUD_EXPORT void ClearHudGeodes(osg::Node* node);
 //
 //Base hud region
 //
-class HOGBOXHUD_EXPORT Region : public hogbox::TransformQuad
+class HOGBOXHUD_EXPORT Region : public hogbox::AnimatedTransformQuad
 {
 public:
-    
-    enum ShaderMode{
-        COLOR_SHADER,
-        TEXTURED_SHADER,
-        CUSTOM_SHADER
-    };
     
     class RegionStyle : public TransformQuadArgs{
     public:
         RegionStyle()
             : TransformQuadArgs(),
-            _color(osg::Vec3(1.0f,1.0f,1.0f)),
-            _alpha(1.0f),
+            _color(osg::Vec3(-1.0f,-1.0f,-1.0f)),//-1 indicates to not use the color arg
+            _alpha(-1.0f), //-1 indicates to not use the alpha
             _assets("")
         {
         }
@@ -136,7 +126,7 @@ public:
     bool IsChild(const std::string& uniqueID);
     //set this regions parent, NULL if attached directly
     //to the hud
-    void SetParent(Region* parent){p_parent=parent;_prevTick=0.0f;}
+    void SetParent(Region* parent){p_parent=parent;}
     Region* GetParent(){return p_parent;}
     
     //remove child
@@ -184,81 +174,10 @@ public:
     //set the texture used in mouse rollovers
     void SetRolloverTexture(osg::Texture* texture);
     
-    //Apply the texture to the channel 0/diffuse
-    virtual void ApplyTexture(osg::Texture* tex);
+    //
     void ApplyBaseTexture();
     void ApplyRollOverTexture();
     
-    //set the material color of the region
-    void SetColor(const osg::Vec3& color);
-    const osg::Vec3& GetColor() const;
-    
-    //set the regions Alpha value
-    virtual void SetAlpha(const float& alpha);
-    const float& GetAlpha() const;
-    //get set enable alpha
-    void EnableAlpha(const bool& enable);
-    const bool& IsAlphaEnabled() const;
-    
-    //Hack for now, but blending doesn't work without light, but coloring doesn't work with
-    void DisableLighting(){
-        _stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-    }
-    
-    
-    //Set the regions stateset directly
-    void SetStateSet(osg::StateSet* stateSet);
-    //return the stateset applied to root
-    osg::StateSet* GetStateSet(); 
-    
-    //
-    //return the build args as a RegionStyle
-    RegionStyle* ArgsAsRegionStyle(){
-        return dynamic_cast<RegionStyle*>(_args.get());
-    }
-    
-    //
-    //Loads and applies a custom shader
-    void SetCustomShader(const std::string& vertShader, const std::string& fragShader, const bool& shadersAreSource = false);
-    
-    //
-    //disable color writes, i.e. only write to depth buffer
-    void DisableColorWrites();
-    //
-    //Reenable color writes
-    void EnableColorWrites();
-    
-    //
-    void SetColorWriteMask(const bool& enable);
-    
-    //
-    //Disable depth writes
-    void DisableDepthWrites();
-    //
-    //Enable depth writes
-    void EnableDepthWrites();
-    
-    //
-    void SetDepthWriteMask(const bool& enable);
-    
-    //
-    //Disable depth testing
-    void DisableDepthTest();
-    
-    //
-    //Enable depth testing
-    void EnableDepthTest();
-    
-    //
-    void SetDepthTestEnabled(const bool& enable);
-    
-    //
-    //Enable fast drawm, just disables depth writes and testing
-    void EnableFastDraw();
-    
-    //
-    //Set the renderbin number
-    void SetRenderBinNumber(const int& num);
     
     //convert coords into the regions local system with this corner as the origin
     osg::Vec2 GetRegionSpaceCoords(osg::Vec2 spCoords);
@@ -282,37 +201,15 @@ public:
     
     
     //
-    //Animation
-    
-    //Color channel
-    template <typename M>
-    void AddColorKey(osg::Vec3 color, float duration, hogbox::Callback* callback=NULL)
-    {
-        //if its going to be the first key ensure value is the regions current
-        if(_animateColor->GetNumKeys() == 0){_animateColor->SetValue(this->GetColor());}
-        _animateColor->AddKey<M>(color, duration, callback);
-    }
-    hogbox::AnimateValue<osg::Vec3>::KeyFrame* GetColorKey(unsigned int index){return _animateColor->GetKey(index);}
-    bool RemoveColorKey(unsigned int index){return _animateColor->RemoveKey(index);}
-    unsigned int GetNumColorKeys(){return _animateColor->GetNumKeys();}
-    
-    //Alpha channel
-    template <typename M>
-    void AddAlphaKey(float alpha, float duration, hogbox::Callback* callback=NULL)
-    {
-        //if its going to be the first key ensure value is the regions current
-        if(_animateAlpha->GetNumKeys() == 0){_animateAlpha->SetValue(this->GetAlpha());}
-        _animateAlpha->AddKey<M>(alpha, duration, callback);
-    }
-    hogbox::AnimateValue<float>::KeyFrame* GetAlphaKey(unsigned int index){return _animateAlpha->GetKey(index);}
-    bool RemoveAlphaKey(unsigned int index){return _animateAlpha->RemoveKey(index);}
-    unsigned int GetNumAlphaKeys(){return _animateAlpha->GetNumKeys();}
-    
-
-    //
     //Get/Set use of microMemory mode
     const bool& GetMicroMemoryMode()const;
     void SetMicroMemoryMode(const bool& on);
+    
+    //
+    //return the build args as a RegionStyle
+    RegionStyle* ArgsAsRegionStyle(){
+        return dynamic_cast<RegionStyle*>(_args.get());
+    }
     
     //
     //Funcs to register event callbacks
@@ -407,18 +304,7 @@ protected:
     
     //regions attached to this one
     RegionList _children; 
-    
-    //the material applied to the region (should I just use HogBoxMaterial?)
-    osg::ref_ptr<osg::StateSet> _stateset; 
-    osg::ref_ptr<osg::Material> _material;
-    osg::Vec3 _color;
-    //color uniform for shader, as vec4 including alpha
-    osg::ref_ptr<osg::Uniform> _colorUniform;
-    float _alpha;
-    bool _alphaEnabled;
-    
-    //
-    ShaderMode _shaderMode;
+
     
     //
     //microMemoryMode=true, indicates that we want to unref our textures image data
@@ -426,10 +312,10 @@ protected:
     //when the region is shown again. Default is false/off
     bool _microMemoryMode;
     
+    //
+    //regions can have a stroke which is just another region positioned behind
+    osg::ref_ptr<Region> _strokeRegion;
 
-    hogbox::AnimateVec3Ptr _animateColor; bool _isColoring;
-    hogbox::AnimateFloatPtr _animateAlpha; bool _isFading;
-    
     
     //Callback system
     

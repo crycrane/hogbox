@@ -65,6 +65,11 @@ public:
 	//
 	//Funcs to register event callbacks
 	void AddOnButtonClickedCallbackReceiver(HudEventCallback* callback);
+    
+    //
+    //In special cases, external object may need to break the buttonDown state,
+    //e.g. if the button is being dragged as part of a list
+    void CancelButtonDown();
 	
 public:
 	

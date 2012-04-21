@@ -24,13 +24,13 @@ namespace hogbox {
 class AnimateUpdateCallback;
 
 //
-//A matrixtransform with a quad attached to a geode
+//A matrixtransform with a quadgeode attached
+//also forwards access to the quadgeodes stateset
+//functions
 //
 class HOGBOX_EXPORT TransformQuad : public osg::MatrixTransform
 {
 public:
-    
-    friend class AnimateUpdateCallback;
     
     enum SizeStyle{
         SIZE_BY_SCALEMATRIX = 0, //default, fine for hard edge quads
@@ -38,17 +38,17 @@ public:
     };
     
     //extend QuadArgs
-    class TransformQuadArgs : public Quad::QuadArgs {
+    class TransformQuadArgs : public QuadGeode::QuadGeodeArgs {
     public:
         TransformQuadArgs()
-            : Quad::QuadArgs(),
+            : QuadGeode::QuadGeodeArgs(),
             _sizeStyle(SIZE_BY_SCALEMATRIX),
             _rotatePlane(Quad::PLANE_XY)
         {
         }
         
         TransformQuadArgs(const TransformQuadArgs& args)
-            : Quad::QuadArgs(args),
+            : QuadGeode::QuadGeodeArgs(args),
             _sizeStyle(args._sizeStyle),
             _rotatePlane(args._rotatePlane)
         {
@@ -83,11 +83,11 @@ public:
     
     //
     //Build the actual quad and attach to geode
-    void buildQuad(const float& width, const float& height, TransformQuadArgs* args = new TransformQuadArgs());
+    void buildQuad(const float& width, const float& height, TransformQuadArgs* args = NULL);
     
     //
     //Build the actual quad and attach to geode
-    inline void buildQuad(const osg::Vec2& size, TransformQuadArgs* args = new TransformQuadArgs()){
+    void buildQuad(const osg::Vec2& size, TransformQuadArgs* args = NULL){
         this->buildQuad(size.x(), size.y(), args);
     }
     
@@ -124,62 +124,65 @@ public:
     
     //move to a new layer, z depth relative to parent
     void SetLayer(const float& depth);
-    const float& GetLayer() const;
-
+    const float& GetLayer() const;    
+    
     //
-    //Animation
+    //stateset for quadgeode
     
-    //Rotation channel
-    template <typename M>
-    void AddRotationKey(float degrees, float duration, hogbox::Callback* callback=NULL)
-    {
-        //if its going to be the first key ensure value is the regions current
-        if(_animateRotate->GetNumKeys() == 0){_animateRotate->SetValue(this->GetRotation());}
-        _animateRotate->AddKey<M>(degrees, duration, callback);
-    }
-    hogbox::AnimateValue<float>::KeyFrame* GetRotationKey(unsigned int index){return _animateRotate->GetKey(index);}
-    bool RemoveRotationKey(unsigned int index){return _animateRotate->RemoveKey(index);}
-    unsigned int GetNumRotationKeys(){return _animateRotate->GetNumKeys();}
+    //Apply the texture to the channel 0/diffuse
+    virtual void ApplyTexture(osg::Texture* tex, const unsigned int& channel=0);
     
-    //Position channel
-    template <class M>
-    void AddPositionKey(osg::Vec2 pos, float duration, hogbox::Callback* callback=NULL)
-    {
-        //if its going to be the first key ensure value is the regions current
-        if(_animatePosition->GetNumKeys() == 0){_animatePosition->SetValue(this->GetPosition());}
-        _animatePosition->AddKey<M>(pos, duration, callback);
-    }
-    hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetPositionKey(unsigned int index){return _animatePosition->GetKey(index);}
-    bool RemovePositionKey(unsigned int index){return _animatePosition->RemoveKey(index);}
-    unsigned int GetNumPositionKeys(){return _animatePosition->GetNumKeys();}
+    //set the material color of the region
+    void SetColor(const osg::Vec3& color);
+    const osg::Vec3& GetColor() const;
     
-    //Size channel
-    template <typename M>
-    void AddSizeKey(osg::Vec2 size, float duration, hogbox::Callback* callback=NULL)
-    {
-        //if its going to be the first key ensure value is the regions current
-        if(_animateSize->GetNumKeys() == 0){_animateSize->SetValue(this->GetSize());}
-        _animateSize->AddKey<M>(size, duration, callback);
-    }
-    hogbox::AnimateValue<osg::Vec2>::KeyFrame* GetSizeKey(unsigned int index){return _animateSize->GetKey(index);}
-    bool RemoveSizeKey(unsigned int index){return _animateSize->RemoveKey(index);}
-    unsigned int GetNumSizeKeys(){return _animateSize->GetNumKeys();}
+    //set the regions Alpha value
+    virtual void SetAlpha(const float& alpha);
+    const float& GetAlpha() const;
+    //get set enable alpha
+    virtual void EnableAlpha(const bool& enable);
+    const bool& IsAlphaEnabled() const;
     
-    
-    //are any of our channels still animating
-    bool IsAnimating()
-    {
-        unsigned int totalKeys = GetNumPositionKeys() + GetNumSizeKeys() + GetNumRotationKeys();
-        if(totalKeys > 0)
-        {return true;}
-        return false;
+    //Hack for now, but blending doesn't work without light, but coloring doesn't work with
+    void DisableLighting(){
+        _stateset->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
     }
     
     //
-    //Enable disable any updates of animations
-    void SetAnimationDisabled(bool disable){_animationDisabled = disable;}
+    //Loads and applies a custom shader
+    void SetCustomShader(const std::string& vertShader, const std::string& fragShader, const bool& shadersAreSource = false);
     
+    //
+    //Enable/Disable color writes, i.e. only write to depth buffer
+    void DisableColorWrites();
+    void EnableColorWrites();
     
+    //
+    void SetColorWriteMask(const bool& enable);
+    
+    //
+    //Enable/Disable depth writes
+    void DisableDepthWrites();
+    void EnableDepthWrites();
+    
+    //
+    void SetDepthWriteMask(const bool& enable);
+    
+    //
+    //Enable/Disable depth testing
+    void DisableDepthTest();
+    void EnableDepthTest();
+    
+    //
+    void SetDepthTestEnabled(const bool& enable);
+    
+    //
+    //Enable fast drawm, just disables depth writes and testing
+    void EnableFastDraw();
+    
+    //
+    //Set the renderbin number
+    void SetRenderBinNumber(const int& num);
     
 protected:
     
@@ -191,11 +194,6 @@ protected:
     //Build our base graph of translate, rotate
     //scale and geode
     void buildBaseGraph();
-     
-    //
-    //general update, updates and syncs our animations etc
-    //normally called by an attached updateCallback
-    virtual void UpdateAnimation(float simTime);
     
 protected:
     
@@ -210,11 +208,8 @@ protected:
     //region size. 
     osg::ref_ptr<osg::MatrixTransform> _scale;
     
-    //geode for the quad
-    osg::ref_ptr<osg::Geode> _quadGeode;
-    
-    //quad geometry
-    osg::ref_ptr<Quad> _quad;
+    //quad geode
+    osg::ref_ptr<QuadGeode> _quadGeode;
     
     
     //size in hud coords
@@ -229,65 +224,7 @@ protected:
     //the root region held by the hogboxHud sets its depth/layer to -1
     float _depth;
 
-    //
-    //Our default update callback to ensure update is called each frame
-    osg::ref_ptr<AnimateUpdateCallback> _updateCallback;
-    
-    //
-    //Animation for each of our attributes
-    hogbox::AnimateFloatPtr _animateRotate; bool _isRotating;
-    hogbox::AnimateVec2Ptr _animatePosition; bool _isTranslating;
-    hogbox::AnimateVec2Ptr _animateSize; bool _isSizing;
-    
-    //previous framestamp time to calc time elapsed
-    float _prevTick;
-    
-    //used to stop any animation
-    bool _animationDisabled;
 };
 
-//
-//HudRegionUpdateCallback
-//our default update callback which will ensure animations etc are updated
-//
-class AnimateUpdateCallback : public osg::NodeCallback
-{
-public:
-    //contuct, passing the region to update
-    AnimateUpdateCallback(TransformQuad* region) 
-    : osg::NodeCallback(),
-    p_updateRegion(region),
-    _prevTick(0.0f)
-    {
-    }
-    
-    //
-    //Update operator
-    virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
-    {
-        if (p_updateRegion &&
-            nv->getVisitorType()==osg::NodeVisitor::UPDATE_VISITOR && 
-            nv->getFrameStamp())
-        {
-            //get the time passed since last update
-            double time = nv->getFrameStamp()->getReferenceTime();
-            if(_prevTick==0.0f){_prevTick = time;}
-            //float timePassed = time - _prevTick;
-            _prevTick = time;
-            
-            p_updateRegion->UpdateAnimation(time);
-        }
-        osg::NodeCallback::traverse(node,nv);
-    }
-    
-protected:
-    
-    virtual~AnimateUpdateCallback(void){}
-    
-protected:
-    
-    TransformQuad* p_updateRegion;
-    float _prevTick;
-};
     
 }; //end hogboxhud namespace

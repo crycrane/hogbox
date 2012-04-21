@@ -138,7 +138,7 @@ bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
 	std::string layoutFile = osgDB::findDataFile( config );
 	if(layoutFile.empty())
 	{
-		osg::notify(osg::WARN) << "SystemInfo::SetSystemInfoFromConfig ERROR: Could not find systemInfo.xml file. " << std::endl;
+		OSG_FATAL << "SystemInfo::SetSystemInfoFromConfig ERROR: Could not find systemInfo.xml file. " << std::endl;
 		return false;
 	}
 	
@@ -165,7 +165,7 @@ bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
 	
 	if (root == NULL)
 	{
-		osg::notify(osg::WARN) << "SystemInfo::SetSystemInfoFromConfig ERROR: Failed to read xml file '" << layoutFile << "'," << std::endl
+		OSG_FATAL << "SystemInfo::SetSystemInfoFromConfig ERROR: Failed to read xml file '" << layoutFile << "'," << std::endl
 		<< "                                         Layout XML file must contain a <SystemInfoConfig> node." << std::endl;
 		return false;
 	}
@@ -202,6 +202,7 @@ bool SystemInfo::SetSystemInfoFromConfig(const std::string& config)
                 }else if(attName == "MaxMultiSamples"){
                     int readValue = atoi(attNode->contents.c_str());
                     _maxMultiSamples=readValue;
+                    _maxTestedMultiSamples = _maxMultiSamples;
                     
                 }else if(attName == "StencilBuffered"){
                     bool readValue = atoi(attNode->contents.c_str()) != 0;

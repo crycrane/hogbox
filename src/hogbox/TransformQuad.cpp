@@ -335,7 +335,7 @@ void TransformQuad::EnableAlpha(const bool& enable)
     if(_quadGeode.get()){
         _quadGeode->EnableAlpha(enable);
     }else{
-        OSG_ALWAYS << "TransformQuad EnableAlpha No Geode for region '" << this->getName() << "'" << std::endl;
+
     }
 }
 
@@ -344,7 +344,7 @@ const bool& TransformQuad::IsAlphaEnabled() const
     if(_quadGeode.get()){
         return _quadGeode->IsAlphaEnabled();
     }
-    OSG_ALWAYS << "TransformQuad IsAlphaEnabled No Geode, alpha defaults to no for region '" << this->getName() << "'" << std::endl;
+
     return false;
 }
 

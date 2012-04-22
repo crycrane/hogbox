@@ -544,13 +544,10 @@ const TextRegion::TEXT_ALIGN& TextRegion::GetAlignment()const
 //
 void TextRegion::SetAlpha(const float& alpha)
 {
-    OSG_ALWAYS << "Set Alpha: " << alpha << " for region '" << this->getName() << std::endl;
 	_textColor.a() = alpha;
     _backdropColor.a() = alpha*0.5f;
 	if(!this->IsAlphaEnabled())
 	{
-        OSG_ALWAYS << "   Not Enabled" << std::endl;
-
 		_textColor.a() = 1.0f;
         _backdropColor.a() = 1.0f;
 	}

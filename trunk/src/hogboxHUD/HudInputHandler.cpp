@@ -230,7 +230,7 @@ void HudInputHandler::SetFocusRegion(Region* focusRegion)
 {
 	if(focusRegion != p_focusRegion)
 	{
-		OSG_ALWAYS << "hogboxHUD HudInputHandler: Switching focus to region '" << focusRegion->getName() << "'."  << std::endl;
+		//OSG_ALWAYS << "hogboxHUD HudInputHandler: Switching focus to region '" << focusRegion->getName() << "'."  << std::endl;
         osg::ref_ptr<osgGA::GUIEventAdapter> ea = new osgGA::GUIEventAdapter();
         if(p_focusRegion){
             osg::ref_ptr<HudInputEvent> leaveEvent = new HudInputEvent();

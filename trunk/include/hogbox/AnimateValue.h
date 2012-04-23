@@ -38,8 +38,8 @@ namespace hogbox
         }
         AnimateValue(const T& value)
             : osg::Object(),
-            _value(value),
             _start(value),
+            _value(value),
             _keyFrameQueue(new KeyFrameQueue())
         {
         }
@@ -47,8 +47,8 @@ namespace hogbox
         /** Copy constructor using CopyOp to manage deep vs shallow copy.*/
         AnimateValue(const AnimateValue& value,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY)
             : osg::Object(value, copyop),
-            _value(value._value),
-            _start(value._start)
+            _start(value._start),
+            _value(value._value)
         {
         }
         
@@ -125,7 +125,7 @@ namespace hogbox
             //return a pointer to a specific key in the queue,
             //if the key does not exist then NULL is returned
             KeyFrame* GetKey(const unsigned int& index){
-                if(index<0 || index >= _keyFrameQueue.size()){return NULL;}
+                if(index >= _keyFrameQueue.size()){return NULL;}
                 typename std::deque<KeyFrame>::iterator itr = _keyFrameQueue.begin();
                 itr += index;
                 return &(*itr);
@@ -142,7 +142,7 @@ namespace hogbox
             //remove a key from the queue
             bool RemoveKey(const unsigned int& index){
                 //check it's in range
-                if(index < 0 || index >= _keyFrameQueue.size()){return false;}
+                if(index >= _keyFrameQueue.size()){return false;}
                 if(_keyFrameQueue.size() == 1){
                     _finalFrame = KeyFrame(*this->GetKey(0));
                 }

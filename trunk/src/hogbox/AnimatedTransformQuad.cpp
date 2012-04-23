@@ -31,12 +31,12 @@ AnimatedTransformQuad::AnimatedTransformQuad(const float& width, const float& he
     _isTranslating(false),
     _animateSize(new hogbox::AnimateVec2()),
     _isSizing(false),
-    _prevTick(0.0f),
-    _animationDisabled(false),
     _animateColor(new hogbox::AnimateVec3()),
     _isColoring(false),
     _animateAlpha(new hogbox::AnimateFloat()),
-    _isFading(false)
+    _isFading(false),
+    _prevTick(0.0f),
+    _animationDisabled(false)
 {
 	this->setDefaultAnimationValues();
 }
@@ -53,12 +53,12 @@ AnimatedTransformQuad::AnimatedTransformQuad(const osg::Vec2& size, TransformQua
     _isTranslating(false),
     _animateSize(new hogbox::AnimateVec2()),
     _isSizing(false),
-    _prevTick(0.0f),
-    _animationDisabled(false),
     _animateColor(new hogbox::AnimateVec3()),
     _isColoring(false),
     _animateAlpha(new hogbox::AnimateFloat()),
-    _isFading(false)
+    _isFading(false),
+    _prevTick(0.0f),
+    _animationDisabled(false)
 {
 	this->setDefaultAnimationValues();
 }

@@ -133,7 +133,7 @@ public:
     virtual void ApplyTexture(osg::Texture* tex, const unsigned int& channel=0);
     
     //set the material color of the region
-    void SetColor(const osg::Vec3& color);
+    virtual void SetColor(const osg::Vec3& color);
     const osg::Vec3& GetColor() const;
     
     //set the regions Alpha value

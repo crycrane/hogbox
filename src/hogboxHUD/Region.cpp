@@ -411,7 +411,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_ENTER):
         {
 			//trigger our onMouseUp event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE ENTER" << std::endl;
+			OSG_ALWAYS << "		MOUSE ENTER" << std::endl;
 			_onMouseEnterEvent->Trigger(hudEvent);
 			break;
         } 
@@ -420,8 +420,8 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_LEAVE):
         {
 			//trigger our onMouseUp event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE LEAVE" << std::endl;
-			_onMouseEnterEvent->Trigger(hudEvent);
+			OSG_ALWAYS << "		MOUSE LEAVE" << std::endl;
+			_onMouseLeaveEvent->Trigger(hudEvent);
 			break;
         } 
 		default:break;

@@ -6,10 +6,14 @@
 
 using namespace hogboxHUD;
 
+const float highlightTime = 0.2f;
+
 ButtonRegion::ButtonRegion(ButtonRegionStyle* style)
     : TextRegion(style),
     _buttonDown(false),
     _mouseDownTexture(NULL),
+    _highlightColor(osg::Vec3(0,0,1)),
+    _oriColor(osg::Vec3(0,0,0)),
     //callback events
     _onButtonClickedEvent(new HudCallbackEvent(this, "OnButtonClicked"))
 {
@@ -70,6 +74,18 @@ bool ButtonRegion::Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style )
 	return TextRegion::Create(corner,size,style);
 }
 
+//
+//Get Set the highlight color
+//
+const osg::Vec3& ButtonRegion::GetHighlightColor()const
+{
+    return _highlightColor;
+}
+void ButtonRegion::SetHighlightColor(const osg::Vec3& color)
+{
+    _highlightColor = color;
+}
+
 int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {	
 	return TextRegion::HandleInputEvent(hudEvent); 
@@ -81,6 +97,11 @@ int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 //
 void ButtonRegion::CancelButtonDown()
 {
+    if(_buttonDown){
+        //animate to back to base color
+        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
+    }
+    
     _buttonDown = false; 
 }
 
@@ -91,6 +112,12 @@ void ButtonRegion::CancelButtonDown()
 void ButtonRegion::OnMouseDown(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	_buttonDown = true;
+    
+    //animate to the highlight color
+    if(this->GetNumColorKeys() == 0){
+        _oriColor = this->GetColor();
+    }
+    this->AddColorKey<osgAnimation::LinearMotion>(_highlightColor, highlightTime);
 }
 void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
@@ -98,6 +125,9 @@ void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inpu
 	if(_buttonDown){
 		//trigger the onButtonClicked Event 
 		_onButtonClickedEvent->Trigger(inputEvent);
+        
+        //animate to back to base color
+        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
 	}
 	
 	//reset buttonDown state
@@ -117,7 +147,13 @@ void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& i
 	//switch back to base texture
 	if(_baseTexture.valid())
 	{this->ApplyTexture(_baseTexture.get());}
-	
+	OSG_FATAL << "OnMouseLeave" << std::endl;
+    
+    if(_buttonDown){
+        //animate to back to base color
+        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
+    }
+    
 	//reset buttonDown state
 	_buttonDown = false;
 }

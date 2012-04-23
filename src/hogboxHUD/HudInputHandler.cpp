@@ -66,6 +66,8 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
 		//mouse drag (moving with button held)
 		case(osgGA::GUIEventAdapter::DRAG):
         {
+            pick(ea,true); //hover check
+            
 			//pass drag to our infoucs region
 			_inputState->SetEvent(ON_MOUSE_DRAG, ea, _hudDimensions);
             applyEvent = true;
@@ -113,7 +115,7 @@ bool HudInputHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUIActionAd
         if(p_focusRegion)
         {
             p_focusRegion->HandleInputEvent(*_inputState.get());
-            
+            //return true;
         }else{
             if(p_clickObject){
                 osg::Referenced* userData = p_clickObject->getUserData();
@@ -189,7 +191,7 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
         node = (nodePath.size()>=1)?nodePath[nodePath.size()-1]:0;
         parent = (nodePath.size()>=2)?dynamic_cast<osg::Group*>(nodePath[nodePath.size()-2]):0;
 
-		OSG_FATAL << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
+		//OSG_ALWAYS << "hogboxHUD HudInputHandler: Picked node '" << node->getName() << "'." << std::endl;
 		
 		//did we pick a node
         if (node)// && (node->getName().size() != 0) )
@@ -226,9 +228,20 @@ void HudInputHandler::pick(const osgGA::GUIEventAdapter& ea, bool hudPick) //mod
 //
 void HudInputHandler::SetFocusRegion(Region* focusRegion)
 {
-	if(focusRegion)
+	if(focusRegion != p_focusRegion)
 	{
-		osg::notify(osg::DEBUG_FP) << "hogboxHUD HudInputHandler: Switching focus to region '" << focusRegion->getName() << "'."  << std::endl;
+		OSG_ALWAYS << "hogboxHUD HudInputHandler: Switching focus to region '" << focusRegion->getName() << "'."  << std::endl;
+        osg::ref_ptr<osgGA::GUIEventAdapter> ea = new osgGA::GUIEventAdapter();
+        if(p_focusRegion){
+            osg::ref_ptr<HudInputEvent> leaveEvent = new HudInputEvent();
+            leaveEvent->SetEvent(ON_MOUSE_LEAVE, *ea.get(), _hudDimensions);
+            p_focusRegion->HandleInputEvent(*leaveEvent.get());
+        }
+        if(focusRegion){
+            osg::ref_ptr<HudInputEvent> enterEvent = new HudInputEvent();
+            enterEvent->SetEvent(ON_MOUSE_ENTER, *ea.get(), _hudDimensions);
+            focusRegion->HandleInputEvent(*enterEvent.get());
+        }
 	}
 	p_focusRegion = focusRegion;
 }

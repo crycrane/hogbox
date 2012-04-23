@@ -115,7 +115,6 @@ namespace hogbox {
 
 		virtual void TriggerCallback() 
 		{
-            OSG_FATAL << "ObjectCallback::TriggerCallback" << std::endl;
 			if (f_callbackFunc) 
 			{
 				//call our receiver objects callback function

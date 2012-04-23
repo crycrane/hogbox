@@ -57,6 +57,12 @@ public:
 	//Create a region to behave like a basic button
 	virtual bool Create(osg::Vec2 corner, osg::Vec2 size, RegionStyle* style = new ButtonRegionStyle());
 
+    //
+    //Get Set the highlight color
+    const osg::Vec3& GetHighlightColor()const;
+    void SetHighlightColor(const osg::Vec3& color);
+    
+    
 	//
 	//Detects mouse down and flags is pressed state,
 	//also swaps to the mouse down texture if one is present
@@ -99,6 +105,12 @@ protected:
 
 	//mouse down/pressed texture
 	osg::ref_ptr<osg::Texture> _mouseDownTexture;
+    
+    //
+    //Highlight color
+    osg::Vec3 _highlightColor;
+    //cache the original color when highlighting
+    osg::Vec3 _oriColor;
 	
 	//sent once a mouse down followed by a mouse up event is received by this region
 	osg::ref_ptr<HudCallbackEvent> _onButtonClickedEvent;

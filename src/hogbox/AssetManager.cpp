@@ -117,9 +117,8 @@ void AssetManager::Sync()
     //for( ; itr!=_pagingOperations.end(); itr++){
     while(itr != _pagingOperations.end()){
         
-        OSG_FATAL << "  Sync Operation" << std::endl;
         if((*itr)->Sync()){
-             OSG_FATAL << "  Operation Complete" << std::endl;
+             OSG_DEBUG_FP << "  Operation Complete" << std::endl;
             //it's done, does it require caching
             if((*itr)->CacheModel()){
                 

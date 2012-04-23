@@ -9,7 +9,7 @@ StrokeRegion::StrokeRegion(StrokeRegionStyle* args)
 {
     StrokeRegionStyle* asStrokeStyle = dynamic_cast<StrokeRegionStyle*>(args);
     if(asStrokeStyle){
-        OSG_ALWAYS << "strokewidth1: " << asStrokeStyle->_strokeSize << std::endl;
+
     }
 }
 

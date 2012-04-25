@@ -16,6 +16,7 @@
 #include <hogboxDB/Export.h>
 //#include <hogbox/Singleton.h>
 
+//#include <hogboxDB/XmlClassWrapper.h>
 #include <hogboxDB/XmlClassManagerWrapper.h>
 #include <osgDB/DynamicLibrary>
 
@@ -131,6 +132,20 @@ protected:
 	
 };
 
+//
+//proxy to register a class wrapper with an existing manager
+class XmlClassWrapperRegistryProxy
+{
+public:
+    XmlClassWrapperRegistryProxy(XmlClassWrapper* wrapper, const char* managerName);
+    virtual ~XmlClassWrapperRegistryProxy(void)
+    {
+    }
+    
+protected:
+    
+};
+
 struct PluginFunctionProxy
 {
 	PluginFunctionProxy(CPluginFunction function) { (function)(); }
@@ -139,7 +154,14 @@ struct PluginFunctionProxy
 #define USE_HOGBOXPLUGIN(ext) \
 extern "C" void hogboxxml_##ext(void); \
 static hogboxDB::PluginFunctionProxy proxy_##ext(hogboxxml_##ext);
-	
+
+//
+//Register a new XmlClassWrapper with an existing manager
+#define REGISTER_HOGBOXWRAPPER(wrapper, managerName) \
+extern "C" void hogboxxml_##wrapper(void) {} \
+static hogboxDB::XmlClassWrapperRegistryProxy g_proxy_##wrapper(new wrapper , #managerName );
+
+    
 //
 //Register a new XmlClassManager type plugin 
 //classname is the base classtype the plugin can handle, other types

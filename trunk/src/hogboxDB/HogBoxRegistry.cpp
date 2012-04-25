@@ -8,6 +8,7 @@
  */
 
 #include <hogboxDB/HogBoxRegistry.h>
+#include <hogboxDB/XmlClassWrapper.h>
 #include <hogbox/Version.h>
 
 using namespace hogboxDB;
@@ -198,4 +199,23 @@ osgDB::Registry::LoadStatus HogBoxRegistry::LoadLibrary(const std::string& fileN
         return osgDB::Registry::LOADED;
     }
     return osgDB::Registry::NOT_LOADED;
+}
+
+//
+//
+XmlClassWrapperRegistryProxy::XmlClassWrapperRegistryProxy(XmlClassWrapper* wrapper, const char* managerName)
+{
+    OSG_ALWAYS << "Register Wrapper for type '" << wrapper->getClassType() << "', with Manager '" << managerName << "'." << std::endl;
+    //check the registry instance
+    HogBoxRegistry* registry = HogBoxRegistry::Inst();
+    if(registry)
+    {
+        OSG_ALWAYS << "  Registery Good" << std::endl;
+
+        XmlClassManager* manager = registry->GetXmlClassManager(managerName);
+        if(manager){
+            OSG_ALWAYS << "  Manager Good" << std::endl;
+            manager->SupportsClassType(wrapper->getClassType(), wrapper);
+        }
+    }
 }

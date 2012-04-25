@@ -591,7 +591,7 @@ public:
     
     //Return the systems documents path, which should be safe for
     //saving user generated documents
-    const std::string GetDocumentPath();
+    const std::string GetDocumentsPath();
     
 	//
 	void PrintReportToLog();

@@ -904,9 +904,13 @@ const std::string SystemInfo::GetDeviceString()
 }
 
 //
-//Return the device id string
+//File path helpers
+
 //
-const std::string GetDeviceString()
+//Return the systems documents path, which should be safe for
+//saving user generated documents
+//
+const std::string SystemInfo::GetDocumentsPath()
 {
 #ifdef TARGET_OS_IPHONE
     //ensure a player data file exists in documents folder
@@ -919,11 +923,10 @@ const std::string GetDeviceString()
 #endif
 }
 
-
 void SystemInfo::PrintReportToLog()
 {
 	OSG_NOTICE << "OSG SystemInfo Report" <<std::endl;
-
+    OSG_NOTICE << "        Documents Path: '" << this->GetDocumentsPath() << "'." << std::endl; 
 	//report all screens
 	OSG_NOTICE << "        Number of Screens:= '" << this->getNumberOfScreens() << "'" << std::endl; 
 	for(unsigned int i=0; i<this->getNumberOfScreens(); i++)

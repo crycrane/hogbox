@@ -50,11 +50,16 @@ namespace hogboxDB {
 #else
          OSG_FATAL << "there" << std::endl;
         std::string foundFile = osgDB::findDataFile(fileName);
+        
         if (foundFile.empty())
         {
             OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Could Not Find File '" << fileName << "'." << std::endl;
             return NULL;
         }
+        
+        //allocate the document node
+        osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
+        osgDB::XmlNode* root = 0;
         
         //open the file with xmlinput
         osgDB::XmlNode::Input input;
@@ -67,29 +72,27 @@ namespace hogboxDB {
         }
         
         //read the file into out document
-        osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
-        if(!root->read(input)){
-            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Opened XMLInput but failed to read node for file '" << fileName << "'." << std::endl;
-            return NULL;
-        }
-#endif
-        OSG_FATAL << "find root name '" << rootNodeName << "', in node named '" << root->name << "'." << std::endl;
+        doc->read(input);
+        
         //iterate over the document nodes and try and find a HogBoxDatabase node to
         //use as a root
-        for(osgDB::XmlNode::Children::iterator itr = root->children.begin();
-            itr != root->children.end() && !root;
+        for(osgDB::XmlNode::Children::iterator itr = doc->children.begin();
+            itr != doc->children.end() && !root;
             ++itr)
         {
-            OSG_FATAL << "check '" << (*itr)->name << "'." << std::endl;
-            if ((*itr)->name==rootNodeName){
-                osg::ref_ptr<osgDB::XmlNode> temp=(*itr);
-                OSG_FATAL << "good" << std::endl;
-                return temp;
-            }
+            //OSG_ALWAYS << "NODE NAME '" << (*itr)->name << "'" << std::endl;
+            if ((*itr)->name==rootNodeName){ root = (*itr);break;}
         }
-        OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to find xml node '" << rootNodeName << "'. In xml file '" << fileName << "'."  << std::endl;
-        return NULL;       
         
+        if (root == NULL)
+        {
+            osg::notify(osg::WARN) << "XML Database Error: Opened Xml file '" << foundFile << "'," << std::endl
+                                   << "                    but failed to find node named <" << rootNodeName << "> node." << std::endl;
+            return NULL;
+        }
+        return root;
+        
+#endif   
     }
 
 	//Methods for deserialising Xml node strings into various standard and

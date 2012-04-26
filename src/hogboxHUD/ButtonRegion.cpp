@@ -99,7 +99,7 @@ void ButtonRegion::CancelButtonDown()
 {
     if(_buttonDown){
         //animate to back to base color
-        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
+        //this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
     }
     
     _buttonDown = false; 
@@ -112,12 +112,7 @@ void ButtonRegion::CancelButtonDown()
 void ButtonRegion::OnMouseDown(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
 	_buttonDown = true;
-    
-    //animate to the highlight color
-    if(this->GetNumColorKeys() == 0){
-        _oriColor = this->GetColor();
-    }
-    this->AddColorKey<osgAnimation::LinearMotion>(_highlightColor, highlightTime);
+
 }
 void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent)
 {
@@ -126,6 +121,11 @@ void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inpu
 		//trigger the onButtonClicked Event 
 		_onButtonClickedEvent->Trigger(inputEvent);
         
+        //animate to the highlight color
+        if(this->GetNumColorKeys() == 0){
+            _oriColor = this->GetColor();
+        }
+        this->AddColorKey<osgAnimation::LinearMotion>(_highlightColor, highlightTime);
         //animate to back to base color
         this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
 	}
@@ -151,7 +151,7 @@ void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& i
     
     if(_buttonDown){
         //animate to back to base color
-        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
+        //this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
     }
     
 	//reset buttonDown state

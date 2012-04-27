@@ -60,6 +60,15 @@ public:
                 _segments(cnr._segments)
             {
             }
+            bool operator==(const Corner &other) const {
+                if((_radius == other._radius) &&
+                   (_segments == other._segments) &&
+                   (_texCoord == other._texCoord)){
+                    return true;
+                }
+                return false;
+            }
+            
             osg::Vec2 _texCoord;
             osg::Vec4 _color;
             float _radius;
@@ -107,6 +116,23 @@ public:
             }
         }
         
+        const bool isEqual(QuadArgs* args){
+            if(!args){return false;}
+            if((_corners[0] == args->_corners[0]) &&
+               (_corners[1] == args->_corners[1]) &&
+               (_corners[2] == args->_corners[2]) &&
+               (_corners[3] == args->_corners[3]) &&
+               (_planeType == args->_planeType)   &&
+               (_rotationType == args->_rotationType) &&
+               (_originType == args->_originType)     &&
+               (_useTexcoords == args->_useTexcoords) &&
+               (_useColor == args->_useColor) &&
+               (_useNormal == args->_useNormal)){
+                return true;
+            }
+            return false;
+        }
+        
         Corner      _corners[4];
         QuadPlane   _planeType;
         QuadPlane   _rotationType;
@@ -141,6 +167,15 @@ public:
     virtual bool isSameKindAs(const Object* obj) const { return dynamic_cast<const Quad*>(obj)!=NULL; }
     virtual const char* libraryName() const { return "hogbox"; }
     virtual const char* className() const { return "Quad"; }
+    
+    //
+    //is the quad equal, based on size and args
+    const bool isEqual(osg::Vec2 size, QuadArgs* args);
+    
+    //
+    //get or create a new quad with matching args and size
+    static Quad* getOrCreateQuad(const osg::Vec2& size, QuadArgs* args);
+    static void clearCache();
     
     //
     //Set the size of the quad, rebuilding as required
@@ -192,6 +227,7 @@ protected:
     //quad build args
     osg::ref_ptr<QuadArgs> _args;
 };
+typedef osg::ref_ptr<Quad> QuadPtr;
     
 //
 //Quad geode wraps quad geometry and stateset

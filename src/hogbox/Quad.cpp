@@ -110,6 +110,42 @@ Quad::~Quad()
 }
 
 //
+//is the quad equal, based on size and args
+//
+const bool Quad::isEqual(osg::Vec2 size, QuadArgs* args)
+{
+    if(_size == size && 
+       _args->isEqual(args)){
+        return true;
+    }
+    return false;
+}
+
+//
+static std::vector<QuadPtr> g_quadCache;
+
+//
+//get or create a new quad with matching args and size
+//
+Quad* Quad::getOrCreateQuad(const osg::Vec2& size, QuadArgs* args)
+{
+    for(unsigned int i=0; i<g_quadCache.size(); i++){
+        if(g_quadCache[i]->isEqual(size, args)){
+            return g_quadCache[i].get();
+        }
+    }
+    
+    Quad* quad = new Quad(size, args);
+    g_quadCache.push_back(quad);
+    return quad;
+}
+
+void Quad::clearCache()
+{
+    g_quadCache.clear();
+}
+
+//
 //Set the size of the quad, rebuilding as required
 //
 void Quad::SetSize(const osg::Vec2& size, QuadArgs* args)
@@ -434,8 +470,9 @@ QuadGeode::QuadGeode(QuadGeodeArgs* args)
 //
 QuadGeode::QuadGeode(const float& width, const float& height, QuadGeodeArgs* args)
     : osg::Geode(),
-    _quad(new Quad(width, height, args))
+    _quad(NULL)
 {
+    _quad = Quad::getOrCreateQuad(osg::Vec2(width, height), args);
     this->InitStateSet();
     this->addDrawable(_quad.get());
 }
@@ -446,8 +483,9 @@ QuadGeode::QuadGeode(const float& width, const float& height, QuadGeodeArgs* arg
 //
 QuadGeode::QuadGeode(const osg::Vec2& size, QuadGeodeArgs* args)
     : osg::Geode(),
-    _quad(new Quad(size, args))
+    _quad(NULL)
 {
+    _quad = Quad::getOrCreateQuad(size, args);
     this->InitStateSet();
     this->addDrawable(_quad.get());
 }

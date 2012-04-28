@@ -99,6 +99,15 @@ bool StrokeRegion::LoadAssest(RegionStyle* args)
                 osg::Vec2 sizeDiff = _size - stokeSize;
                 strokeCorner =  strokeCorner + (sizeDiff*0.5f);
             }
+            
+            float sizeScale = stokeSize.x()/_size.x();
+            
+            //calc scaled corner radius if any
+            for(unsigned int i=0; i<4; i++){
+                if(strokeArgs->_corners[i]._radius > 0.0f){
+                    strokeArgs->_corners[i]._radius *= sizeScale;  
+                }
+            }
 
             // OSG_ALWAYS << "StrokeColor: " << stokeSize.x() << ", " << stokeSize.y() << std::endl;
             _stroke->Create(strokeCorner, stokeSize);

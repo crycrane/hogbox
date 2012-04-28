@@ -162,7 +162,7 @@ Region::~Region(void)
 	_onMouseEnterEvent = NULL;
 	_onMouseLeaveEvent = NULL;
     
-	OSG_FATAL << "    Deallocating " << this->className() << ": named '" << this->getName() << "'." << std::endl;
+	OSG_INFO << "    Deallocating " << this->className() << ": named '" << this->getName() << "'." << std::endl;
 	for(unsigned int i=0; i<_children.size(); i++)
 	{
 		_childMount->removeChild(_children[i]->GetRegion());
@@ -322,7 +322,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
     if(IsAnimating() || !_pickable){return 0;}
     
 	//check for basic event and inform our callbacks if detected
-	osg::notify(osg::DEBUG_FP) << "hogboxHUD Region: Input Event received by region '" << this->getName() << "'." << std::endl;
+	OSG_DEBUG_FP << "hogboxHUD Region: Input Event received by region '" << this->getName() << "'." << std::endl;
 	
 	//handle the event type
     switch(hudEvent.GetEventType())
@@ -330,7 +330,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
             //key is pressed down
 		case(ON_KEY_DOWN):
         {
-			osg::notify(osg::DEBUG_FP) << "		KEY DOWN" << std::endl;
+			OSG_DEBUG_FP << "		KEY DOWN" << std::endl;
 			_onKeyDownEvent->Trigger(hudEvent);
 			break;
         }
@@ -338,7 +338,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
             //key released
 		case(ON_KEY_UP):
         {
-			osg::notify(osg::DEBUG_FP) << "		KEY UP" << std::endl;
+			OSG_DEBUG_FP << "		KEY UP" << std::endl;
 			_onKeyUpEvent->Trigger(hudEvent);
 			break;
 		}
@@ -347,7 +347,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_MOVE):
         {
 			//trigger our onMouseDown event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE MOVE" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE MOVE" << std::endl;
 			_onMouseMoveEvent->Trigger(hudEvent);
 			break;
 		}
@@ -356,7 +356,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_DRAG):
         {
 			//trigger our onMouseDrag event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE DRAG" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE DRAG" << std::endl;
             _onMouseDragEvent->Trigger(hudEvent);
 			break;
         } 
@@ -365,7 +365,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_DOWN):
 		{
 			//trigger our onMouseDown event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE DOWN" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE DOWN" << std::endl;
 			_onMouseDownEvent->Trigger(hudEvent);
 			break;
 		}
@@ -374,7 +374,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_UP):
         {
 			//trigger our onMouseUp event
-			osg::notify(osg::DEBUG_FP) << "		MOUSE UP" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE UP" << std::endl;
 			//on mouse up check for multi touch and tap count to mimic double click behavior
             osgGA::GUIEventAdapter* ea = hudEvent.GetInputState();
             if(!ea){return 0;}
@@ -402,7 +402,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
             //double click do down and up
 		case(ON_DOUBLE_CLICK):
         {
-			osg::notify(osg::DEBUG_FP) << "		DOUBLE CLICK" << std::endl;
+			OSG_DEBUG_FP << "		DOUBLE CLICK" << std::endl;
 			_onDoubleClickEvent->Trigger(hudEvent);
 			break;
         } 
@@ -411,7 +411,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_ENTER):
         {
 			//trigger our onMouseUp event
-			OSG_ALWAYS << "		MOUSE ENTER" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE ENTER" << std::endl;
 			_onMouseEnterEvent->Trigger(hudEvent);
 			break;
         } 
@@ -420,7 +420,7 @@ int Region::HandleInputEvent(HudInputEvent& hudEvent)
 		case(ON_MOUSE_LEAVE):
         {
 			//trigger our onMouseUp event
-			OSG_ALWAYS << "		MOUSE LEAVE" << std::endl;
+			OSG_DEBUG_FP << "		MOUSE LEAVE" << std::endl;
 			_onMouseLeaveEvent->Trigger(hudEvent);
 			break;
         } 
@@ -713,6 +713,21 @@ void Region::ApplyBaseTexture()
 void Region::ApplyRollOverTexture()
 {
 	this->ApplyTexture(this->_rollOverTexture);
+}
+
+//
+//override setAlpha to set alpha of children
+//
+void Region::SetAlpha(const float& alpha)
+{
+    hogbox::TransformQuad::SetAlpha(alpha);
+    
+    for(unsigned int i=0; i<_children.size(); i++){
+        Region* asRegion = dynamic_cast<Region*>(_children[i].get());
+        if(asRegion){
+            asRegion->SetAlpha(alpha);
+        }
+    }
 }
 
 //

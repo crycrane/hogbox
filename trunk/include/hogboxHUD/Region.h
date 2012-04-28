@@ -178,6 +178,10 @@ public:
     void ApplyBaseTexture();
     void ApplyRollOverTexture();
     
+    //
+    //override setAlpha to set alpha of children
+    virtual void SetAlpha(const float& alpha);
+    
     
     //convert coords into the regions local system with this corner as the origin
     osg::Vec2 GetRegionSpaceCoords(osg::Vec2 spCoords);

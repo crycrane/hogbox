@@ -286,6 +286,9 @@ bool HogBoxViewer::CreateAppWindow()
             }else{
                 graphicsTraits->samples = _glSystemInfo->maxMultiSamplesSupported();
             }
+            if(graphicsTraits->samples > 0){
+                graphicsTraits->sampleBuffers = 1;
+            }
         }
       
 		//apply extra traits required for stereo modes

@@ -47,6 +47,9 @@ static const char* textFragSource = {
 	"}\n" 
 };
 
+//share static text program
+static osg::ref_ptr<osg::Program> g_textQuadProgram = NULL;
+
 //
 TextRegion::TextRegion(TextRegionStyle* style)
     : StrokeRegion(style),
@@ -77,12 +80,13 @@ TextRegion::TextRegion(TextRegionStyle* style)
 	stateset->setMode(GL_LIGHTING,osg::StateAttribute::OFF);
     
 #ifndef OSG_GL_FIXED_FUNCTION_AVAILABLE
-	osg::Program* program = new osg::Program; 
-	program->setName("textShader"); 
-	program->addShader(new osg::Shader(osg::Shader::VERTEX, textVertSource)); 
-	program->addShader(new osg::Shader(osg::Shader::FRAGMENT, textFragSource)); 
-	stateset->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 	
-    
+    if(!g_textQuadProgram.get()){
+        g_textQuadProgram = new osg::Program; 
+        g_textQuadProgram->setName("textShader"); 
+        g_textQuadProgram->addShader(new osg::Shader(osg::Shader::VERTEX, textVertSource)); 
+        g_textQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, textFragSource)); 
+    }
+    stateset->setAttributeAndModes(g_textQuadProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE); 
     stateset->addUniform(new osg::Uniform("glyphTexture", 0));
 #endif
     

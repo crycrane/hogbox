@@ -54,7 +54,7 @@ public:
 		HD_720P			
 	};
 	
-	IPhoneCaptureFormat(CaptureFormatPreset capturePreset, const NSString* osPresetString) 
+	IPhoneCaptureFormat(CaptureFormatPreset capturePreset, NSString* osPresetString) 
 		: hogboxVision::CaptureFormat(),
 		_capturePreset(capturePreset),
 		_osPresetString(osPresetString)

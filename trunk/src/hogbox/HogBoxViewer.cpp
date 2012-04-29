@@ -274,6 +274,9 @@ bool HogBoxViewer::CreateAppWindow()
 				graphicsTraits->inheritedWindowData = windata;
 			#endif			
 		}
+        
+        //
+        graphicsTraits->supportsResize = true;
 
 
 		//apply samles if supported

@@ -495,6 +495,11 @@ QuadGeode::~QuadGeode()
     
 }
 
+//
+//for now store coloured and texture shaders
+//as static instance to share across all quads
+static osg::ref_ptr<osg::Program> g_coloredQuadProgram = NULL;
+static osg::ref_ptr<osg::Program> g_texturedQuadProgram = NULL;
 
 //
 //Init Material/stateset stuff
@@ -520,11 +525,15 @@ void QuadGeode::InitStateSet()
     //_stateset->setAttributeAndModes(_material, osg::StateAttribute::ON | osg::StateAttribute::PROTECTED);
 
     #else
-    osg::Program* program = new osg::Program; 
-    program->setName("coloredQuadShader"); 
-    program->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
-    program->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource)); 
-    _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
+    
+    //set default program
+    if(!g_coloredQuadProgram.get()){
+        g_coloredQuadProgram = new osg::Program; 
+        g_coloredQuadProgram->setName("coloredQuadShader"); 
+        g_coloredQuadProgram->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
+        g_coloredQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource));  
+    }
+    _stateset->setAttributeAndModes(g_coloredQuadProgram, osg::StateAttribute::ON); 	
 
     _shaderMode = COLOR_SHADER;
 
@@ -552,19 +561,24 @@ void QuadGeode::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
     
     //
     if(_shaderMode == COLOR_SHADER && tex != NULL){
-        osg::Program* program = new osg::Program; 
-        program->setName("texturedQuadShader"); 
-        program->addShader(new osg::Shader(osg::Shader::VERTEX, texturedVertSource)); 
-        program->addShader(new osg::Shader(osg::Shader::FRAGMENT, texturedFragSource)); 
-        _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
+        
+        if(!g_texturedQuadProgram.get()){
+            g_texturedQuadProgram = new osg::Program; 
+            g_texturedQuadProgram->setName("texturedQuadShader"); 
+            g_texturedQuadProgram->addShader(new osg::Shader(osg::Shader::VERTEX, texturedVertSource)); 
+            g_texturedQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, texturedFragSource));  
+        }
+        _stateset->setAttributeAndModes(g_texturedQuadProgram, osg::StateAttribute::ON); 		
         _shaderMode = TEXTURED_SHADER;
         
     }else if(_shaderMode == TEXTURED_SHADER && tex == NULL){
-        osg::Program* program = new osg::Program; 
-        program->setName("coloredQuadShader"); 
-        program->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
-        program->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource)); 
-        _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
+        if(!g_coloredQuadProgram.get()){
+            g_coloredQuadProgram = new osg::Program; 
+            g_coloredQuadProgram->setName("coloredQuadShader"); 
+            g_coloredQuadProgram->addShader(new osg::Shader(osg::Shader::VERTEX, coloredVertSource)); 
+            g_coloredQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource));  
+        }
+        _stateset->setAttributeAndModes(g_coloredQuadProgram, osg::StateAttribute::ON); 		
         _shaderMode = COLOR_SHADER;
     }
 	

@@ -110,6 +110,24 @@ protected:
     std::string _osgPath;
 };
     
+//
+//Process a node after loading
+class ProcessNodeOperation : public osg::Referenced
+{
+public:
+    ProcessNodeOperation()
+        : osg::Referenced()
+    {
+    }
+    
+    virtual bool process(osg::Node* node){
+        return true;
+    }
+    
+protected:
+    virtual ~ProcessNodeOperation(){}
+};
+    
 // 
 class DatabasePagingOperation : public osg::Operation, public osgUtil::IncrementalCompileOperation::CompileCompletedCallback
 {
@@ -118,6 +136,7 @@ public:
     DatabasePagingOperation(const std::string& filename,
                             hogbox::Callback* callback,
                             bool cache = false,
+                            ProcessNodeOperation* processor = NULL,
                             osgDB::Archive* archive=NULL,
                             osgUtil::IncrementalCompileOperation* ico=NULL)
         : Operation("DatabasePaging Operation", false),
@@ -126,6 +145,7 @@ public:
         _done(false),
         _callback(callback),
         _cache(cache),
+        _processor(processor),
         _incrementalCompileOperation(ico),
         _archive(archive)
     {
@@ -153,6 +173,10 @@ public:
         
         if (_loadedModel.valid())
         {
+            if(_processor.get()){
+                _processor->process(_loadedModel.get());
+            }
+            
             if (_incrementalCompileOperation.valid())
             {
                 OSG_FATAL<<"Registering with ICO "<<_filename<<std::endl;
@@ -234,6 +258,9 @@ protected:
     bool                                                _cache;
     osg::ref_ptr<osgUtil::IncrementalCompileOperation>  _incrementalCompileOperation;
     
+    //optional processor applied once loaded but still in paging thread
+    osg::ref_ptr<ProcessNodeOperation> _processor;
+    
     //optional archive used to load assets from
     osg::ref_ptr<osgDB::Archive> _archive;
 };
@@ -266,11 +293,13 @@ public:
         ReadOptions()
             : osg::Referenced(),
             cache(false),
-            loadCompleteCallback(NULL)
+            loadCompleteCallback(NULL),
+            processor(NULL)
         {
         }
         bool cache;
         hogbox::CallbackPtr loadCompleteCallback;
+        ProcessNodeOperation* processor;
     };
     
     //get or load a new osg node

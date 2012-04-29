@@ -164,6 +164,7 @@ osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, ReadOption
         DatabasePagingOperationPtr operation = new DatabasePagingOperation(fileName,
                                                                            readOptions->loadCompleteCallback.get(),
                                                                            readOptions->cache,
+                                                                           readOptions->processor,
                                                                            _archive.get());
         _databasePagingThread->add(operation.get());
         _pagingOperations.push_back(operation);
@@ -187,6 +188,12 @@ osg::NodePtr AssetManager::GetOrLoadNode(const std::string& fileName, ReadOption
     
     //check we have a valid node
     if(node.get()){
+        
+        //apply the processor if any
+        if(readOptions->processor){
+            readOptions->processor->process(node.get());
+        }
+        
         //make sure we are using vertex buffer objects
         ApplyVBOVisitor vboVisitor;
         node->accept(vboVisitor);

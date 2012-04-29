@@ -135,7 +135,7 @@ bool RTTPass::Init(RTTArgs args)
             program->setName("depthToColorShader"); 
             program->addShader(new osg::Shader(osg::Shader::VERTEX, depthPassVertSource)); 
             program->addShader(new osg::Shader(osg::Shader::FRAGMENT, depthPassFragSource)); 
-            _camera->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+            _camera->getOrCreateStateSet()->setAttributeAndModes(program, osg::StateAttribute::ON);// | osg::StateAttribute::OVERRIDE);
         }
 	}
 

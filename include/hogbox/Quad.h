@@ -245,15 +245,42 @@ public:
     class QuadGeodeArgs : public Quad::QuadArgs {
     public:
         QuadGeodeArgs()
-            : Quad::QuadArgs()
+            : Quad::QuadArgs(),
+            _color(osg::Vec3(1.0f,1.0f,1.0f)),
+            _alpha(1.0f),
+            _alphaEnabled(false),
+            _colorWrites(true),
+            _depthTest(true),
+            _depthWrites(true),
+            _shaderMode(COLOR_SHADER)
         {
         }
         
         QuadGeodeArgs(const QuadGeodeArgs& args)
-            : Quad::QuadArgs(args)
+            : Quad::QuadArgs(args),
+            _color(args._color),
+            _alpha(args._alpha),
+            _alphaEnabled(args._alphaEnabled),
+            _colorWrites(args._colorWrites),
+            _depthTest(args._depthTest),
+            _depthWrites(args._depthWrites),
+            _shaderMode(args._shaderMode)
         {
         }
     
+        //color of quad
+        osg::Vec3 _color;
+        
+        //alpha of quad
+        float _alpha;
+        bool _alphaEnabled;
+        
+        bool _colorWrites;
+        bool _depthTest;
+        bool _depthWrites;
+        
+        //
+        ShaderMode _shaderMode;
         
     protected:
         virtual ~QuadGeodeArgs(){
@@ -262,7 +289,7 @@ public:
     
     //
     //just allocate the transform graph and geode
-    QuadGeode(QuadGeodeArgs* args=NULL);
+    QuadGeode(QuadGeodeArgs* args = new QuadGeodeArgs());
     
     //
     //Contruct base quad geometry now, passing width height and
@@ -339,19 +366,15 @@ protected:
     
 protected:
     
+    //args for the quad use to store style info like color etc
+    osg::ref_ptr<QuadGeodeArgs> _args;
+    
     //our quad geometry
     osg::ref_ptr<Quad> _quad;
     
-    //color of quad
-    osg::Vec3 _color;
     //color uniform for shader, as vec4 including alpha
     osg::ref_ptr<osg::Uniform> _colorUniform;
-    //alpha of quad
-    float _alpha;
-    bool _alphaEnabled;
-    
-    //
-    ShaderMode _shaderMode;
+
 };
     
 };//end hogbox namespace

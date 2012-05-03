@@ -458,6 +458,7 @@ osg::Vec2 Quad::computeQuadTexCoord(const osg::Vec3& coord, const float& width, 
 //
 QuadGeode::QuadGeode(QuadGeodeArgs* args)
     : osg::Geode(),
+    _args(args),
     _quad(new Quad())
 {
     this->InitStateSet();
@@ -470,6 +471,7 @@ QuadGeode::QuadGeode(QuadGeodeArgs* args)
 //
 QuadGeode::QuadGeode(const float& width, const float& height, QuadGeodeArgs* args)
     : osg::Geode(),
+    _args(args),
     _quad(NULL)
 {
     _quad = Quad::getOrCreateQuad(osg::Vec2(width, height), args);
@@ -483,6 +485,7 @@ QuadGeode::QuadGeode(const float& width, const float& height, QuadGeodeArgs* arg
 //
 QuadGeode::QuadGeode(const osg::Vec2& size, QuadGeodeArgs* args)
     : osg::Geode(),
+    _args(args),
     _quad(NULL)
 {
     _quad = Quad::getOrCreateQuad(size, args);
@@ -535,15 +538,15 @@ void QuadGeode::InitStateSet()
     }
     _stateset->setAttributeAndModes(g_coloredQuadProgram, osg::StateAttribute::ON); 	
 
-    _shaderMode = COLOR_SHADER;
+    _args->_shaderMode = COLOR_SHADER;
 
     #endif
     //_root->setStateSet(_stateset.get()); 
     //_quadGeode->setStateSet(_stateset.get()); 
 
-    this->SetColor(osg::Vec3(1.0f, 1.0f, 1.0f));
-    this->SetAlpha(1.0f);
-    this->EnableAlpha(false);
+    this->SetColor(_args->_color);
+    this->SetAlpha(_args->_alpha);
+    this->EnableAlpha(_args->_alphaEnabled);
 }
 
 //
@@ -560,7 +563,7 @@ void QuadGeode::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
     _stateset->addUniform(new osg::Uniform("diffuseTexture", channel));
     
     //
-    if(_shaderMode == COLOR_SHADER && tex != NULL){
+    if(_args->_shaderMode == COLOR_SHADER && tex != NULL){
         
         if(!g_texturedQuadProgram.get()){
             g_texturedQuadProgram = new osg::Program; 
@@ -569,9 +572,9 @@ void QuadGeode::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
             g_texturedQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, texturedFragSource));  
         }
         _stateset->setAttributeAndModes(g_texturedQuadProgram, osg::StateAttribute::ON); 		
-        _shaderMode = TEXTURED_SHADER;
+        _args->_shaderMode = TEXTURED_SHADER;
         
-    }else if(_shaderMode == TEXTURED_SHADER && tex == NULL){
+    }else if(_args->_shaderMode == TEXTURED_SHADER && tex == NULL){
         if(!g_coloredQuadProgram.get()){
             g_coloredQuadProgram = new osg::Program; 
             g_coloredQuadProgram->setName("coloredQuadShader"); 
@@ -579,7 +582,7 @@ void QuadGeode::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
             g_coloredQuadProgram->addShader(new osg::Shader(osg::Shader::FRAGMENT, coloredFragSource));  
         }
         _stateset->setAttributeAndModes(g_coloredQuadProgram, osg::StateAttribute::ON); 		
-        _shaderMode = COLOR_SHADER;
+        _args->_shaderMode = COLOR_SHADER;
     }
 	
 	//if the textures image includes alpha enable alpha/blending
@@ -629,9 +632,9 @@ void QuadGeode::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
 //
 void QuadGeode::SetColor(const osg::Vec3& color)
 {
-	_color = color;
+	_args->_color = color;
     
-	osg::Vec4 vec4Color = osg::Vec4(color, _alpha);
+	osg::Vec4 vec4Color = osg::Vec4(color, _args->_alpha);
     
 	//set the materials color
 	//_material->setAmbient(osg::Material::FRONT_AND_BACK, vec4Color ); 
@@ -646,16 +649,16 @@ void QuadGeode::SetColor(const osg::Vec3& color)
 
 const osg::Vec3& QuadGeode::GetColor() const
 {
-	return _color;
+	return _args->_color;
 }
 
 
 void QuadGeode::SetAlpha(const float& alpha)
 {
-	_alpha = alpha;
+	_args->_alpha = alpha;
     
     //call set color to update the coloruniform with the new alpha
-    this->SetColor(_color);
+    this->SetColor(_args->_color);
     
 	//set the materials alpha
 	//_material->setAlpha(osg::Material::FRONT_AND_BACK, _alpha);
@@ -663,7 +666,7 @@ void QuadGeode::SetAlpha(const float& alpha)
 
 const float& QuadGeode::GetAlpha() const
 {
-	return _alpha;
+	return _args->_alpha;
 }
 
 //
@@ -686,12 +689,12 @@ void QuadGeode::EnableAlpha(const bool& enable)
 		_stateset->setRenderingHint(osg::StateSet::OPAQUE_BIN);
 		_stateset->setMode(GL_BLEND, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
 	}
-	_alphaEnabled = enable;
+	_args->_alphaEnabled = enable;
 }
 
 const bool& QuadGeode::IsAlphaEnabled() const
 {
-	return _alphaEnabled;
+	return _args->_alphaEnabled;
 }
 
 //
@@ -723,7 +726,7 @@ void QuadGeode::SetCustomShader(const std::string& vertFile, const std::string& 
     program->addShader(fragShader); 
     program->addShader(vertShader); 
     _stateset->setAttributeAndModes(program, osg::StateAttribute::ON); 	
-    _shaderMode = CUSTOM_SHADER;
+    _args->_shaderMode = CUSTOM_SHADER;
 }
 
 //

@@ -57,6 +57,7 @@ public:
         SizeStyle _sizeStyle;
         Quad::QuadPlane _rotatePlane;
         
+        
     protected:
         virtual ~TransformQuadArgs(){
         }

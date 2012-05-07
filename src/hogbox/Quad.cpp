@@ -450,6 +450,12 @@ osg::Vec2 Quad::computeQuadTexCoord(const osg::Vec3& coord, const float& width, 
     
     float u = l+(xDif*unitX);
     float v = b+(yDif*unitY);
+    
+    if(_args->_originType == ORI_CENTER){
+        u+=0.5f;
+        v+=0.5f;
+    }
+    
     return osg::Vec2(u,v);
 }
 

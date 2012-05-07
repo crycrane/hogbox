@@ -484,10 +484,13 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
         //create localised path
         std::string localFolder = std::string([currentLanguage UTF8String])+".lproj";
         
+        //is it ipad
+        std::string ipadStr = SystemInfo::IsDeviceIPad() ? "~ipad" : "";
+        
         if(screenType != SystemInfo::LOW_DENSITY){
-            fullFileName = FindFile(localFolder+"/"+name+"@2x"+ext);
+            fullFileName = FindFile(localFolder+"/"+name+"@2x"+ipadStr+ext);
         }else{
-            fullFileName = FindFile(localFolder+"/"+name+ext);
+            fullFileName = FindFile(localFolder+"/"+name+ipadStr+ext);
         }
 #endif
     }

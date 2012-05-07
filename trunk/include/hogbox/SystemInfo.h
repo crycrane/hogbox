@@ -584,7 +584,12 @@ public:
     
     //
     //Return the device id string
-    const std::string GetDeviceString();
+    static const std::string GetDeviceString();
+    
+    //
+    //Conveinience method to determin if we are running on ipad
+    static const bool IsDeviceIPad();
+    
 
     //
     //File path helpers

@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #import <UIKit/UIScreen.h>
+#import <UIKit/UIDevice.h>
 #endif
 
 
@@ -901,6 +902,20 @@ const std::string SystemInfo::GetDeviceString()
 #elif defined(ANDROID)
     return "AndroidDevice";
 #endif
+}
+
+const bool SystemInfo::IsDeviceIPad()
+{
+#ifdef TARGET_OS_IPHONE 
+#if (__IPHONE_OS_VERSION_MAX_ALLOWED >= 30200)
+    if ([[UIDevice currentDevice] respondsToSelector: @selector(userInterfaceIdiom)])
+        return (bool)([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad);
+#endif
+    return false;
+#else
+    return false;
+#endif
+
 }
 
 //

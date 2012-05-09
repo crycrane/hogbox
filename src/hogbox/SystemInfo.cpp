@@ -71,7 +71,7 @@ SystemInfo::SystemInfo(GatherLevel level)
     //Default buffers
     _maxTestedBuffers(2),
     _maxTestedStencilBits(0),
-    _maxTestedDepthBits(16),
+    _maxTestedDepthBits(24),
     _maxTestedMultiSamples(0),
     //list of Systeminfolevels
     _renderSupportInfo(NULL),

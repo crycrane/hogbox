@@ -465,9 +465,12 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
     std::string ext = osgDB::getFileExtensionIncludingDot(fileName);
     std::string fullFileName = FindFile(fileName);
     
-    if(screenType != SystemInfo::LOW_DENSITY){ //add @2x for higher resolutions
+    if(screenType != SystemInfo::LOW_DENSITY || SystemInfo::IsDeviceIPad()){ //add @2x for higher resolutions
+        //is it ipad
+        std::string ipadStr = SystemInfo::IsDeviceIPad() ? "~ipad" : "";
+        std::string retinaStr = SystemInfo::Inst()->getScreenDensity() != SystemInfo::LOW_DENSITY ? "@2x" : "";
         //see if a @2x version exists        
-        std::string at2X = path.empty() ? name+"@2x"+ext : path+"/"+name+"@2x"+ext;
+        std::string at2X = path.empty() ? name+retinaStr+ipadStr+ext : path+"/"+name+retinaStr+ipadStr+ext;
         std::string retinaFullFileName = FindFile(at2X);
         if (!retinaFullFileName.empty()) {
             fullFileName = retinaFullFileName;
@@ -487,6 +490,8 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
         //is it ipad
         std::string ipadStr = SystemInfo::IsDeviceIPad() ? "~ipad" : "";
         
+        OSG_ALWAYS << "IPadStr: '" << ipadStr << "'." << std::endl;
+        
         if(screenType != SystemInfo::LOW_DENSITY){
             fullFileName = FindFile(localFolder+"/"+name+"@2x"+ipadStr+ext);
         }else{
@@ -494,6 +499,7 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
         }
 #endif
     }
+    OSG_ALWAYS << "FullFileName: '" << fullFileName << "'." << std::endl;
     return fullFileName;
 }
 

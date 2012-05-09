@@ -537,16 +537,6 @@ bool Region::LoadAssest(RegionStyle* style)
     
     std::string assetName = style->_assets;
     
-    osg::ref_ptr<TransformQuadArgs> args = new TransformQuadArgs();
-    args->_corners[0]._radius = _size.x()*0.2f;
-    args->_corners[0]._segments = 4;
-    args->_corners[1]._radius = _size.x()*0.2f;
-    args->_corners[1]._segments = 4;
-    args->_corners[2]._radius = _size.x()*0.2f;
-    args->_corners[2]._segments = 4;
-    args->_corners[3]._radius = _size.x()*0.2f;
-    args->_corners[3]._segments = 4;
-    
     //if we have any kind of asset name we build the quad
     if(!assetName.empty()){
         
@@ -565,6 +555,12 @@ bool Region::LoadAssest(RegionStyle* style)
             {
                 //apply the base as default
                 this->ApplyTexture(_baseTexture.get());
+                
+                //see if we want to size by texture dimensions
+                if(style->_sizeByImage){
+                    osg::Vec2 imageSize = osg::Vec2(_baseTexture->getImage()->s(),_baseTexture->getImage()->t());
+                    this->SetSize(imageSize);
+                }
             }
         }
         
@@ -692,7 +688,7 @@ void Region::ApplyNodeMask()
 //
 //set the texture used by default
 //
-void Region::SetBaseTexture(osg::Texture* texture)
+void Region::SetBaseTexture(osg::Texture2D* texture)
 {
 	_baseTexture = NULL;
 	_baseTexture = texture;
@@ -700,7 +696,7 @@ void Region::SetBaseTexture(osg::Texture* texture)
 //
 //Set the texture used as rollover
 //
-void Region::SetRolloverTexture(osg::Texture* texture)
+void Region::SetRolloverTexture(osg::Texture2D* texture)
 {
 	_baseTexture = NULL;
 	_baseTexture = texture;

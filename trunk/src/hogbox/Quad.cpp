@@ -40,7 +40,7 @@ static const char* texturedFragSource = {
 	"void main(void) {\n" 
     "  mediump vec4 texColor = texture2D(diffuseTexture, texCoord0);\n" 
     "  gl_FragColor = texColor;//vec4(texColor.r*_color.r,texColor.g*_color.g,texColor.b*_color.b, texColor.a*_color.a);\n"
-    "  //gl_FragColor.a = gl_FragColor.a*_color.a;\n"
+    "  gl_FragColor.a = gl_FragColor.a*_color.a;\n"
 	"}\n" 
 };
 

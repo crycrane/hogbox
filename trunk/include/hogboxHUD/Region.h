@@ -63,7 +63,8 @@ public:
             : TransformQuadArgs(),
             _color(osg::Vec3(-1.0f,-1.0f,-1.0f)),//-1 indicates to not use the color arg
             _alpha(-1.0f), //-1 indicates to not use the alpha
-            _assets("")
+            _assets(""),
+            _sizeByImage(false)
         {
         }
         
@@ -71,7 +72,8 @@ public:
             : TransformQuadArgs(args),
             _color(args._color),
             _alpha(args._alpha),
-            _assets(args._assets)
+            _assets(args._assets),
+            _sizeByImage(args._sizeByImage)
         {
         }
         
@@ -79,6 +81,10 @@ public:
         float _alpha;
         
         std::string _assets;
+        
+        //flag to set the size of the region using the assets
+        //pixel dimensions
+        bool _sizeByImage;
         
     protected:
         virtual ~RegionStyle(){
@@ -169,10 +175,10 @@ public:
     }
     
     //set the texture used by default
-    void SetBaseTexture(osg::Texture* texture);
-    osg::Texture* GetBaseTexture(){return _baseTexture.get();}
+    void SetBaseTexture(osg::Texture2D* texture);
+    osg::Texture2D* GetBaseTexture(){return _baseTexture.get();}
     //set the texture used in mouse rollovers
-    void SetRolloverTexture(osg::Texture* texture);
+    void SetRolloverTexture(osg::Texture2D* texture);
     
     //
     void ApplyBaseTexture();
@@ -297,11 +303,11 @@ protected:
     bool _hovering; //is it in a hover state
     
     //standard texture 
-    osg::ref_ptr<osg::Texture> _baseTexture;
+    osg::ref_ptr<osg::Texture2D> _baseTexture;
     
     
     //texture used on rollover
-    osg::ref_ptr<osg::Texture> _rollOverTexture;
+    osg::ref_ptr<osg::Texture2D> _rollOverTexture;
     
     //nodes parent region, null if no parent (should this be shared or weak)
     Region* p_parent;

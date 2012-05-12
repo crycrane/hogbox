@@ -114,7 +114,6 @@ namespace hogboxDB {
         //
 		//write a single node with the content as a string version of the type value
 		virtual osgDB::XmlNodePtr serialize() {
-            OSG_FATAL << "Serialize Attribute" << std::endl;
             //OSG_FATAL << "    Value: " << this->get() << std::endl;
             osgDB::XmlNodePtr attNode = new osgDB::XmlNode();
             attNode->name = this->getName();

@@ -55,13 +55,13 @@ TextRegion::TextRegion(TextRegionStyle* style)
     : StrokeRegion(style),
     _string(""),
     _text(NULL),
-    _fontHeight(18.0f),
-    _fontName("Fonts/arial.ttf"),
+    _fontHeight(-1),
+    _fontName(""),
     _boarderPadding(5.0f),
-    _alignmentMode(CENTER_ALIGN),
-    _textColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f)),
-    _backdropType(NO_BACKDROP),
-    _backdropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f)),
+    _alignmentMode(NO_ALIGN_SET),
+    _textColor(osg::Vec4(-0.1f,-0.1f,-0.1f,-1.0f)),
+    _backdropType(NO_BACKDROP_SET),
+    _backdropColor(osg::Vec4(-0.1f,-0.1f,-0.1f,-0.7f)),
     //callback events
     _onTextChangedEvent(new HudCallbackEvent(this, "OnTextChanged"))
 {
@@ -122,12 +122,12 @@ TextRegion::TextRegion(TextRegionStyle* style)
 	//attach the text to translate for now 
 	_rotate->addChild(oriText);
     
-    _text->setColor(_textColor);
-	this->SetFontType(_fontName);
-	this->SetFontHeight(_fontHeight);
-	this->SetAlignment(_alignmentMode);
-	this->SetBackDropType(_backdropType);
-	this->SetBackDropColor(_backdropColor);
+    _text->setColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f));
+	this->SetFontType("Fonts/arial.ttf");
+	this->SetFontHeight(18.0f);
+	this->SetAlignment(CENTER_ALIGN);
+	this->SetBackDropType(NO_BACKDROP);
+	this->SetBackDropColor(osg::Vec4(0.1f,0.1f,0.1f,0.7f));
 }
 
 TextRegion::TextRegion(osg::Vec2 corner, osg::Vec2 size, TextRegionStyle* style) 
@@ -346,10 +346,13 @@ void TextRegion::SetSize(const osg::Vec2& size)
 //
 void TextRegion::SetText(const std::string& str)
 {
-	_string = str;
-	_text->setText(str);
-	osg::ref_ptr<HudInputEvent> dummyEvent;
-	_onTextChangedEvent->Trigger(*dummyEvent.get());
+    if(str != _string){
+        _string = str;
+        _text->setText(str);
+        osg::ref_ptr<HudInputEvent> dummyEvent;
+        _onTextChangedEvent->Trigger(*dummyEvent.get());
+        _dirtyRenderState = true;
+    }
 }
 
 //
@@ -366,8 +369,11 @@ const std::string& TextRegion::GetText()const
 //
 void TextRegion::SetFontHeight(const float& fontHeight)
 {
-	_fontHeight = fontHeight;
-	_text->setCharacterSize(_fontHeight, 1.0f);
+    if(fontHeight != _fontHeight){
+        _fontHeight = fontHeight;
+        _text->setCharacterSize(_fontHeight, 1.0f);
+        _dirtyRenderState = true;
+    }
 }
 
 //
@@ -384,6 +390,7 @@ const float& TextRegion::GetFontHeight()const
 void TextRegion::SetFontResolution(const osg::Vec2& fontRes)
 {
     _text->setFontResolution((int)fontRes.x(), (int)fontRes.y());
+    _dirtyRenderState = true;
 }
 
 //
@@ -396,6 +403,7 @@ void TextRegion::SetFontType(const std::string& fontFile)
     
     if(font.get()){
         _text->setFont(_fontName);
+        _dirtyRenderState = true;
     }
 }
 
@@ -421,6 +429,7 @@ const float& TextRegion::GetBoarderPadding()const
 void TextRegion::SetBoarderPadding(const float& padding)
 {
 	_boarderPadding = padding;
+    _dirtyRenderState = true;
 }
 
 //
@@ -428,6 +437,9 @@ void TextRegion::SetBoarderPadding(const float& padding)
 //
 void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 {
+    if(alignment == _alignmentMode){
+        //return;
+    }
 	_alignmentMode = alignment;
     
     osg::Vec3 offset = osg::Vec3(0.0f,0.0f,0.0f);
@@ -533,6 +545,7 @@ void TextRegion::SetAlignment(const TEXT_ALIGN& alignment)
 			break;
 		}
 	}
+    _dirtyRenderState = true;
 }
 
 //
@@ -571,7 +584,10 @@ void TextRegion::SetTextColor(const osg::Vec4& color)
 	_textColor.b() = color.z();
     _textColor.a() = this->GetAlpha();
 	_text->setColor(_textColor);
+
     this->SetColor(osg::Vec3(color.x(),color.y(),color.z()));
+    
+    _dirtyRenderState = true;
 }
 
 //
@@ -591,7 +607,10 @@ void TextRegion::SetBackDropColor(const osg::Vec4 &color)
 	_backdropColor.g() = color.g();
 	_backdropColor.b() = color.b();
 	_backdropColor.a() = this->GetAlpha()*0.5f;
+    
 	_text->setBackdropColor(_backdropColor);
+    
+    _dirtyRenderState = true;
 }
 
 //
@@ -619,6 +638,8 @@ void TextRegion::SetBackDropType(const BACKDROP_TYPE& type)
     }else{ 
         _text->setBackdropType(osgText::Text::NONE);
 	}
+    
+    _dirtyRenderState = true;
 }
 
 const TextRegion::BACKDROP_TYPE& TextRegion::GetBackDropType() const

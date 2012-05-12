@@ -147,7 +147,6 @@ void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& i
 	//switch back to base texture
 	if(_baseTexture.valid())
 	{this->ApplyTexture(_baseTexture.get());}
-	OSG_FATAL << "OnMouseLeave" << std::endl;
     
     if(_buttonDown){
         //animate to back to base color
@@ -156,6 +155,7 @@ void ButtonRegion::OnMouseLeave(osg::Object* sender, hogboxHUD::HudInputEvent& i
     
 	//reset buttonDown state
 	_buttonDown = false;
+    
 }
 
 //

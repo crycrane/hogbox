@@ -185,6 +185,15 @@ public:
     //Set the renderbin number
     void SetRenderBinNumber(const int& num);
     
+    //
+    //Get the dirty render state, the state will be set to false
+    //once read
+    virtual const bool isRenderStateDirty(){
+        bool dirty = _dirtyRenderState;
+        _dirtyRenderState = false;
+        return dirty;
+    }
+    
 protected:
     
     //destructor
@@ -224,6 +233,9 @@ protected:
     //depth/layer of the region i.e. z coord relative to parent
     //the root region held by the hogboxHud sets its depth/layer to -1
     float _depth;
+    
+    //dirty render state to indicate redraw
+    bool _dirtyRenderState;
 
 };
 

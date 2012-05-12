@@ -318,8 +318,7 @@ NodePtrVector HogBoxObject::GetWrappedNodes() const
 void HogBoxObject::SetWrappedNodes(const NodePtrVector& nodes)
 {
 	//iterate the list and pass through add to object
-	for(unsigned int i=0; i<nodes.size(); i++)
-	{OSG_FATAL << "Add Wrapped Node" << std::endl;
+	for(unsigned int i=0; i<nodes.size(); i++){
 		this->AddNodeToObject(nodes[i]);
 	}
 }

@@ -31,7 +31,6 @@ namespace hogboxDB {
     static inline osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName)
     {
 #if USE_ASSETMANAGER
-        OSG_FATAL << "here" << std::endl;
         hogbox::XmlInputObjectPtr xmlObject = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
         if(!xmlObject.get()){
             OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Read XML File '" << fileName << "'." << std::endl;
@@ -48,7 +47,6 @@ namespace hogboxDB {
         osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
         root->read(xmlObject->GetInput());
 #else
-         OSG_FATAL << "there" << std::endl;
         std::string foundFile = osgDB::findDataFile(fileName);
         
         if (foundFile.empty())

@@ -245,8 +245,6 @@ bool HogBoxViewer::CreateAppWindow()
 		graphicsTraits->useCursor = _usingCursor;
 		graphicsTraits->windowName = _windowName;
 		graphicsTraits->vsync = _vSync;
-
-        OSG_FATAL << "HogBoxViewer Content Scale " << _depthBits << std::endl;
         
 		//attach to any handle if available
 		if(_hwnd != NULL)

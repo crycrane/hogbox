@@ -22,6 +22,8 @@
 #include <osgAnimation/ActionBlendOut>
 #include <osgAnimation/ActionAnimation>
 
+#include <osg/AnimationPath>
+
 namespace hogbox
 {
 
@@ -116,6 +118,39 @@ namespace hogbox
 					onFoundManagerBase(b, &node);
 					//_am = new osgAnimation::BasicAnimationManager(*b);
 					//node.setUpdateCallback(_am.get());
+					return;
+				}
+			}
+			traverse(node);
+		}
+	};
+    
+	//
+	//finds and returns the first AnimationPathCallback in the sub graph
+	struct FindAnimationPathCallbackVisitor : public osg::NodeVisitor
+	{
+        osg::ref_ptr<osg::AnimationPathCallback> _foundAnimationPathCallback;
+		osg::ref_ptr<osg::Node> _foundInNode;
+        
+		FindAnimationPathCallbackVisitor() 
+        : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN) 
+		{
+		}
+        
+		//base version just stores them 
+		virtual void onFoundAnimationPathCallback(osg::AnimationPathCallback* callback, osg::Node* sourceNode)
+		{
+			_foundAnimationPathCallback = callback;
+			_foundInNode = sourceNode;
+		}
+        
+		void apply(osg::Node& node) {
+			if (_foundAnimationPathCallback.valid())
+				return;
+			if (node.getUpdateCallback()) {
+                osg::AnimationPathCallback* b = dynamic_cast<osg::AnimationPathCallback*>(node.getUpdateCallback());
+				if (b) {
+					onFoundAnimationPathCallback(b, &node);
 					return;
 				}
 			}

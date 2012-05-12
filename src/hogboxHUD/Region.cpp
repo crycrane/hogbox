@@ -441,6 +441,7 @@ void Region::AddChild(Region* region)
 	_children.push_back(region); 
     
 	region->SetParent(this); 
+    _dirtyRenderState = true;
 }
 
 
@@ -488,6 +489,7 @@ bool Region::RemoveChild(unsigned int pos, unsigned int numChildrenToRemove)
 	Region* region = (*first+pos);
 	_childMount->removeChild(region->GetRegion());
 	_children.erase(first+pos);
+    _dirtyRenderState = true;
     return true;
 }
 
@@ -584,6 +586,7 @@ bool Region::LoadAssest(RegionStyle* style)
     _args = style;
     _assetFolder = style->_assets;
 	_assestLoaded = true;
+    _dirtyRenderState = true;
     
 	return true;
 }
@@ -606,6 +609,7 @@ bool Region::UnLoadAssests()
 	_rollOverTexture = NULL;
     
 	_assestLoaded = false;
+    _dirtyRenderState = true;
     
 	return true;
 }
@@ -682,6 +686,7 @@ void Region::ApplyNodeMask()
     {
         _quadGeode->setNodeMask(nodeMask);
         this->setNodeMask(nodeMask);
+        _dirtyRenderState = true;
     }
 }
 
@@ -818,6 +823,24 @@ void Region::SetMicroMemoryMode(const bool& on)
 		if(_baseTexture.get()){_baseTexture->setUnRefImageDataAfterApply(false);}
 		if(_rollOverTexture.get()){_rollOverTexture->setUnRefImageDataAfterApply(false);}
 	}
+}
+
+//
+//overload isRenderStateDirty to check children also
+//
+const bool Region::isRenderStateDirty()
+{
+    for(unsigned int i=0; i<_children.size(); i++)
+    {
+        Region* asRegion = dynamic_cast<Region*>(_children[i].get());
+        if(asRegion){
+            if(asRegion->isRenderStateDirty()){
+                _dirtyRenderState = true;
+                break;
+            }
+        }
+    }
+    return TransformQuad::isRenderStateDirty();
 }
 
 //

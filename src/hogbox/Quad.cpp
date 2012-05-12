@@ -286,7 +286,7 @@ void Quad::buildQuadGeometry(const float& width, const float& height, QuadArgs* 
     osg::Vec3 widthDir = widthVec;
     widthDir.normalize();
     
-    osg::Vec3Array* coords = new osg::Vec3Array();
+    osg::ref_ptr<osg::Vec3Array> coords = new osg::Vec3Array();
     
     //first vec at center
     osg::Vec3 center = corner+(heightVec*0.5f)+(widthVec*0.5f);
@@ -404,19 +404,19 @@ void Quad::buildQuadGeometry(const float& width, const float& height, QuadArgs* 
     
     this->setVertexArray(coords);
     
-    osg::Vec2Array* tcoords = new osg::Vec2Array();
+    osg::ref_ptr<osg::Vec2Array> tcoords = new osg::Vec2Array();
     for(unsigned int i=0; i<coords->size(); i++){
         tcoords->push_back(this->computeQuadTexCoord((*coords)[i], width, height, l,b,r,t));
     }
     
     this->setTexCoordArray(0,tcoords);
     
-    osg::Vec4Array* colours = new osg::Vec4Array(1);
+    osg::ref_ptr<osg::Vec4Array> colours = new osg::Vec4Array(1);
     (*colours)[0].set(1.0f,1.0f,1.0,1.0f);
     //this->setColorArray(colours);
     //this->setColorBinding(Geometry::BIND_OVERALL);
     
-    osg::Vec3Array* normals = new osg::Vec3Array(1);
+    osg::ref_ptr<osg::Vec3Array> normals = new osg::Vec3Array(1);
     (*normals)[0] = widthVec^heightVec;
     (*normals)[0].normalize();
     //this->setNormalArray(normals);

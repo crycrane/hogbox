@@ -9,7 +9,8 @@ TransformQuad::TransformQuad(TransformQuadArgs* args)
     _size(osg::Vec2(1.0f, 1.0f)),
     _corner(osg::Vec2(0.0f,0.0f)),
     _rotation(0.0f),
-    _depth(0.0f)
+    _depth(0.0f),
+    _dirtyRenderState(true) //dirtied by default to force initial draw
 {
     this->buildBaseGraph();
 }
@@ -119,6 +120,8 @@ void TransformQuad::buildQuad(const float& width, const float& height, Transform
     }
     _scale->addChild(_quadGeode.get());
     //_quadGeode->addDrawable(_quad.get());
+    
+    _dirtyRenderState = true;
 }
 
 //positioning
@@ -142,6 +145,8 @@ void TransformQuad::SetPosition(const osg::Vec2& corner)
         default:break;
     }
 	_translate->setMatrix( osg::Matrix::translate(offset)); 
+    
+    _dirtyRenderState = true;
 }
 
 const osg::Vec2& TransformQuad::GetPosition() const
@@ -178,6 +183,8 @@ void TransformQuad::SetRotation(const float& rotate)
     }
     
 	_rotate->setMatrix(osg::Matrix::rotate(osg::DegreesToRadians(_rotation), axis));
+    
+    _dirtyRenderState = true;
 }
 
 const float& TransformQuad::GetRotation() const
@@ -221,6 +228,8 @@ void TransformQuad::SetSize(const osg::Vec2& size)
             this->buildQuad(_size.x(), _size.y(), _args.get());
        //}
     }
+    
+    _dirtyRenderState = true;
 }
 
 
@@ -276,6 +285,8 @@ void TransformQuad::SetLayer(const float& depth)
         default:break;
     }
 	_translate->setMatrix( osg::Matrix::translate(offset)); 
+    
+    _dirtyRenderState = true;
 }
 
 const float& TransformQuad::GetLayer() const
@@ -290,6 +301,7 @@ void TransformQuad::ApplyTexture(osg::Texture* tex, const unsigned int& channel)
 {
 	if(_quadGeode.get()){
         _quadGeode->ApplyTexture(tex, channel);
+        _dirtyRenderState = true;
     }
 }
 
@@ -300,6 +312,7 @@ void TransformQuad::SetColor(const osg::Vec3& color)
 {
     if(_quadGeode.get()){
         _quadGeode->SetColor(color);
+        _dirtyRenderState = true;
     }
 }
 
@@ -316,6 +329,7 @@ void TransformQuad::SetAlpha(const float& alpha)
 {
     if(_quadGeode.get()){
         _quadGeode->SetAlpha(alpha);
+        _dirtyRenderState = true;
     }
 }
 
@@ -334,6 +348,7 @@ void TransformQuad::EnableAlpha(const bool& enable)
 {
     if(_quadGeode.get()){
         _quadGeode->EnableAlpha(enable);
+        _dirtyRenderState = true;
     }else{
 
     }
@@ -355,6 +370,7 @@ void TransformQuad::SetCustomShader(const std::string& vertFile, const std::stri
 {
     if(_quadGeode.get()){
         _quadGeode->SetCustomShader(vertFile, fragFile, shadersAreSource);
+        _dirtyRenderState = true;
     }
 }
 
@@ -378,6 +394,7 @@ void TransformQuad::SetColorWriteMask(const bool& enable)
 {
     if(_quadGeode.get()){
         _quadGeode->SetColorWriteMask(enable);
+        _dirtyRenderState = true;
     } 
 }
 
@@ -401,6 +418,7 @@ void TransformQuad::SetDepthWriteMask(const bool& enable)
 {
     if(_quadGeode.get()){
         _quadGeode->SetDepthWriteMask(enable);
+        _dirtyRenderState = true;
     }    
 }
 
@@ -425,6 +443,7 @@ void TransformQuad::SetDepthTestEnabled(const bool& enable)
 {
     if(_quadGeode.get()){
         _quadGeode->SetDepthTestEnabled(enable);
+        _dirtyRenderState = true;
     } 
 }
 
@@ -444,5 +463,6 @@ void TransformQuad::SetRenderBinNumber(const int& num)
 {
     if(_quadGeode.get()){
         _quadGeode->SetRenderBinNumber(num);
+        _dirtyRenderState = true;
     } 
 }

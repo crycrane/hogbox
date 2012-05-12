@@ -87,7 +87,7 @@ public:
                 return false;
 			}
             //
-            OSG_FATAL << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
+            OSG_INFO << "XML Info: Loaded osg Node file '" << _fileName << "'." << std::endl;
             
 			//add the node to our base group
 			group->addChild(fileNode);

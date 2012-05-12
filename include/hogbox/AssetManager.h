@@ -153,7 +153,7 @@ public:
     
     virtual void operator () (osg::Object* object)
     {
-        OSG_FATAL<<"LoadAndCompileOperation "<<_filename<<std::endl;
+        OSG_INFO <<"LoadAndCompileOperation "<<_filename<<std::endl;
         
         _modelReadyToMerge = false;
         
@@ -179,7 +179,7 @@ public:
             
             if (_incrementalCompileOperation.valid())
             {
-                OSG_FATAL<<"Registering with ICO "<<_filename<<std::endl;
+                OSG_INFO <<"Registering with ICO "<<_filename<<std::endl;
                 
                 osg::ref_ptr<osgUtil::IncrementalCompileOperation::CompileSet> compileSet =
                 new osgUtil::IncrementalCompileOperation::CompileSet(_loadedModel.get());
@@ -196,12 +196,12 @@ public:
             _done = true;
         }
         
-        OSG_FATAL<<"done LoadAndCompileOperation "<<_filename<<std::endl;
+        OSG_INFO <<"done LoadAndCompileOperation "<<_filename<<std::endl;
     }
     
     virtual bool compileCompleted(osgUtil::IncrementalCompileOperation::CompileSet* compileSet)
     {
-        OSG_NOTICE<<"compileCompleted"<<std::endl;
+        OSG_INFO <<"compileCompleted"<<std::endl;
         _modelReadyToMerge = true;
         _done = true;
         return true;

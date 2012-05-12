@@ -194,3 +194,11 @@ void Hud::SetHudOrientation(HudOrientation ori)
 		_hudRegion->SetPosition(osg::Vec2(0.0f, _screenSize.y()));
 	}
 }
+
+//
+//Does the hud require redrawing
+//
+const bool Hud::RequiresRedraw()
+{
+    return _hudRegion->isRenderStateDirty(); 
+}

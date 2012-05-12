@@ -29,15 +29,17 @@ class HOGBOXHUD_EXPORT TextRegion : public StrokeRegion
 {
 public:
     enum TEXT_ALIGN{
-        CENTER_ALIGN=0,
-        RIGHT_ALIGN=1,
-        LEFT_ALIGN=2
+        NO_ALIGN_SET=0, 
+        CENTER_ALIGN=1,
+        RIGHT_ALIGN=2,
+        LEFT_ALIGN=3
     };
     
     enum BACKDROP_TYPE{
-        NO_BACKDROP=0,
-        DROP_SHADOW=1,
-        STROKE=2
+        NO_BACKDROP_SET=0,
+        NO_BACKDROP=1,
+        DROP_SHADOW=2,
+        STROKE=3
     };
     
     class TextRegionStyle : public StrokeRegionStyle{

@@ -19,7 +19,7 @@ class ReaderWriterXMLObject : public osgDB::ReaderWriter
 public:
     ReaderWriterXMLObject()
     {
-        OSG_FATAL << "Construct ReaderWriterXMLObject" << std::endl;
+
     }
     
     virtual const char* className() const
@@ -35,7 +35,7 @@ public:
     virtual ReadResult readObject(const std::string& file,
                                   const osgDB::ReaderWriter::Options* options) const
     {
-        OSG_FATAL<<"ReaderWriterXMLObject File("<<file<<")"<<std::endl;
+        OSG_INFO<<"ReaderWriterXMLObject File("<<file<<")"<<std::endl;
         
         std::string ext = osgDB::getLowerCaseFileExtension(file);
         if (!acceptsExtension(ext)) return ReadResult::FILE_NOT_HANDLED;
@@ -50,7 +50,6 @@ public:
     }
     
     virtual ReadResult readObject(std::istream& fin, const Options* options) const{
-        OSG_FATAL<<"ReaderWriterXMLObject Stream()"<<std::endl;
         osg::ref_ptr<XmlInputObject> xmlObject = new XmlInputObject(fin);
         return xmlObject.release();
     }
@@ -330,7 +329,7 @@ osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, ReadOp
     if(obj.get()){
         osgText::Font* font = dynamic_cast<osgText::Font*>(obj.get());
         if(font){
-            OSG_FATAL << "ReadFont from archive '" << fileName << "'." << std::endl;
+            OSG_INFO << "ReadFont from archive '" << fileName << "'." << std::endl;
             _fontCache[fileName] = font;
             return font;
         }
@@ -490,8 +489,6 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
         //is it ipad
         std::string ipadStr = SystemInfo::IsDeviceIPad() ? "~ipad" : "";
         
-        OSG_ALWAYS << "IPadStr: '" << ipadStr << "'." << std::endl;
-        
         if(screenType != SystemInfo::LOW_DENSITY){
             fullFileName = FindFile(localFolder+"/"+name+"@2x"+ipadStr+ext);
         }else{
@@ -499,7 +496,7 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
         }
 #endif
     }
-    OSG_ALWAYS << "FullFileName: '" << fullFileName << "'." << std::endl;
+
     return fullFileName;
 }
 

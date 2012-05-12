@@ -90,7 +90,7 @@ osg::ObjectPtr XmlClassManager::GetOrLoadNode(osg::ref_ptr<osgDB::XmlNode> xmlNo
 	//check it loaded
 	if(newObject.get())
 	{
-        OSG_FATAL << "XmlClassManager::GetOrLoadNode: INFO: Adding Node Object with uniqueID '" << uniqueIDStr << "' to database." << std::endl;
+        OSG_INFO << "XmlClassManager::GetOrLoadNode: INFO: Adding Node Object with uniqueID '" << uniqueIDStr << "' to database." << std::endl;
 		//add to our list of loaded nodes
 		XmlNodeToObjectPair newObjectEntry(xmlNode, newObject);
 		_objectList.insert(newObjectEntry);

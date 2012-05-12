@@ -33,12 +33,11 @@ public:
 	HogBoxObjectXmlWrapper() 
 			: hogboxDB::XmlClassWrapper("HogBoxObject")
 	{
-        OSG_FATAL << "Allocate HogBoxObjectXmlWrapper" << std::endl;
+
 	}
     
     //
     virtual osg::Object* allocateClassType(){
-        OSG_FATAL << "HogBoxObjectXmlWrapper Allocating HogBoxObject" << std::endl;
         return new hogbox::HogBoxObject();
     }
     

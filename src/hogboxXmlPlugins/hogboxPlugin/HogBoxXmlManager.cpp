@@ -41,7 +41,7 @@ public:
 
 	HogBoxXmlManager(void) : hogboxDB::XmlClassManager()
 	{
-        OSG_FATAL << "Register HogBoxXmlManager" << std::endl;
+        OSG_INFO << "Register HogBoxXmlManager" << std::endl;
 		SupportsClassType("HogBoxViewer", new HogBoxViewerXmlWrapper());//"Xml definition of HogBoxViewer");
 		SupportsClassType("HogBoxObject", new HogBoxObjectXmlWrapper());//"Xml definition of HogBoxObject.");
 		SupportsClassType("MeshMapping", new MeshMappingXmlWrapper());//"Xml definition of MeshMapping. For defining the The state of the meshes in a HogBoxObject.");

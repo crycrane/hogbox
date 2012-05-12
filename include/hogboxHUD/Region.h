@@ -61,7 +61,6 @@ public:
     public:
         RegionStyle()
             : TransformQuadArgs(),
-            _color(osg::Vec3(-1.0f,-1.0f,-1.0f)),//-1 indicates to not use the color arg
             _alpha(-1.0f), //-1 indicates to not use the alpha
             _assets(""),
             _sizeByImage(false)
@@ -70,14 +69,12 @@ public:
         
         RegionStyle(const RegionStyle& args)
             : TransformQuadArgs(args),
-            _color(args._color),
             _alpha(args._alpha),
             _assets(args._assets),
             _sizeByImage(args._sizeByImage)
         {
         }
         
-        osg::Vec3 _color;
         float _alpha;
         
         std::string _assets;
@@ -220,6 +217,11 @@ public:
     RegionStyle* ArgsAsRegionStyle(){
         return dynamic_cast<RegionStyle*>(_args.get());
     }
+    
+    //
+    //overload isRenderStateDirty to check children also
+    virtual const bool isRenderStateDirty();
+
     
     //
     //Funcs to register event callbacks

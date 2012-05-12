@@ -74,6 +74,11 @@ public:
     //
     //get the ammount of time passed to this frame
     const float& GetTimePassed(){return _timePassed;}
+    
+    //
+    //Does the hud require redrawing
+    const bool RequiresRedraw();
+    
 protected:
     
     Hud(void);

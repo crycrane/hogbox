@@ -40,7 +40,7 @@ public:
 		AddComponentDependency("WorldTransformComponent");
 	}
 
-	META_Box(hogboxStage, PhysicsComponent);
+	META_Object(hogboxStage, PhysicsComponent);
 
 	//
 	//pure virtual get type name to be implemented by concrete types

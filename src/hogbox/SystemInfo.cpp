@@ -7,11 +7,14 @@
 #include <sstream>
 #include <string>
 
-#ifdef TARGET_OS_IPHONE
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#import <UIKit/UIScreen.h>
-#import <UIKit/UIDevice.h>
+#ifdef __APPLE__
+    #include <TargetConditionals.h>
+    #if (TARGET_OS_IPHONE)
+        #include <sys/types.h>
+        #include <sys/sysctl.h>
+        #import <UIKit/UIScreen.h>
+        #import <UIKit/UIDevice.h>
+    #endif
 #endif
 
 
@@ -495,7 +498,7 @@ const double SystemInfo::getScreenAspectRatio(unsigned int screenID)
 //get the screens density/res group, used for loading different assets on different displays
 SystemInfo::ScreenDensity SystemInfo::getScreenDensity()
 {
-#ifdef TARGET_OS_IPHONE
+#if (TARGET_OS_IPHONE)
     if([[UIScreen mainScreen] respondsToSelector:@selector(scale)])
     {
         if([[UIScreen mainScreen] scale] > 2){
@@ -872,7 +875,7 @@ bool SystemInfo::IsFeatureLevelSupported(const std::string& name)
 //
 const std::string SystemInfo::GetDeviceString()
 {
-#ifdef TARGET_OS_IPHONE 
+#if (TARGET_OS_IPHONE )
     size_t size;
     
     // Set 'oldp' parameter to NULL to get the size of the data
@@ -895,7 +898,7 @@ const std::string SystemInfo::GetDeviceString()
     
     return deviceName;
     
-#elif defined(WIN32
+#elif defined(WIN32)
     return "Windows";
 #elif defined(__APPLE__)
     return "OSX";
@@ -906,7 +909,7 @@ const std::string SystemInfo::GetDeviceString()
 
 const bool SystemInfo::IsDeviceIPad()
 {
-#ifdef TARGET_OS_IPHONE 
+#if (TARGET_OS_IPHONE )
 #if (__IPHONE_OS_VERSION_MAX_ALLOWED >= 30200)
     if ([[UIDevice currentDevice] respondsToSelector: @selector(userInterfaceIdiom)])
         return (bool)([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad);
@@ -927,14 +930,14 @@ const bool SystemInfo::IsDeviceIPad()
 //
 const std::string SystemInfo::GetDocumentsPath()
 {
-#ifdef TARGET_OS_IPHONE
+#if (TARGET_OS_IPHONE)
     //ensure a player data file exists in documents folder
     NSArray     *docsPathList = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString    *docsPath     = [docsPathList  objectAtIndex:0];
     const char* docsPathChar  = [docsPath UTF8String];
     return std::string(docsPathChar);
 #else
-    return "Documents;
+    return "Documents";
 #endif
 }
 

@@ -27,7 +27,7 @@ public:
 		AddCallbackEventType("OnHide");
 	}
 
-	META_Box(hogboxStage, RenderableComponent);
+	META_Object(hogboxStage, RenderableComponent);
 
 	//
 	//pure virtual get type name to be implemented by concrete types

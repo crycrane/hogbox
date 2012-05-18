@@ -29,7 +29,7 @@ public:
 		AddCallbackEventType("OnUpdate");
 	}
 
-	META_Box(hogboxStage, Entity);
+	META_Object(hogboxStage, Entity);
 
 	//
 	//register a callback to one of our events, returns false if the event does not exist

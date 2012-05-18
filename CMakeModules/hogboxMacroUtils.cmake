@@ -121,6 +121,50 @@ ENDMACRO(LINK_CORELIB_DEFAULT CORELIB_NAME)
 
 
 #######################################################################################################
+#  macro for common setup of libraries it expect some variables to be set:
+#  either within the local CMakeLists or higher in hierarchy
+#  LIB_NAME  is the name of the target library
+#  TARGET_SRC  are the sources of the target
+#  TARGET_H are the eventual headers of the target
+#  TARGET_H_NO_MODULE_INSTALL are headers that belong to target but shouldn't get installed by the ModuleInstall script
+#  TARGET_LIBRARIES are the libraries to link to that are internal to the project and have d suffix for debug
+#  TARGET_EXTERNAL_LIBRARIES are external libraries and are not differentiated with d suffix
+#  TARGET_LABEL is the label IDE should show up for targets
+##########################################################################################################
+
+MACRO(SETUP_LIBRARY LIB_NAME)
+    IF(ANDROID)
+        SETUP_ANDROID_LIBRARY(${LIB_NAME}) 
+    ELSE()
+        SET(TARGET_NAME ${LIB_NAME} )
+        SET(TARGET_TARGETNAME ${LIB_NAME} )
+        ADD_LIBRARY(${LIB_NAME}
+            ${hogbox_USER_DEFINED_DYNAMIC_OR_STATIC}
+            ${TARGET_H}
+            ${TARGET_H_NO_MODULE_INSTALL}
+            ${TARGET_SRC}
+        )
+        SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES FOLDER "HogBox Core")
+        IF(TARGET_LABEL)
+            SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PROJECT_LABEL "${TARGET_LABEL}")
+        ENDIF(TARGET_LABEL)
+    
+        IF(TARGET_LIBRARIES)
+            LINK_INTERNAL(${LIB_NAME} ${TARGET_LIBRARIES})
+        ENDIF()
+        IF(TARGET_EXTERNAL_LIBRARIES)
+            LINK_EXTERNAL(${LIB_NAME} ${TARGET_EXTERNAL_LIBRARIES})
+        ENDIF()
+        IF(TARGET_LIBRARIES_VARS)
+            LINK_WITH_VARIABLES(${LIB_NAME} ${TARGET_LIBRARIES_VARS})
+        ENDIF(TARGET_LIBRARIES_VARS)
+        LINK_CORELIB_DEFAULT(${LIB_NAME})
+    
+    ENDIF()
+    INCLUDE(ModuleInstall OPTIONAL)
+ENDMACRO(SETUP_LIBRARY LIB_NAME)
+
+#######################################################################################################
 #  macro for common setup of plugins, examples and applications it expect some variables to be set:
 #  either within the local CMakeLists or higher in hierarchy
 #  TARGET_NAME is the name of the folder and of the actually .exe or .so or .dll
@@ -182,7 +226,9 @@ ENDMACRO(SETUP_LINK_LIBRARIES)
 #
 
 MACRO(SETUP_XML_PLUGIN PLUGIN_NAME)
-
+    IF(ANDROID)
+        SETUP_ANDROID_LIBRARY(${TARGET_DEFAULT_PREFIX}${PLUGIN_NAME}) 
+    ELSE()
     SET(TARGET_NAME ${PLUGIN_NAME})
 
     #MESSAGE("in -->SETUP_PLUGIN<-- ${TARGET_NAME}-->${TARGET_SRC} <--> ${TARGET_H}<--")
@@ -261,6 +307,7 @@ MACRO(SETUP_XML_PLUGIN PLUGIN_NAME)
             ARCHIVE DESTINATION lib${LIB_POSTFIX}/${hogbox_PLUGINS} COMPONENT libhogbox-dev
             LIBRARY DESTINATION lib${LIB_POSTFIX}/${hogbox_PLUGINS} COMPONENT ${PACKAGE_COMPONENT})
     ENDIF(WIN32)
+    ENDIF()
 ENDMACRO(SETUP_XML_PLUGIN)
 
 

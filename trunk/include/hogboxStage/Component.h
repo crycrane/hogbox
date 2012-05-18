@@ -26,7 +26,7 @@ public:
 	/** Copy constructor using CopyOp to manage deep vs shallow copy.*/
 	Component(const Component& ent,const osg::CopyOp& copyop=osg::CopyOp::SHALLOW_COPY);
 
-	META_Box(hogboxStage, Component);
+	META_Object(hogboxStage, Component);
 
 	//
 	//Called when a component is added to an entity

@@ -14,12 +14,12 @@
 
 #include <hogbox/HogBoxNotifyHandler.h>
 
-#include <hogboxHUD/HogBoxHud.h>
+#include <hogboxHUD/Hud.h>
 #include <hogboxHUD/ButtonRegion.h>
-#include <hogboxHUD/OsgInput.h>
+#include <hogboxHUD/HudInputHandler.h>
 
-#include <hogboxStage/EntityManager.h>
-#include <hogboxStage/RenderableComponent.h>
+//#include <hogboxStage/EntityManager.h>
+//#include <hogboxStage/RenderableComponent.h>
 
 #include <osgAnimation/BasicAnimationManager>
 #include <osgAnimation/AnimationManagerBase>
@@ -37,12 +37,12 @@ public:
 	{
 	}
 
-	META_Box(hogbox,App);
+	META_Object(hogbox,App);
 
 	void OnClickButton(osg::Object* sender, hogboxHUD::HudInputEvent& inputEvent){
 		osg::notify(osg::WARN) << "Clicked Button" << std::endl;
 		//cast sender to hudregion
-		hogboxHUD::HudRegion* hud = dynamic_cast<hogboxHUD::HudRegion*>(sender);
+		hogboxHUD::Region* hud = dynamic_cast<hogboxHUD::Region*>(sender);
 		if(hud){
 			hud->RemoveChild(0,1);
 		}
@@ -95,11 +95,11 @@ int main( int argc, const char* argv[] )
 	//AnimationSplitter spiltter("./splitConfig.xml");
 	//return 0;
 
-	hogboxDB::HogBoxManager* manager = hogboxDB::HogBoxManager::Instance();
+	hogboxDB::HogBoxManager* manager = hogboxDB::HogBoxManager::Inst();
 	manager->ReadDataBaseFile("./Data/hogboxDB.xml");
 
 	//instance the entityManager to add its xml system to the hogboxDB Registry
-	hogboxStage::EntitytManager* entityManager = hogboxStage::EntitytManager::Instance();
+	//hogboxStage::EntitytManager* entityManager = hogboxStage::EntitytManager::Instance();
 
 
 	//load the main window
@@ -117,7 +117,7 @@ int main( int argc, const char* argv[] )
 	hogbox::HogBoxObjectPtr hogboxObject = manager->ReadNodeByIDTyped<hogbox::HogBoxObject>("Terrorist.Object");
 	root->addChild(hogboxObject->GetRootNode());
 
-	hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
+	//hogboxStage::EntityPtr entity = manager->ReadNodeByIDTyped<hogboxStage::Entity>("Terrorist.Entity");
 	//add a renderable component to the entity
 	//entity->AddComponent(new hogboxStage::RenderableComponent());
 //entityManager->
@@ -135,8 +135,8 @@ int main( int argc, const char* argv[] )
 
 
 	//add hud
-	hogboxHUD::HogBoxHud::Instance()->Create(osg::Vec2(800,600));
-	root->addChild(hogboxHUD::HogBoxHud::Instance()->GetHudNode());
+	hogboxHUD::Hud::Inst()->Create(osg::Vec2(800,600));
+	root->addChild(hogboxHUD::Hud::Inst()->GetHudNode());
 	
 	//add input handler for hud
 	hogboxHUD::HudInputHandler* input = new hogboxHUD::HudInputHandler(viewer->GetViewer(),osg::Vec2(800,600));
@@ -146,20 +146,20 @@ int main( int argc, const char* argv[] )
 	osg::ref_ptr<App> _app = new App();
 	osg::ref_ptr<hogboxHUD::ButtonRegion> region = manager->ReadNodeByIDTyped<hogboxHUD::ButtonRegion>("Button.SwapCamera");
 	region->AddOnButtonClickedCallbackReceiver(new hogboxHUD::HudEventObjectCallback<App>(region.get(),_app.get(),&App::OnClickButton)); 
-	hogboxHUD::HogBoxHud::Instance()->AddRegion(region);
+	hogboxHUD::Hud::Inst()->AddRegion(region);
 
-	hogboxHUD::HudRegion* childRegion = new hogboxHUD::HudRegion(true);
-	childRegion->Create(osg::Vec2(0,0), osg::Vec2(40,40), "Quad");
-	region->AddChild(childRegion);
+	hogboxHUD::Region* childRegion = new hogboxHUD::Region();
+	//childRegion->Create(osg::Vec2(0,0), osg::Vec2(40,40), "Quad");
+	//region->AddChild(childRegion);
 	childRegion = NULL;
 
 
 	//find the book pick mesh and attach a callback
-	osg::ref_ptr<hogboxHUD::CallbackEvent> _onObjectClickedEvent = new hogboxHUD::CallbackEvent(_app.get(), "OnObjectClicked");
+	/*osg::ref_ptr<hogboxHUD::CallbackEvent> _onObjectClickedEvent = new hogboxHUD::CallbackEvent(_app.get(), "OnObjectClicked");
 	_onObjectClickedEvent->AddCallbackReceiver(new hogboxHUD::HudEventObjectCallback<App>(NULL,_app.get(),&App::OnClickObject));
 	osg::Geode* bookPickMesh = hogboxObject->GetNodeByNameTyped<osg::Geode>("PickBookShelf", true);
 	bookPickMesh->setUserData(_onObjectClickedEvent.get());
-	
+	*/
 	
 	//add a camera manipulator to control camera
 	osg::ref_ptr<osgGA::TrackballManipulator> cameraManipulator;

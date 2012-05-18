@@ -23,7 +23,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxStage, ComponentEvent);
+	META_Object(hogboxStage, ComponentEvent);
 	
 protected:	
 	
@@ -59,7 +59,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxStage, ComponentUpdate);
+	META_Object(hogboxStage, ComponentUpdate);
 
 protected:
 	virtual ~ComponentUpdate(){

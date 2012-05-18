@@ -20,7 +20,7 @@
 #ifdef WIN32
 	#include <windows.h> //for window handle stuff
 	#include <osgViewer/api/win32/GraphicsWindowWin32> //include platform specifiec graphics window implementation
-#else
+#elif defined(__APPLE__)
 	#include <TargetConditionals.h>
 	#if (TARGET_OS_IPHONE)
 		#include <osgViewer/api/IOS/GraphicsWindowIOS> 

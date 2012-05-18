@@ -259,7 +259,7 @@ bool HogBoxViewer::CreateAppWindow()
 			#if (TARGET_OS_IPHONE)
 				windata = new osgViewer::GraphicsWindowIOS::WindowData((UIView*)_hwnd, _deviceOrientationFlags, _contentScale);
 			#else
-				windata = new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)_hwnd);
+                windata = NULL;//new osgViewer::GraphicsWindowCarbon::WindowData((OpaqueWindowPtr*)_hwnd);
 			#endif
 #endif
 			graphicsTraits->inheritedWindowData = windata;

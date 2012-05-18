@@ -50,6 +50,8 @@ IF(MINGW)
     SET(hogboxVis_PLUGIN_PREFIX "mingw_")
 ENDIF()
 
+PROJECT(hogbox)
+
 #
 SET(CMAKE_MODULE_PATH "${hogbox_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 SET(SOURCE_DIR ${hogbox_SOURCE_DIR})
@@ -87,7 +89,7 @@ ENDIF ()
 
 #
 ## Option to enable Android build using AndroidNDK
-OPTION(OSG_BUILD_PLATFORM_ANDROID ON)
+OPTION(OSG_BUILD_PLATFORM_ANDROID OFF)
 IF(OSG_BUILD_PLATFORM_ANDROID)
 
     CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
@@ -155,9 +157,6 @@ IF(OSG_BUILD_PLATFORM_ANDROID)
     ADD_DEFINITIONS(-DANDROID)
 
 ENDIF()
-
-PROJECT(hogbox)
-
 
 
 #######################################
@@ -295,7 +294,7 @@ IF(NOT MSVC OR MSVC_IDE)
     MAKE_DIRECTORY(${OUTPUT_LIBDIR}/${hogboxVis_PLUGINS})
 ENDIF(NOT MSVC OR MSVC_IDE)
 
-# On CMake 2.4.x use EXECUTABLE_OUTPUT_PATH and LIBRARY_OUTPUT_PATH and later
+# On CMake 2.4.x use EXECUTABLE_OUTPUT_PAhTH and LIBRARY_OUTPUT_PATH and later
 # we work around the DLL placement by use of the PREFIX target property hack
 #
 # On CMake 2.6.x use the newly minted CMAKE_LIBRARY_OUTPUT_DIRECTORY,

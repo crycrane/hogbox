@@ -37,7 +37,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxStage, Entity);
+	META_Object(hogboxStage, Entity);
 
 	//
 	//Add a new component, returns false if component of same type

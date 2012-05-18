@@ -25,7 +25,7 @@ public:
 	{
 	}
 
-	META_Box(hogboxStage, MovedEvent);
+	META_Object(hogboxStage, MovedEvent);
 
 protected:
 	virtual ~MovedEvent(){

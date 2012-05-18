@@ -1,4 +1,4 @@
-CMAKE_MINIMU_REQUIRED(VERSION 2.4.5 FATAL_ERROR)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5 FATAL_ERROR)
 
 if(COMMAND cmake_policy)
     # Works around warnings libraries linked against that don't
@@ -15,41 +15,6 @@ if(COMMAND cmake_policy)
         cmake_policy(SET CMP0008 OLD)
     endif()
 endif()
-
-
-# IPHONE_PORT@tom
-# Trying to get CMake to generate an XCode IPhone project, current efforts are to get iphoneos sdk 3.1 working
-# Added option which needs manually setting to select the IPhone SDK for building. We can only have one of the below 
-# set to true. Should realy have an OSG_BUILD_PLATFORM variable that we set to our desired platform
-OPTION(OSG_BUILD_PLATFOR_IPHONE "Enable IPhoneSDK Device support" ON)
-OPTION(OSG_BUILD_PLATFOR_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" OFF)
-IF(OSG_BUILD_PLATFOR_IPHONE OR OSG_BUILD_PLATFOR_IPHONE_SIMULATOR)
-  
-  #you need to manually set the default sdk version here
-  SET (IPHONE_SDKVER "4.1")
-  #the below is taken from ogre, it states the gcc stuff needs to happen before PROJECT() is called. I've no clue if we even need it
-  # Force gcc <= 4.2 on iPhone
-  include(CMakeForceCompiler)
-  CMAKE_FORCE_C_COMPILER(gcc-4.2 GNU)
-  CMAKE_FORCE_CXX_COMPILER(gcc-4.2 GNU)
-  SET(GCC_THUMB_SUPPORT NO)
-
-  #set either the device sdk or the simulator sdk. Can't find away to separate these in the same project
-  IF(OSG_BUILD_PLATFOR_IPHONE)
-    SET (IPHONE_DEVROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
-    SET (IPHONE_SDKROOT "${IPHONE_DEVROOT}/SDKs/iPhoneOS${IPHONE_SDKVER}.sdk")
-  ELSE()
-    SET (IPHONE_DEVROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer")
-    SET (IPHONE_SDKROOT "${IPHONE_DEVROOT}/SDKs/iPhoneSimulator${IPHONE_SDKVER}.sdk")
-  ENDIF()
-ENDIF ()
-# IPHONE_PORT@tom
-
-PROJECT(hogbox)
-
-SET(CMAKE_MODULE_PATH "${hogbox_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
-SET(SOURCE_DIR ${hogbox_SOURCE_DIR})
-SET(OSG_DIR "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path where to find the osg installation")
 
 #######################################
 # Versions
@@ -84,6 +49,115 @@ ENDIF()
 IF(MINGW)
     SET(hogboxVis_PLUGIN_PREFIX "mingw_")
 ENDIF()
+
+#
+SET(CMAKE_MODULE_PATH "${hogbox_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+SET(SOURCE_DIR ${hogbox_SOURCE_DIR})
+SET(OSG_DIR "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path where to find the osg installation")
+
+
+# IPHONE_PORT@tom
+# Trying to get CMake to generate an XCode IPhone project, current efforts are to get iphoneos sdk 3.1 working
+# Added option which needs manually setting to select the IPhone SDK for building. We can only have one of the below 
+# set to true. Should realy have an OSG_BUILD_PLATFORM variable that we set to our desired platform
+OPTION(OSG_BUILD_PLATFORM_IPHONE "Enable IPhoneSDK Device support" OFF)
+OPTION(OSG_BUILD_PLATFORM_IPHONE_SIMULATOR "Enable IPhoneSDK Simulator support" OFF)
+IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
+  
+  #you need to manually set the default sdk version here
+  SET (IPHONE_SDKVER "4.1")
+  #the below is taken from ogre, it states the gcc stuff needs to happen before PROJECT() is called. I've no clue if we even need it
+  # Force gcc <= 4.2 on iPhone
+  include(CMakeForceCompiler)
+  CMAKE_FORCE_C_COMPILER(gcc-4.2 GNU)
+  CMAKE_FORCE_CXX_COMPILER(gcc-4.2 GNU)
+  SET(GCC_THUMB_SUPPORT NO)
+
+  #set either the device sdk or the simulator sdk. Can't find away to separate these in the same project
+  IF(OSG_BUILD_PLATFORM_IPHONE)
+    SET (IPHONE_DEVROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
+    SET (IPHONE_SDKROOT "${IPHONE_DEVROOT}/SDKs/iPhoneOS${IPHONE_SDKVER}.sdk")
+  ELSE()
+    SET (IPHONE_DEVROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer")
+    SET (IPHONE_SDKROOT "${IPHONE_DEVROOT}/SDKs/iPhoneSimulator${IPHONE_SDKVER}.sdk")
+  ENDIF()
+ENDIF ()
+# IPHONE_PORT@tom
+
+
+#
+## Option to enable Android build using AndroidNDK
+OPTION(OSG_BUILD_PLATFORM_ANDROID ON)
+IF(OSG_BUILD_PLATFORM_ANDROID)
+
+    CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0 FATAL_ERROR)
+
+    INCLUDE(OsgAndroidMacroUtils)
+    SET(ANDROID TRUE)
+    IF(NOT ANDROID_PLATFORM)
+        MESSAGE("Warning Android Platform version NOT defined, Default selected version: 5")
+        SET(ANDROID_PLATFORM 5)
+    ENDIF()
+    IF(NOT ANDROID_ABI)
+        MESSAGE("Warning Android ABI version NOT defined, Default selection: armeabi armeabi-v7a")
+        SET(ANDROID_ABI "armeabi armeabi-v7a")
+    ENDIF()
+    IF(NOT ANDROID_STL)
+        MESSAGE("Warning Android STL NOT defined, Default selection: gnustl_static")
+        SET(ANDROID_STL "gnustl_static")
+    ENDIF()
+    IF(ANDROID_DEBUG)
+        MESSAGE("Warning Android Build is in debug mode")
+        SET(ANDROID_RELEASE_OPTIM "debug")
+    ELSE()
+        MESSAGE("Warning Android Build is in release mode")
+        SET(ANDROID_RELEASE_OPTIM "release")
+    ENDIF()
+    IF(ANDROID_NEON)
+        MESSAGE("Warning Android NEON optimizations enabled, this will not be available on all armeabi-v7a devices ie. Tegra2")
+        SET(ANDROID_OPTIM_NEON true)
+    ELSE()
+        SET(ANDROID_OPTIM_NEON false)
+    ENDIF()
+    IF(ANDROID_ARM32)
+        MESSAGE("Warning ARM 32bit instruction set will be used")
+        SET(ANDROID_OPTIM_ARM32 true)
+    ELSE()
+        SET(ANDROID_OPTIM_ARM32 false)
+    ENDIF()
+
+    FIND_PACKAGE(AndroidNDK REQUIRED)
+
+    SET(OSG_ANDROID_TEMPLATES "${CMAKE_SOURCE_DIR}/PlatformSpecifics/Android")
+
+    SET(J  "4" CACHE STRING "how many processes for make -j <J>")
+
+    ADD_CUSTOM_COMMAND(
+        OUTPUT    Android-OpenSceneGraph
+        DEPENDS   ${CMAKE_BINARY_DIR}/Android.mk
+        COMMAND   "${ANDROID_NDK}/ndk-build"
+        ARGS      --directory=${CMAKE_BINARY_DIR} NDK_APPLICATION_MK=Application.mk -j${J} NDK_LOG=1
+    )
+
+    ADD_CUSTOM_TARGET(ndk ALL echo
+          DEPENDS Android-Hogbox
+    )
+    install(DIRECTORY include/ DESTINATION include/
+        PATTERN ".svn" EXCLUDE
+    )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ DESTINATION include/
+    )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/obj/ DESTINATION obj/
+        PATTERN ".svn" EXCLUDE
+        PATTERN "objs" EXCLUDE
+    )
+
+    ADD_DEFINITIONS(-DANDROID)
+
+ENDIF()
+
+PROJECT(hogbox)
+
 
 
 #######################################
@@ -126,6 +200,25 @@ SET(GL_LIBS
 # MESSAGE( "project path: ${PROJECT_BINARY_DIR}" )
 # MESSAGE( "source  path: ${hogbox_SOURCE_DIR}" )
 
+
+########################################################################################################
+##### these were settings located in SetupCommon.cmake used in Luigi builds.... find out what are useful
+########################################################################################################
+#luigi#SET(CMAKE_VERBOSE_MAKEFILE TRUE)
+#luigi#SET(CMAKE_SKIP_RPATH TRUE)
+#luigi#SET(CMAKE_SKIP_RULE_DEPENDENCY TRUE)
+#luigi#IF(UNIX)
+#luigi#    LIST_CONTAINS(contains "g++" ${CMAKE_CXX_COMPILER_LIST})
+#luigi#    IF (contains)
+#luigi#        MESSAGE(${MY_MESSAGE_DEFAULT} "${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE} setting  CMAKE_CXX_COMPILER to g++")
+#luigi#        SET(CMAKE_CXX_COMPILER "g++")
+#luigi#        SET(CMAKE_CXX_COMPILER_LOADED 2)
+#luigi#        SET(CMAKE_CXX_COMPILER_WORKS 2)
+#luigi#    ENDIF (contains)
+#luigi#    SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
+#luigi#    SET(CMAKE_CXX_FLAGS_DEBUG "-ggdb -gstabs")
+#luigi#ENDIF(UNIX)
+########################################################################################################
 
 #######################################
 # Solution definition
@@ -275,19 +368,19 @@ IF (hogbox_MAINTAINER)
     ENDIF(hogbox_RELEASE_CANDIDATE EQUAL 0)
 
 
-    ADD_CUSTO_TARGET(tag-test
+    ADD_CUSTOM_TARGET(tag-test
         COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
     )
 
-    ADD_CUSTO_TARGET(tag-run
+    ADD_CUSTOM_TARGET(tag-run
         COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNTAGDIR}/${RELEASE_NAME} -m "Release ${RELEASE_NAME}"
     )
 
-    ADD_CUSTO_TARGET(branch-test
+    ADD_CUSTOM_TARGET(branch-test
         COMMAND echo ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${hogbox_BRANCH} -m "Branch ${hogbox_BRANCH}"
     )
 
-    ADD_CUSTO_TARGET(branch-run
+    ADD_CUSTOM_TARGET(branch-run
         COMMAND ${SVNCOMMAND} copy ${SVNSOURCEDIR} ${SVNBRANCHDIR}/${hogbox_BRANCH} -m "Branch ${hogbox_BRANCH}"
     )
 
@@ -296,7 +389,7 @@ IF (hogbox_MAINTAINER)
     #
     SET(GENERATELOGS svn2cl)
 
-    ADD_CUSTO_TARGET(ChangeLog
+    ADD_CUSTOM_TARGET(ChangeLog
         COMMAND ${SVNCOMMAND} update
         #COMMAND ${SVNCOMMAND} up
         #COMMAND ${GENERATELOGS}
@@ -342,10 +435,10 @@ ADD_SUBDIRECTORY(examples)
 
 # IPHONE_PORT@tom
 #Here we check if the user specified IPhone SDK
-IF(OSG_BUILD_PLATFOR_IPHONE OR OSG_BUILD_PLATFOR_IPHONE_SIMULATOR)
+IF(OSG_BUILD_PLATFORM_IPHONE OR OSG_BUILD_PLATFORM_IPHONE_SIMULATOR)
 	
 	#set iphone arch and flags taken from http://sites.google.com/site/michaelsafyan/coding/resources/how-to-guides/cross-compile-for-the-iphone/how-to-cross-compile-for-the-iphone-using-cmake
-	IF(OSG_BUILD_PLATFOR_IPHONE)
+	IF(OSG_BUILD_PLATFORM_IPHONE)
 		SET(CMAKE_OSX_ARCHITECTURES "armv6;armv7" CACHE STRING "Build architectures for iOS" FORCE)
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -miphoneos-version-min=3.1 -mno-thumb -arch armv6 -pipe -no-cpp-precomp" CACHE STRING "Flags used by the compiler during all build types." FORCE)
 	ELSE()
@@ -385,5 +478,13 @@ CONFIGURE_FILE(
   "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/cmake_uninstall.cmake.in"
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
-ADD_CUSTO_TARGET(uninstall
+ADD_CUSTOM_TARGET(uninstall
   "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+
+#
+IF(ANDROID)
+    message(STATUS "Creating Android Makefile Master files" )
+    configure_file("${OSG_ANDROID_TEMPLATES}/Android.mk.master.in" "${CMAKE_BINARY_DIR}/Android.mk")
+    configure_file("${OSG_ANDROID_TEMPLATES}/Application.mk.master.in" "${CMAKE_BINARY_DIR}/Application.mk")
+    configure_file("${OSG_ANDROID_TEMPLATES}/AndroidManifest.xml.master.in" "${CMAKE_BINARY_DIR}/AndroidManifest.xml")
+ENDIF(ANDROID)

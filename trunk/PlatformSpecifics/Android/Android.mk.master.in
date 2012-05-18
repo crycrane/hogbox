@@ -1,0 +1,9 @@
+#ANDROID ROOT MAKEFILE
+OSG_ROOT := $(call my-dir)
+LOCAL_PATH := $(call my-dir)
+OSG_ROOT := $(LOCAL_PATH)
+OSGInclude :=   $(OSG_ROOT)/include/hogbox \
+                $(OSG_ROOT)/include/hogboxDB \
+		$(OSG_ROOT)/include/hogboxHUD \
+		$(OSG_ROOT)/include/hogboxVision
+include src/Android.mk

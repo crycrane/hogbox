@@ -35,7 +35,7 @@ public:
     virtual ReadResult readObject(const std::string& file,
                                   const osgDB::ReaderWriter::Options* options) const
     {
-        OSG_INFO<<"ReaderWriterXMLObject File("<<file<<")"<<std::endl;
+        OSG_ALWAYS<<"ReaderWriterXMLObject File("<<file<<")"<<std::endl;
         
         std::string ext = osgDB::getLowerCaseFileExtension(file);
         if (!acceptsExtension(ext)) return ReadResult::FILE_NOT_HANDLED;
@@ -357,8 +357,8 @@ XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, 
     }   
     
     if(obj.get()){
-        XmlInputObject* xmlObject = dynamic_cast<XmlInputObject*>(obj.get());
-        if(xmlObject){
+        XmlInputObjectPtr xmlObject = dynamic_cast<XmlInputObject*>(obj.get());
+        if(xmlObject.get()){
             OSG_FATAL << "ReadXml from archive '" << fileName << "'." << std::endl;
             //_xmlObjectCache[fileName] = xmlObject;//caching doesn't seem to work on xml input, think node read destroys it (maybe make xmlinputobject read it and cache an xml root node)
             return xmlObject;

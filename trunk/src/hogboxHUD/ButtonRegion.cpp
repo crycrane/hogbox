@@ -14,6 +14,7 @@ ButtonRegion::ButtonRegion(ButtonRegionStyle* style)
     _mouseDownTexture(NULL),
     _highlightColor(osg::Vec3(0,0,1)),
     _oriColor(osg::Vec3(0,0,0)),
+    _enabled(true),
     //callback events
     _onButtonClickedEvent(new HudCallbackEvent(this, "OnButtonClicked"))
 {
@@ -86,6 +87,21 @@ void ButtonRegion::SetHighlightColor(const osg::Vec3& color)
     _highlightColor = color;
 }
 
+//
+//set the enabled state to false to prevent clicks
+//
+void ButtonRegion::SetEnabled(const bool& enable)
+{
+    _enabled = enable; 
+}
+
+//
+//
+const bool& ButtonRegion::GetEnabled()const
+{
+    return _enabled;
+}
+
 int ButtonRegion::HandleInputEvent(HudInputEvent& hudEvent)
 {	
 	return TextRegion::HandleInputEvent(hudEvent); 
@@ -118,16 +134,19 @@ void ButtonRegion::OnMouseUp(osg::Object* sender, hogboxHUD::HudInputEvent& inpu
 {
 	//if the button is down then it's a Click event
 	if(_buttonDown){
-		//trigger the onButtonClicked Event 
-		_onButtonClickedEvent->Trigger(inputEvent);
         
-        //animate to the highlight color
-        if(this->GetNumColorKeys() == 0){
-            _oriColor = this->GetColor();
+        if(_enabled){
+            //trigger the onButtonClicked Event 
+            _onButtonClickedEvent->Trigger(inputEvent);
+            
+            //animate to the highlight color
+            if(this->GetNumColorKeys() == 0){
+                _oriColor = this->GetColor();
+            }
+            this->AddColorKey<osgAnimation::LinearMotion>(_highlightColor, highlightTime);
+            //animate to back to base color
+            this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
         }
-        this->AddColorKey<osgAnimation::LinearMotion>(_highlightColor, highlightTime);
-        //animate to back to base color
-        this->AddColorKey<osgAnimation::LinearMotion>(_oriColor, highlightTime);
 	}
 	
 	//reset buttonDown state

@@ -62,6 +62,10 @@ public:
     const osg::Vec3& GetHighlightColor()const;
     void SetHighlightColor(const osg::Vec3& color);
     
+    //
+    //set the enabled state to false to prevent clicks
+    void SetEnabled(const bool& enable);
+    const bool& GetEnabled()const;
     
 	//
 	//Detects mouse down and flags is pressed state,
@@ -99,6 +103,10 @@ protected:
 
 protected:
 
+    //
+    //enable/disable pressing of the button
+    bool _enabled;
+    
 	//is the button currently held down (received mouseDown Event)
 	//if mouse up occurs while _butonDown is true a ButtonClick Event is triggered
 	bool _buttonDown;

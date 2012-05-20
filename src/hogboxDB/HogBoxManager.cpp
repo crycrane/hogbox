@@ -48,7 +48,7 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
     //check the file exists
     if(!osgDB::fileExists(fileName))
     {
-        osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
+        OSG_FATAL << "HogBoxManager::ReadDataBaseFile Error: Failed to read xml file '" << fileName << "'," << std::endl
         << "                                        The file does not exists." << std::endl;
         //IPHONE_PORT@tom osgDB::fileExists needs fixing on iphone by the look of things
         //return false;
@@ -59,13 +59,21 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
     osgDB::XmlNode* root = 0;
     
     //open the file with xmlinput
-    hogbox::XmlInputObjectPtr xmlInput = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
-    osgDB::XmlNode::Input input = xmlInput->GetInput();
+    hogbox::XmlInputObjectPtr xmlObject = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
+    if(!xmlObject.get()){
+        OSG_FATAL << "HogBoxManager::ReadDataBaseFile ERROR: Failed to Read XML File '" << fileName << "'." << std::endl;
+        return NULL;            
+    }
+    
+    if(!xmlObject->GetInput()){
+        OSG_FATAL << "HogBoxManager::ReadDataBaseFile ERROR: Failed to Open XML File '" << fileName << "'." << std::endl;
+        return NULL;
+    }
     //input.open(fileName);
     //input.readAllDataIntoBuffer();
     
     //read the file into out document
-    doc->read(input);
+    doc->read(xmlObject->GetInput());
     
     //iterate over the document nodes and try and find a HogBoxDatabase node to
     //use as a root
@@ -78,7 +86,7 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
     
     if (root == NULL)
     {
-        osg::notify(osg::WARN) << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
+        OSG_FATAL << "XML Database Error: Failed to read xml file '" << fileName << "'," << std::endl
         << "                                        Hogbox XML Database files must contain a <HogBoxDatabase> node." << std::endl;
         return false;
     }
@@ -209,7 +217,7 @@ bool HogBoxManager::ReleaseNodeByID(const std::string& uniqueID)
 osgDB::XmlNode* HogBoxManager::FindNodeByUniqueIDProperty(const std::string& uniqueID, osgDB::XmlNode* xmlNode)
 {
 	if(xmlNode==NULL){
-		if(!_databaseNode){this->ReadDataBaseFile("Data/hogboxDB.xml");}
+		if(!_databaseNode.get()){this->ReadDataBaseFile("Data/hogboxDB.xml");}
 		xmlNode = _databaseNode;
         if(xmlNode==NULL){
             OSG_FATAL << "HogBoxManager::FindNodeByUniqueIDProperty: ERROR: No database fileloaded." << std::endl;

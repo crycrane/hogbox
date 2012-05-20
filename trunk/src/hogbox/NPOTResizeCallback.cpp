@@ -11,6 +11,15 @@
 # include <cmath>
 #endif
 
+#ifdef ANDROID
+#include <cstdlib>
+float log2( float n )  
+{  
+    // log(n)/log(2) is log2.  
+    return log( n ) / log( 2 );  
+}
+#endif
+
 using namespace hogbox;
 
 

@@ -102,6 +102,7 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 					   int stereoMode, bool renderOffscreen)
 {
 
+    OSG_ALWAYS << "HogBoxViewer::Init 1" << std::endl;
 	_screenID = screenID;
 
 	//good default fov
@@ -111,6 +112,8 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
     //double distance = 0.5; //osg::DisplaySettings::instance()->getScreenDistance();
    // _vfov = osg::RadiansToDegrees(atan2(height/2.0f,distance)*2.0);
 
+    OSG_ALWAYS << "HogBoxViewer::Init 2" << std::endl;
+    
 	//set the scene to render
 	_scene = scene;
 
@@ -123,7 +126,7 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
     if(_bIsFullScreen){
         _winSize = screenRes;
     }
-    
+    OSG_ALWAYS << "HogBoxViewer::Init 3" << std::endl;
     //window corner in pixels ( Windows bottom left is 0,0)
 	if(winCr.x()==-1)//pass neg to center
 	{
@@ -143,13 +146,13 @@ int HogBoxViewer::Init(osg::Node* scene, bool fullScreen,
 
 	//Do we want to render to offscreen image target
 	_bRenderOffscreen = renderOffscreen;
-
+    OSG_ALWAYS << "HogBoxViewer::Init 4" << std::endl;
 	//if we have a valid scene then construc the window, else divert till later
 	if(_scene.valid() && realizeNow)
 	{
 		return CreateAppWindow();
 	}
-
+    OSG_ALWAYS << "HogBoxViewer::Init 5-" << std::endl;
 	return 0;
 }
 
@@ -330,15 +333,14 @@ bool HogBoxViewer::CreateAppWindow()
 			graphicsTraits->pbuffer = true;
 		}
 
+#ifndef ANDROID
 		//create graphics context using requested traits
 		_graphicsContext = osg::GraphicsContext::createGraphicsContext(graphicsTraits);
-
 		if(!_graphicsContext.valid())
 		{
 			OSG_WARN << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
 			return false;
 		}
-
 		//cast the context to a window to set position etc
 		_graphicsWindow = dynamic_cast<osgViewer::GraphicsWindow*>(_graphicsContext.get());
 
@@ -347,6 +349,9 @@ bool HogBoxViewer::CreateAppWindow()
 			OSG_WARN << "HogBoxViewer CreateWindow ERROR: Failed to create graphicsContext, viewer is not vaild." << std::endl;
 			return false;
 		}
+#else
+        
+#endif
 
 		//now window is created apply settings that don't seem to persist from the traits (useCursor)
 		this->SetCursorVisible(_usingCursor);
@@ -371,8 +376,14 @@ bool HogBoxViewer::CreateAppWindow()
 		_viewer->getCamera()->setProjectionMatrixAsPerspective( _vfov, _winSize.x()/_winSize.y(), 1.0f,1000.0f);
 
 		//attach the graphics context to the viewers camera
+#ifndef ANDROID
 		_viewer->getCamera()->setGraphicsContext(_graphicsContext.get());
-		_viewer->getCamera()->setViewport(0,0,_winSize.x(),_winSize.y());
+#else
+        OSG_ALWAYS << "HogBoxViewer::CreatAppWindow 1" << std::endl;
+        _viewer->setUpViewerAsEmbeddedInWindow(0, 0, graphicsTraits->width, graphicsTraits->height);
+#endif
+		
+        _viewer->getCamera()->setViewport(0,0,_winSize.x(),_winSize.y());
 		_viewer->getCamera()->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		_viewer->getCamera()->setClearColor(_clearColor);
 		
@@ -391,8 +402,8 @@ bool HogBoxViewer::CreateAppWindow()
 			_resizeCallback = NULL;
 		}
 		#ifndef TARGET_OS_IPHONE
-			_resizeCallback = new HogBoxViewerResizedCallback(_viewer.get(), _winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
-			_graphicsContext->setResizedCallback(_resizeCallback);
+			//_resizeCallback = new HogBoxViewerResizedCallback(_viewer.get(), _winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
+			//_graphicsContext->setResizedCallback(_resizeCallback);
 		#endif
 		//force a resize to acount for the initial state
 		//_resizeCallback->resizedImplementation(_graphicsContext, _winCorner.x(), _winCorner.y(), _winSize.x(), _winSize.y());
@@ -433,9 +444,9 @@ bool HogBoxViewer::CreateAppWindow()
 
 		//everything is inplace so realize our viewer (creating window etc)
 		#ifndef TARGET_OS_IPHONE
-			_viewer->realize();
+			//_viewer->realize();
 			//force a resize to get a proper initial state
-			_resizeCallback->resizedImplementation(_graphicsContext,_winCorner.x(),_winCorner.y(),_winSize.x(),_winSize.y());
+			//_resizeCallback->resizedImplementation(_graphicsContext,_winCorner.x(),_winCorner.y(),_winSize.x(),_winSize.y());
 		#endif
 
 	

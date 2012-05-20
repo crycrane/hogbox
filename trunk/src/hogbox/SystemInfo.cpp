@@ -23,7 +23,7 @@ using namespace hogbox;
 //BUG@tom Since moving to CMake the Singleton class has been misbehaving. An app seems to
 //use a different instance of the registry then the plugins seem to register too.
 //Changing to the dreaded global instance below has fixed things but I need to try and correct this
-osg::ref_ptr<SystemInfo> s_hogboxSystemInfoInstance = NULL;
+static osg::ref_ptr<SystemInfo> s_hogboxSystemInfoInstance = NULL;
 
 SystemInfo* SystemInfo::Inst(GatherLevel level, bool erase)
 {
@@ -83,7 +83,7 @@ SystemInfo::SystemInfo(GatherLevel level)
 	_avliableDedicatedGLMemory(0)
 {
 	//call init to get info
-	this->Init(true);
+	this->Init(false);
 }
 
 SystemInfo::~SystemInfo(void)

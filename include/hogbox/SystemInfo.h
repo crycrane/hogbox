@@ -53,6 +53,11 @@ namespace hogbox {
 		#define GL_STEREO 1
 	#endif
 #endif
+    
+#ifdef ANDROID
+#define GL_STENCIL 1
+#define GL_STEREO 1
+#endif
 	
 //
 //Gathers infomation on available dedicated video memory (currently nvidia only)

@@ -30,6 +30,10 @@
 		#include <osgViewer/api/Carbon/GraphicsWindowCarbon> 
 		#define HWND unsigned long
 	#endif
+#elif defined(ANDROID)
+
+    #define HWND unsigned long
+
 #endif
 
 #include <osgGA/TrackballManipulator>

@@ -1,6 +1,8 @@
 
 #include <hogboxDB/HogBoxManager.h>
 
+#include <hogbox/AssetManager.h>
+
 using namespace hogboxDB;
 
 //BUG@tom Since moving to CMake the Singleton class has been misbehaving. An app seems to
@@ -57,9 +59,10 @@ bool HogBoxManager::ReadDataBaseFile(const std::string& fileName)
     osgDB::XmlNode* root = 0;
     
     //open the file with xmlinput
-    osgDB::XmlNode::Input input;
-    input.open(fileName);
-    input.readAllDataIntoBuffer();
+    hogbox::XmlInputObjectPtr xmlInput = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
+    osgDB::XmlNode::Input input = xmlInput->GetInput();
+    //input.open(fileName);
+    //input.readAllDataIntoBuffer();
     
     //read the file into out document
     doc->read(input);

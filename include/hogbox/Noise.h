@@ -16,6 +16,10 @@
 #include <osg/Image>
 #include <time.h>
 
+#ifdef ANDROID
+#include <cstdlib>
+#endif
+
 namespace hogbox {
 	
 	static inline void SetSeed(const unsigned int& seed=-1)

@@ -90,7 +90,7 @@ AssetManager::~AssetManager(void)
 bool AssetManager::OpenAndMountArchive(const std::string& fileName){
     _archive = osgDB::openArchive(fileName, osgDB::Archive::READ);
     if(_archive.valid()){
-        OSG_FATAL<<"List of files in archive:"<<std::endl;
+        OSG_FATAL << "List of files in archive:" << std::endl;
         osgDB::Archive::FileNameList fileNames;
         if (_archive->getFileNames(fileNames))
         {
@@ -98,12 +98,14 @@ bool AssetManager::OpenAndMountArchive(const std::string& fileName){
                 itr!=fileNames.end();
                 ++itr)
             {
-                OSG_FATAL<<"    "<<*itr<<std::endl;
+                OSG_FATAL << "    " << *itr << std::endl;
             }
         }
         
-        OSG_FATAL<<std::endl;
-        OSG_FATAL<<"Master file "<<_archive->getMasterFileName()<<std::endl;
+        OSG_FATAL << std::endl;
+        OSG_FATAL << "Master file "<<_archive->getMasterFileName() << std::endl;
+    }else{
+        OSG_FATAL << "Failed to open Archive '" << fileName << "'." << std::endl;
     }
     return _archive.valid();
 }
@@ -283,7 +285,7 @@ osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, ReadOpti
     osg::ImagePtr image = NULL;
     
     if(_archive.valid()){
-        osgDB::ReaderWriter::ReadResult result = _archive->readImage(deviceFileName);
+        osgDB::ReaderWriter::ReadResult result = _archive->readImage("/assets/"+deviceFileName);
         image = result.getImage();
     }else{
         image = osgDB::readImageFile(deviceFileName);
@@ -291,7 +293,7 @@ osg::ImagePtr AssetManager::GetOrLoadImage(const std::string& fileName, ReadOpti
     
     if(image.get()){
         _imageCache[fileName] = image;
-        OSG_INFO << "OsgModelCache::GetOrLoadImage: INFO: Lodeded image file '" << deviceFileName << "'." << std::endl;
+        OSG_INFO << "OsgModelCache::GetOrLoadImage: INFO: Loaded image file '" << deviceFileName << "'." << std::endl;
         
 	}else{
         OSG_FATAL << "OsgModelCache::GetOrLoadImage: ERROR: Failed to read image file '" << fileName << "'." << std::endl;
@@ -350,6 +352,7 @@ XmlInputObjectPtr AssetManager::GetOrLoadXmlObject(const std::string& fileName, 
     }
     osg::ref_ptr<osg::Object> obj = NULL;
     if(_archive.valid()){
+        OSG_FATAL << "!!!Reading XmlFile from archive'" << fileName << "'." << std::endl;
         osgDB::ReaderWriter::ReadResult result = _archive->readObject("/assets/"+fileName);
         obj = result.getObject();
     }else{
@@ -382,7 +385,7 @@ osg::ShaderPtr AssetManager::GetOrLoadShader(const std::string& fileName, osg::S
     }
     
     osg::ShaderPtr shader = new osg::Shader(shaderType == osg::Shader::VERTEX ? osg::Shader::VERTEX : osg::Shader::FRAGMENT);
-    std::string vertFile = osgDB::findDataFile(fileName);
+    std::string vertFile =  this->FindFile(fileName);
     
     if(shader->loadShaderSourceFromFile(vertFile)){
         _shaderCache[fileName] = shader;
@@ -506,11 +509,12 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
 const std::string AssetManager::FindFile(const std::string& file)
 {
     if(_archive.valid()){
-        if(_archive->fileExists("/assets/"+file)){
-            return "/assets/"+file;
+        if(this->FileExists(file)){
+            return file;
         }else{
             return "";
         }
     }
     return osgDB::findDataFile(file);
 }
+

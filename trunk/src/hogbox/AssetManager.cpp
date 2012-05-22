@@ -329,8 +329,8 @@ osgText::FontPtr AssetManager::GetOrLoadFont(const std::string& fileName, ReadOp
     }   
     
     if(obj.get()){
-        osgText::Font* font = dynamic_cast<osgText::Font*>(obj.get());
-        if(font){
+        osgText::FontPtr font = dynamic_cast<osgText::Font*>(obj.get());
+        if(font.get()){
             OSG_INFO << "ReadFont from archive '" << fileName << "'." << std::endl;
             _fontCache[fileName] = font;
             return font;

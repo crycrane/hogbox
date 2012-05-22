@@ -399,10 +399,10 @@ void TextRegion::SetFontResolution(const osg::Vec2& fontRes)
 void TextRegion::SetFontType(const std::string& fontFile)
 {
 	_fontName = osgDB::findDataFile(fontFile);
-    osgText::FontPtr font = hogbox::AssetManager::Inst()->GetOrLoadFont(fontFile).get();
+    osgText::FontPtr font = hogbox::AssetManager::Inst()->GetOrLoadFont(fontFile);
     
     if(font.get()){
-        _text->setFont(_fontName);
+        _text->setFont(font);
         _dirtyRenderState = true;
     }
 }

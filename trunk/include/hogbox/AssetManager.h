@@ -361,6 +361,7 @@ public:
     
     JNIEnv* getAndroidEnv(){return g_androidEnv;}
     jobject getAndroidAssetManger(){return g_androidAssetManger;}
+    
 #endif
     
     

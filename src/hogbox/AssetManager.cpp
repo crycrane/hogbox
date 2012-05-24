@@ -468,6 +468,7 @@ const std::string AssetManager::GetImagePathForDevice(const std::string& fileNam
     std::string fullFileName = FindFile(fileName);
     
     if(screenType != SystemInfo::LOW_DENSITY || SystemInfo::IsDeviceIPad()){ //add @2x for higher resolutions
+        OSG_ALWAYS << "Screen IS HD" << std::endl;
         //is it ipad
         std::string ipadStr = SystemInfo::IsDeviceIPad() ? "~ipad" : "";
         std::string retinaStr = SystemInfo::Inst()->getScreenDensity() != SystemInfo::LOW_DENSITY ? "@2x" : "";

@@ -28,28 +28,51 @@ namespace hogboxDB {
     //
     //Helper to open an xml file and then try to find and return the specified node
     //if the node does not exist or the file doesn't open null is returned.
-    static inline osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName)
+    static inline osg::ref_ptr<osgDB::XmlNode> openXmlFileAndReturnNode(const std::string& fileName, const std::string rootNodeName, bool useAssetManager=true)
     {
         //allocate the document node
         osg::ref_ptr<osgDB::XmlNode> doc = new osgDB::XmlNode;
         osgDB::XmlNode* root = 0;
         
 #if USE_ASSETMANAGER
-        hogbox::XmlInputObjectPtr xmlObject = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
-        if(!xmlObject.get()){
-            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Read XML File '" << fileName << "'." << std::endl;
-            return NULL;            
-        }
-        
+        if(useAssetManager){
+            hogbox::XmlInputObjectPtr xmlObject = hogbox::AssetManager::Inst()->GetOrLoadXmlObject(fileName);
+            if(!xmlObject.get()){
+                OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << fileName << "'." << std::endl;
+                return NULL;            
+            }
+            
 
-        if(!xmlObject->GetInput()){
-            OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << fileName << "'." << std::endl;
-            return NULL;
+            if(!xmlObject->GetInput()){
+                OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Read XML File '" << fileName << "'." << std::endl;
+                return NULL;
+            }
+            
+            //read the file into out document
+            //osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
+            doc->read(xmlObject->GetInput());
+        }else{
+            std::string foundFile = fileName;//osgDB::findDataFile(fileName);
+            
+            if (foundFile.empty())
+            {
+                OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Could Not Find File '" << fileName << "'." << std::endl;
+                return NULL;
+            }
+            
+            //open the file with xmlinput
+            osgDB::XmlNode::Input input;
+            input.open(foundFile);
+            input.readAllDataIntoBuffer();
+            
+            if(!input){
+                OSG_FATAL << "hogboxDB: openXmlFileAndReturnNode: ERROR: Failed to Open XML File '" << foundFile << "'." << std::endl;
+                return NULL;
+            }
+            
+            //read the file into out document
+            doc->read(input);
         }
-        
-        //read the file into out document
-        //osg::ref_ptr<osgDB::XmlNode> root = new osgDB::XmlNode;
-        doc->read(xmlObject->GetInput());
 #else
         std::string foundFile = osgDB::findDataFile(fileName);
         

@@ -489,6 +489,9 @@ public:
 	bool setScreenResolution(osg::Vec2 pixels, unsigned int screenID=0);
 	bool setScreenRefreshRate(double hz, unsigned int screenID=0);
 	bool setScreenColorDepth(unsigned int depth, unsigned int screenID=0);
+    
+    //manually set a screen resolution to be returned by get getScreenResolution etc
+    void setManualScreenResolution(osg::Vec2 pixels);
 
 	//Gl Version
 	const float getGLVersionNumber(){return _glVersionNumber;}
@@ -603,6 +606,10 @@ public:
     //saving user generated documents
     const std::string GetDocumentsPath();
     
+    //
+    //we can manually set the documents path, which is usefull for android
+    void SetDocumentsPath(const std::string& docs);
+    
 	//
 	void PrintReportToLog();
 
@@ -620,6 +627,7 @@ protected:
 	//colects the system infomation, should be called when the single instance
 	//is first created
 	int Init(bool printReport = true);
+    
 	
 	//
 	//Load system info from an xml config file, returns true if used
@@ -675,6 +683,9 @@ private:
     //can be set, otherwise this is set to -1,-1 to indicate
     //that osg windowsysteminterface should be used to get screen size
     osg::Vec2 _manualScreenSize;
+    
+    //manually set docs path, only used if not empty
+    std::string _manualDocumentsPath;
     
 	//buffers
 	

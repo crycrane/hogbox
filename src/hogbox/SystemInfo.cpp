@@ -527,14 +527,19 @@ SystemInfo::ScreenDensity SystemInfo::getScreenDensity()
     osg::Vec2 QHD(540,960);
     osg::Vec2 WVGA(480,800);
     osg::Vec2 HVGA(320,480);
+    float tol = 100.0f;
     
-    OSG_FATAL << "ScreenLength: " << screenLength << std::endl;
+    OSG_ALWAYS << "ScreenSize:  " << screenSize.x() << ", " << screenSize.y() << std::endl;
+    OSG_FATAL << "ScreenLength: " << screenLength << ", WGALength: " << WVGA.length() << std::endl;
     
     if(screenLength >= QHD.length()){
+        OSG_ALWAYS << "Screen IS H-HD" << std::endl;
         return HIGH_DENSITY;
-    }else if(screenLength >= WVGA.length()){
+    }else if(screenLength >= WVGA.length()-tol){
+        OSG_ALWAYS << "Screen IS M-HD" << std::endl;
         return MEDIUM_DENSITY;
     }else{
+        OSG_ALWAYS << "Screen IS LOW" << std::endl;
         return LOW_DENSITY;
     }
     
@@ -602,6 +607,14 @@ bool SystemInfo::setScreenColorDepth(unsigned int depth, unsigned int screenID)
 	screen.colorDepth = depth;
 
 	return wsi->setScreenSettings(osg::GraphicsContext::ScreenIdentifier(screenID), screen);
+}
+
+//
+//manually set a screen resolution to be returned by get getScreenResolution etc
+//
+void SystemInfo::setManualScreenResolution(osg::Vec2 pixels)
+{
+    _manualScreenSize = pixels;
 }
 
 //
@@ -931,14 +944,25 @@ const bool SystemInfo::IsDeviceIPad()
 const std::string SystemInfo::GetDocumentsPath()
 {
 #if (TARGET_OS_IPHONE)
+    if(!_manualDocumentsPath.empty()){
+        return _manualDocumentsPath;
+    }
     //ensure a player data file exists in documents folder
     NSArray     *docsPathList = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString    *docsPath     = [docsPathList  objectAtIndex:0];
     const char* docsPathChar  = [docsPath UTF8String];
     return std::string(docsPathChar);
 #else
-    return "Documents";
+    return _manualDocumentsPath;
 #endif
+}
+
+//
+//we can manually set the documents path, which is usefull for android
+//
+void SystemInfo::SetDocumentsPath(const std::string& docs)
+{
+    _manualDocumentsPath = docs;
 }
 
 void SystemInfo::PrintReportToLog()

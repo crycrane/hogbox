@@ -90,7 +90,7 @@ AssetManager::~AssetManager(void)
 bool AssetManager::OpenAndMountArchive(const std::string& fileName){
     _archive = osgDB::openArchive(fileName, osgDB::Archive::READ);
     if(_archive.valid()){
-        OSG_FATAL << "List of files in archive:" << std::endl;
+        /*OSG_FATAL << "List of files in archive:" << std::endl;
         osgDB::Archive::FileNameList fileNames;
         if (_archive->getFileNames(fileNames))
         {
@@ -103,7 +103,7 @@ bool AssetManager::OpenAndMountArchive(const std::string& fileName){
         }
         
         OSG_FATAL << std::endl;
-        OSG_FATAL << "Master file "<<_archive->getMasterFileName() << std::endl;
+        OSG_FATAL << "Master file "<<_archive->getMasterFileName() << std::endl;*/
     }else{
         OSG_FATAL << "Failed to open Archive '" << fileName << "'." << std::endl;
     }

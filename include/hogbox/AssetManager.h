@@ -273,8 +273,15 @@ class AssetManager : public osg::Referenced
 {
 public:
     
-    static AssetManager* Inst(){
-        static osg::ref_ptr<AssetManager> g_AssetManagerInstance = new AssetManager();
+    static AssetManager* Inst(bool erase=false){
+        static osg::ref_ptr<AssetManager> g_AssetManagerInstance = NULL;
+        if(erase){
+            g_AssetManagerInstance=NULL;
+        }else{
+            if(!g_AssetManagerInstance.get()){
+                g_AssetManagerInstance = new AssetManager();
+            }
+        }
         return g_AssetManagerInstance.get();
     }
     

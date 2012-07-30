@@ -41,9 +41,16 @@ public:
     
     struct sEmpty
     {
-        HogBoxRegistry* getIt()
+        HogBoxRegistry* getIt(bool erase = false)
         {
-            static osg::ref_ptr<HogBoxRegistry> it = new HogBoxRegistry;
+            static osg::ref_ptr<HogBoxRegistry> it = NULL;
+            if(erase){
+                it = NULL;
+            }else{
+                if(!it.get()){
+                    it = new HogBoxRegistry();
+                }
+            }
             return it.get();
         }
     };
